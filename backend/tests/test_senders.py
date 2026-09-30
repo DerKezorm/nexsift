@@ -190,3 +190,35 @@ def test_raw_line_breaks_inside_json_strings_are_tolerated(client: TestClient, o
     assert thread["title"] == "vzdump backup status (pve01): backup successful"
     detail = client.get(f"/api/threads/{thread['id']}").json()
     assert detail["events"][0]["recognized"] is True
+
+
+def test_a_good_proxmox_backup_closes_the_failed_one(client: TestClient, operator: dict) -> None:
+    """As it happened on 30.09.2026: the nightly job failed for one container, the repaired run went through."""
+    source = add_source(client, "proxmox")
+    path = "/api/v1/hook/" + source["connection"]["token"]
+    failed = {
+        "title": "vzdump backup status (pve01): backup failed",
+        "message": "201 ollama err",
+        "severity": "error",
+        "type": "vzdump",
+        "host": "pve01",
+    }
+    good = {
+        "title": "vzdump backup status (pve01): backup successful",
+        "message": "201 ollama ok",
+        "severity": "info",
+        "type": "vzdump",
+        "host": "pve01",
+    }
+    client.post(path, json=failed)
+    client.post(path, json=good)
+    [thread] = inbox(client)
+    assert thread["resolved_at"] is not None
+    assert thread["resolved_by"] == good["title"]
+    assert inbox(client, "crit") == []
+    # The next night fails again: a new red line, not the closed one.
+    client.post(path, json=failed)
+    assert len(inbox(client, "crit")) == 1
+    # A good backup without an open problem is just an info line.
+    client.post(path, json={**good, "host": "pve02", "title": "vzdump backup status (pve02): backup successful"})
+    assert any(t["title"].endswith("(pve02): backup successful") and t["resolved_at"] is None for t in inbox(client))

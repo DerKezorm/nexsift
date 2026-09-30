@@ -118,6 +118,11 @@ def proxmox(incoming: Incoming, payload: Payload) -> list[Incoming]:
     incoming.fields = {key: value for key, value in (("type", kind), ("host", host)) if value}
     if kind:
         incoming.group_key = f"{kind}-{host}" if host else kind
+        # A job of the same kind on the same host that went well is the all-clear for one that failed: a good
+        # backup after a failed one closes the red line instead of joining it (seen for real on 30.09.2026).
+        # Without an open problem it simply becomes a line of its own.
+        if priority == INFO:
+            incoming.resolves = incoming.group_key
     return [incoming]
 
 

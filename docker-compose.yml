@@ -1,0 +1,51 @@
+# nexsift, start with:  docker compose up -d
+#
+# Then open http://<your-host>:8490 and create your account. The sources page shows what to enter in each
+# sender; the ports below are the doors those senders knock on.
+#
+# To build from source instead of pulling the image, comment out `image:` and uncomment `build: .`.
+
+services:
+  nexsift:
+    image: ghcr.io/derkezorm/nexsift:latest
+    # build: .
+    container_name: nexsift
+    restart: unless-stopped
+
+    ports:
+      # Host port on the left, container port on the right.
+      - "8490:8000"      # interface, own webhooks, Discord-style webhooks
+      - "8491:8001"      # answers like a Gotify server
+      - "8492:8002"      # answers like an ntfy server
+      - "25:2525"        # SMTP for devices that only send mail (no sign-in)
+      - "514:5514/udp"   # syslog
+      - "514:5514/tcp"   # syslog over TCP
+      # Remove a line to close that door. If a host port is taken, pick another one on the left and tell
+      # NEXSIFT_PUBLIC_PORTS below, so the setup hints show the right number.
+
+    volumes:
+      # ⚠️ A local disk, never an SMB or NFS share. SQLite's locking does not work reliably over network
+      # filesystems, and that is how it loses data.
+      - ./data:/data
+
+    environment:
+      # Who should own the files in the data directory. The container fixes the permissions itself on start.
+      PUID: 1000
+      PGID: 1000
+
+      # The clock the quiet hours of push targets go by.
+      TZ: Europe/Berlin
+
+      # The ports as seen from outside, for the setup hints on the sources page. Keep in line with `ports:`.
+      NEXSIFT_PUBLIC_PORTS: "web=8490,gotify=8491,ntfy=8492,smtp=25,syslog=514"
+
+      # The address people and senders use to reach nexsift. Without it nexsift takes the address of the
+      # request. The same can be set under Settings, which wins.
+      # NEXSIFT_PUBLIC_URL: https://nexsift.example.com
+
+      # Protects the stored secrets (tokens, OIDC client secret, push credentials). Leaving it empty is fine:
+      # nexsift creates one on first start and keeps it as /data/secret.key. Back it up with the data.
+      NEXSIFT_SECRET_KEY: ${NEXSIFT_SECRET_KEY:-}
+
+      # Behind a reverse proxy: its address or network, so X-Forwarded-For is believed from it.
+      # NEXSIFT_TRUSTED_PROXIES: 172.18.0.0/16

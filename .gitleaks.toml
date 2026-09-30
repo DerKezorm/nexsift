@@ -20,4 +20,7 @@ paths = [
 regexes = [
   # The reserved documentation domain.
   '''example\.(com|org|net)''',
+  # The characters source tokens are drawn from (backend/app/services/sources.py), without the ones that look
+  # alike. A list of letters, not a key.
+  '''^ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789$''',
 ]

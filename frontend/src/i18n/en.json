@@ -657,7 +657,8 @@
           "s1": "In Proxmox: Datacenter, Notifications, Add under Notification Targets, \"Webhook\".",
           "s2": "Any endpoint name, like nexsift. Method POST and the address from here.",
           "s3": "Delete the empty header row with the bin icon; no header is needed. Paste the body from here into Body.",
-          "s4": "Add, then create a notification matcher that points to nexsift. Check with Test on the target."
+          "s4": "Add. Check with Test on the target that it arrives.",
+          "s5": "Important: Test goes straight to the target, real notifications go through matchers. Open the default-matcher under Notification Matchers and also tick nexsift under Targets to notify. Otherwise backups and updates never arrive."
         }
       },
       "synology": {

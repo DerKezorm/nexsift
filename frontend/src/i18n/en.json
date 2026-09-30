@@ -830,7 +830,7 @@
     "light": "Light"
   },
   "unreachable": {
-    "lead": "The interface cannot reach the nexsift server. Is the container running?",
+    "lead": "The interface cannot reach the nexsift server right now. After an update it is usually back within a minute; this page tries again every five seconds on its own.",
     "retry": "Try again",
     "title": "Server not reachable"
   },

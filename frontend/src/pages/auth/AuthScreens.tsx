@@ -162,8 +162,14 @@ export function LoginScreen() {
   )
 }
 
+/** Shown while the server is away, typically for the minute an update restarts the container. It keeps
+ * trying on its own, so nobody is stuck on this page after the server came back. */
 export function UnreachableScreen({ onRetry }: { onRetry: () => void }) {
   const { t } = useTranslation()
+  useEffect(() => {
+    const timer = window.setInterval(onRetry, 5000)
+    return () => window.clearInterval(timer)
+  }, [onRetry])
   return (
     <Frame>
       <h1 className="text-xl font-bold">{t('unreachable.title')}</h1>

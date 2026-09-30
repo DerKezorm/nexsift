@@ -830,7 +830,7 @@
     "light": "Hell"
   },
   "unreachable": {
-    "lead": "Die Oberfläche erreicht den nexsift-Server nicht. Läuft der Container?",
+    "lead": "Die Oberfläche erreicht den nexsift-Server gerade nicht. Nach einem Update ist er meist nach einer Minute wieder da; diese Seite versucht es alle fünf Sekunden von selbst.",
     "retry": "Noch einmal versuchen",
     "title": "Server nicht erreichbar"
   },

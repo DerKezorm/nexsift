@@ -1,0 +1,12 @@
+fastapi==0.141.1
+uvicorn[standard]==0.54.0
+sqlalchemy==2.1.1
+pydantic==2.13.5
+pydantic-settings==2.15.0
+argon2-cffi==25.1.0
+cryptography==50.0.1
+httpx==0.28.1
+# PyJWT checks the id tokens of the OIDC provider and signs the short-lived sign-in attempt cookie.
+pyjwt==2.15.0
+# The SMTP entrance for senders that only speak email (UPS, NAS, router).
+aiosmtpd==1.4.6

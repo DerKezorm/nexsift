@@ -1,0 +1,155 @@
+"""Sources: creating them with their token or key, finding them again when a message comes in, and what the
+operator has to enter in the sender."""
+
+from __future__ import annotations
+
+import hashlib
+import re
+import secrets
+from typing import Any
+from urllib.parse import urlsplit
+
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from .. import crypto
+from ..config import get_settings
+from ..models import Source, utcnow
+from . import presets, settings_service
+
+TOKEN_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789"
+HOSTNAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
+
+
+class SourceError(ValueError):
+    def __init__(self, code: str, message: str, status: int = 422) -> None:
+        super().__init__(message)
+        self.code, self.status = code, status
+
+
+def _token(length: int = 24) -> str:
+    return "".join(secrets.choice(TOKEN_ALPHABET) for _ in range(length))
+
+
+def hash_token(token: str) -> str:
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def slug(name: str) -> str:
+    cleaned = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+    return cleaned[:40] or "source"
+
+
+def create(db: Session, preset: str, name: str, hostname: str = "") -> Source:
+    if preset not in presets.PRESETS:
+        raise SourceError("unknown_preset", "Unknown kind of source.")
+    info = presets.PRESETS[preset]
+    name = " ".join(name.split())[:80] or info["name"]
+    source = Source(name=name, kind=info["kind"], protocol=info["protocol"])
+    protocol = info["protocol"]
+    if protocol in ("gotify", "webhook", "discord"):
+        token = _token()
+        source.token_hash = hash_token(token)
+        source.token_enc = crypto.encrypt_secret(token)
+    if protocol == "discord":
+        # Discord's webhook address has a number and a token; the number only has to look like one.
+        source.match_key = f"discord:{secrets.randbelow(9 * 10**17) + 10**17}"
+    elif protocol == "ntfy":
+        source.match_key = f"ntfy:{slug(name)}-{_token(6).lower()}"
+    elif protocol == "smtp":
+        base = slug(name)
+        candidate, suffix = base, 1
+        while db.scalar(select(Source).where(Source.match_key == f"smtp:{candidate}")) is not None:
+            suffix += 1
+            candidate = f"{base}-{suffix}"
+        source.match_key = f"smtp:{candidate}"
+    elif protocol == "syslog":
+        host = hostname.strip().lower()
+        if not HOSTNAME.match(host):
+            raise SourceError("hostname_required", "Enter the host name (or address) the device sends syslog as.")
+        if db.scalar(select(Source).where(Source.match_key == f"syslog:{host}")) is not None:
+            raise SourceError("hostname_taken", "There is already a source for this host name.", 409)
+        source.match_key = f"syslog:{host}"
+    db.add(source)
+    db.commit()
+    presets.install_source_rules(db, preset, source.id)
+    return source
+
+
+def renew_token(db: Session, source: Source) -> None:
+    if source.protocol not in ("gotify", "webhook", "discord"):
+        raise SourceError("no_token", "This source has no token.")
+    token = _token()
+    source.token_hash = hash_token(token)
+    source.token_enc = crypto.encrypt_secret(token)
+    db.commit()
+
+
+def by_token(db: Session, token: str, protocol: str) -> Source | None:
+    if not token or len(token) > 200:
+        return None
+    source = db.scalar(select(Source).where(Source.token_hash == hash_token(token)))
+    return source if source is not None and source.protocol == protocol else None
+
+
+def by_key(db: Session, key: str) -> Source | None:
+    return db.scalar(select(Source).where(Source.match_key == key))
+
+
+def is_muted(source: Source) -> bool:
+    return source.muted_until is not None and source.muted_until > utcnow()
+
+
+def _host(db: Session, request_host: str) -> tuple[str, str]:
+    """Scheme and host the senders should use: from the public address, else from the request."""
+    public = settings_service.public_url(db)
+    if public:
+        parts = urlsplit(public)
+        return parts.scheme, parts.hostname or request_host
+    return "http", request_host.split(":", 1)[0] or "localhost"
+
+
+def connection(db: Session, source: Source, request_host: str) -> dict[str, Any]:
+    """Everything the setup hint needs, already put together. The interface only arranges it into sentences."""
+    scheme, host = _host(db, request_host)
+    ports = get_settings().outside_ports()
+    public = settings_service.public_url(db)
+    web = public or f"{scheme}://{host}:{ports['web']}"
+    token = crypto.decrypt_secret(source.token_enc) if source.token_enc else ""
+    key = (source.match_key or "").split(":", 1)[-1]
+    info: dict[str, Any] = {"host": host, "ports": ports, "token": token}
+    if source.protocol == "gotify":
+        info["server"] = f"http://{host}:{ports['gotify']}"
+        info["shoutrrr"] = f"gotify://{host}:{ports['gotify']}/{token}?disabletls=yes"
+    elif source.protocol == "ntfy":
+        info["server"] = f"http://{host}:{ports['ntfy']}"
+        info["topic"] = key
+        info["url"] = f"http://{host}:{ports['ntfy']}/{key}"
+    elif source.protocol == "webhook":
+        info["url"] = f"{web}/api/v1/hook/{token}"
+    elif source.protocol == "discord":
+        info["url"] = f"{web}/api/webhooks/{key}/{token}"
+    elif source.protocol == "smtp":
+        info["server"] = host
+        info["port"] = ports["smtp"]
+        info["recipient"] = f"{key}@nexsift.local"
+    elif source.protocol == "syslog":
+        info["server"] = host
+        info["port"] = ports["syslog"]
+        info["hostname"] = key
+    return info
+
+
+def view(db: Session, source: Source) -> dict[str, Any]:
+    return {
+        "id": source.id,
+        "name": source.name,
+        "kind": source.kind,
+        "protocol": source.protocol,
+        "created_at": source.created_at.isoformat(),
+        "last_seen_at": source.last_seen_at.isoformat() if source.last_seen_at else None,
+        "count_total": source.count_total,
+        "muted_until": source.muted_until.isoformat() if is_muted(source) and source.muted_until else None,
+        "unrecognized_streak": source.unrecognized_streak,
+        "last_unrecognized_at": source.last_unrecognized_at.isoformat() if source.last_unrecognized_at else None,
+    }

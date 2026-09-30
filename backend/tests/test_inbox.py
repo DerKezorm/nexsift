@@ -1,0 +1,161 @@
+"""Bundling, rules, throttling, and the actions on threads."""
+
+from datetime import timedelta
+
+from fastapi.testclient import TestClient
+
+from app.db import SessionLocal
+from app.models import Thread
+from tests.conftest import UI, add_source, inbox
+
+
+def _hook(client: TestClient, source: dict):
+    path = "/api/v1/hook/" + source["connection"]["token"]
+    return lambda **body: client.post(path, json=body)
+
+
+def test_same_message_bundles_into_one_thread(client: TestClient, operator: dict) -> None:
+    send = _hook(client, add_source(client, "webhook"))
+    send(title="Disk sda at 91 %")
+    send(title="Disk sda at 92 %")
+    send(title="Something else")
+    threads = inbox(client)
+    assert len(threads) == 2
+    bundled = next(thread for thread in threads if thread["event_count"] == 2)
+    assert bundled["title"] == "Disk sda at 92 %"
+
+
+def test_bundle_window_ends(client: TestClient, operator: dict) -> None:
+    send = _hook(client, add_source(client, "webhook"))
+    send(title="Nightly job ran")
+    with SessionLocal() as db:
+        thread = db.query(Thread).one()
+        thread.last_at = thread.last_at - timedelta(minutes=16)
+        db.commit()
+    send(title="Nightly job ran")
+    assert len(inbox(client)) == 2
+
+
+def test_an_unresolved_critical_problem_stays_one_line(client: TestClient, operator: dict) -> None:
+    send = _hook(client, add_source(client, "webhook"))
+    send(title="VM 104 stopped", priority="critical")
+    with SessionLocal() as db:
+        thread = db.query(Thread).one()
+        thread.last_at = thread.last_at - timedelta(hours=5)
+        db.commit()
+    send(title="VM 104 stopped", priority="critical")
+    [thread] = inbox(client)
+    assert thread["event_count"] == 2
+
+
+def test_archived_thread_is_not_reopened(client: TestClient, operator: dict) -> None:
+    send = _hook(client, add_source(client, "webhook"))
+    send(title="Update available")
+    [thread] = inbox(client)
+    client.post("/api/threads/state", json={"ids": [thread["id"]], "state": "archived"}, headers=UI)
+    send(title="Update available")
+    assert len(inbox(client)) == 1
+    assert len(inbox(client, "archived")) == 1
+
+
+def test_new_event_makes_a_read_thread_unread(client: TestClient, operator: dict) -> None:
+    send = _hook(client, add_source(client, "webhook"))
+    send(title="Temperature high")
+    [thread] = inbox(client)
+    client.post("/api/threads/state", json={"ids": [thread["id"]], "state": "read"}, headers=UI)
+    send(title="Temperature high")
+    assert inbox(client)[0]["state"] == "unread"
+
+
+def test_keyword_rules_respect_word_boundaries(client: TestClient, operator: dict) -> None:
+    send = _hook(client, add_source(client, "webhook"))
+    send(title="Backup finished with 0 errors")
+    send(title="Backup ERROR on disk 2")
+    priorities = {thread["title"]: thread["priority"] for thread in inbox(client)}
+    assert priorities == {"Backup finished with 0 errors": "info", "Backup ERROR on disk 2": "crit"}
+
+
+def test_rule_can_drop_group_and_rename(client: TestClient, operator: dict) -> None:
+    source = add_source(client, "webhook")
+    send = _hook(client, source)
+    drop = {
+        "name": "Ignore DHCP",
+        "source_id": source["id"],
+        "conditions": [{"field": "any", "op": "contains", "value": "DHCPACK"}],
+        "actions": {"drop": True},
+    }
+    group = {
+        "name": "Logins together",
+        "conditions": [{"field": "title", "op": "regex", "value": r"login from \S+"}],
+        "actions": {"group_key": "logins", "title_template": "{count} logins"},
+    }
+    assert client.post("/api/rules", json=drop, headers=UI).status_code == 201
+    assert client.post("/api/rules", json=group, headers=UI).status_code == 201
+    send(title="DHCPACK on eth0")
+    send(title="login from alice")
+    send(title="login from bob")
+    [thread] = inbox(client)
+    assert thread["title"] == "2 logins"
+
+
+def test_rule_validation_explains_itself(client: TestClient, operator: dict) -> None:
+    bad = {"name": "x", "conditions": [{"field": "title", "op": "regex", "value": "(unclosed"}], "actions": {"priority": "crit"}}
+    response = client.post("/api/rules", json=bad, headers=UI)
+    assert response.status_code == 422
+    assert response.json()["detail"]["code"] == "rule_regex"
+    none = {"name": "x", "conditions": [{"field": "title", "op": "word", "value": "a"}], "actions": {}}
+    assert client.post("/api/rules", json=none, headers=UI).json()["detail"]["code"] == "rule_no_action"
+
+
+def test_try_shows_what_would_happen(client: TestClient, operator: dict) -> None:
+    result = client.post("/api/rules/try", json={"title": "Pool DEGRADED", "body": ""}, headers=UI).json()
+    assert result["matched"] == ["Words for trouble make it a warning"]
+    assert result["actions"] == {"priority": "warn"}
+
+
+def test_rule_order_decides(client: TestClient, operator: dict) -> None:
+    rules = client.get("/api/rules").json()
+    ids = [rule["id"] for rule in rules]
+    response = client.put("/api/rules/order", json={"ids": list(reversed(ids))}, headers=UI)
+    assert [rule["id"] for rule in response.json()] == list(reversed(ids))
+    assert client.put("/api/rules/order", json={"ids": ids[:1]}, headers=UI).status_code == 422
+
+
+def test_throttle_counts_instead_of_storing(client: TestClient, operator: dict) -> None:
+    client.put("/api/settings", json={"values": {"throttle_per_minute": 3}}, headers=UI)
+    send = _hook(client, add_source(client, "webhook"))
+    for number in range(10):
+        send(title=f"loop {number}")
+    [thread] = inbox(client)
+    assert thread["event_count"] == 3
+    assert thread["throttled_count"] == 7
+
+
+def test_delete_can_be_undone(client: TestClient, operator: dict) -> None:
+    send = _hook(client, add_source(client, "webhook"))
+    send(title="oops")
+    [thread] = inbox(client)
+    assert client.delete(f"/api/threads/{thread['id']}", headers=UI).status_code == 204
+    assert inbox(client) == []
+    assert client.post(f"/api/threads/{thread['id']}/restore", headers=UI).status_code == 200
+    assert len(inbox(client)) == 1
+
+
+def test_views_counts_search_and_read_all(client: TestClient, operator: dict) -> None:
+    send = _hook(client, add_source(client, "webhook"))
+    send(title="Pool FAILED", message="zpool tank")
+    send(title="Weekly report", message="all fine")
+    counts = client.get("/api/threads/counts").json()["views"]
+    assert counts == {"inbox": 2, "unread": 2, "crit": 1, "archived": 0}
+    found = client.get("/api/threads?q=tank").json()["items"]
+    assert [thread["title"] for thread in found] == ["Pool FAILED"]
+    assert client.post("/api/threads/read-all", json={"view": "inbox"}, headers=UI).json()["changed"] == 2
+    assert client.get("/api/threads/counts").json()["views"]["unread"] == 0
+
+
+def test_settings_bounds(client: TestClient, operator: dict) -> None:
+    response = client.put("/api/settings", json={"values": {"bundle_minutes": 0}}, headers=UI)
+    assert response.status_code == 422 and response.json()["detail"]["code"] == "out_of_range"
+    assert client.put("/api/settings", json={"values": {"nope": 1}}, headers=UI).status_code == 422
+    ok = client.put("/api/settings", json={"values": {"bundle_minutes": 30, "public_url": "https://nexsift.example.com/"}}, headers=UI)
+    assert ok.json()["public_url"] == "https://nexsift.example.com"

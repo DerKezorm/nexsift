@@ -16,8 +16,10 @@ export interface SetupLine {
   hint?: string
 }
 
+// escape makes a value safe inside a JSON string (Proxmox docs, webhook templates); without it a quote in a
+// backup log would break the body. Proxmox sends no Content-Type of its own; nexsift reads JSON either way.
 const PROXMOX_BODY = `{
-  "title": "{{ title }}",
+  "title": "{{ escape title }}",
   "message": "{{ escape message }}",
   "severity": "{{ severity }}",
   "type": "{{ fields.type }}",
@@ -41,8 +43,7 @@ export function setupLines(preset: string, connection: Connection): SetupLine[] 
     case 'proxmox':
       return [
         { label: 'method', value: 'POST' },
-        { label: 'url', value: c.url ?? '' },
-        { label: 'header', value: 'Content-Type: application/json' },
+        { label: 'url', value: c.url ?? '', hint: 'proxmoxNoHeader' },
         { label: 'body', value: PROXMOX_BODY, multiline: true, hint: 'proxmoxBody' },
       ]
     case 'uptimekuma':

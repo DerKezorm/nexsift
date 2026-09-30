@@ -3,7 +3,9 @@
     "back": "Zurück",
     "cancel": "Abbrechen",
     "close": "Schließen",
+    "copied": "Kopiert",
     "copy": "Kopieren",
+    "copyFailed": "Markiert, jetzt Strg+C",
     "done": "Fertig",
     "hide": "Ausblenden",
     "loading": "Lädt …",
@@ -549,7 +551,6 @@
       "body": "Inhalt (Body)",
       "compose": "Oder in docker-compose.yml",
       "env": "Umgebungsvariable",
-      "header": "Header",
       "method": "Methode",
       "recipient": "Empfänger",
       "requestBody": "Request Body",
@@ -575,6 +576,7 @@
       "noAuth": "Ohne Anmeldung, ohne Verschlüsselung (kein SSL/TLS).",
       "paperlessBody": "Die Platzhalter in geschweiften Klammern füllt Paperless selbst. „Als JSON senden“ einschalten.",
       "proxmoxBody": "Die Platzhalter in doppelten geschweiften Klammern füllt Proxmox selbst.",
+      "proxmoxNoHeader": "Einen Header braucht es nicht. Die leere Header-Zeile in Proxmox mit dem Papierkorb löschen, sonst lässt sich nicht speichern. Secrets bleiben leer.",
       "recipient": "Der Name vor dem @ ordnet die Mail dieser Quelle zu. Die Domain ist egal.",
       "sender": "Beliebig, viele Geräte wollen hier nur irgendeine Adresse.",
       "syslogHostname": "Diesen Namen muss das Gerät in seinen Syslog-Zeilen tragen.",
@@ -652,9 +654,10 @@
         "name": "Proxmox VE",
         "short": "Backups, Replikation, Updates und Ausfälle von Proxmox.",
         "steps": {
-          "s1": "In Proxmox: Rechenzentrum, Benachrichtigungen, Ziele, Hinzufügen, „Webhook“.",
-          "s2": "Methode, Adresse, Header und Inhalt von hier eintragen.",
-          "s3": "Unter „Benachrichtigungs-Matcher“ eine Regel anlegen, die auf dieses Ziel zeigt, dann „Test“."
+          "s1": "In Proxmox: Datacenter, Notifications, bei Notification Targets auf Add, „Webhook“ (deutsch: Rechenzentrum, Benachrichtigungen).",
+          "s2": "Endpoint Name frei wählen, etwa nexsift. Methode POST und die Adresse von hier.",
+          "s3": "Die leere Header-Zeile mit dem Papierkorb löschen, Header braucht es keinen. Den Inhalt von hier ins Feld Body.",
+          "s4": "Add, dann bei Notification Matchers einen Matcher anlegen, der auf nexsift zeigt. Mit Test am Ziel prüfen."
         }
       },
       "synology": {

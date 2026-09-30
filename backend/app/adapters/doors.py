@@ -18,8 +18,10 @@ Payload = dict[str, Any]
 
 
 def _as_json(body: bytes) -> Any:
+    # strict=False: real line breaks inside JSON strings are read, not refused. Templates without escaping
+    # (Proxmox examples, own scripts) produce exactly that, and refusing would lose the whole structure.
     try:
-        return json.loads(body.decode("utf-8", errors="replace"))
+        return json.loads(body.decode("utf-8", errors="replace"), strict=False)
     except ValueError:
         return None
 

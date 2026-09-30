@@ -157,3 +157,36 @@ def test_rename_and_mute(client: TestClient, operator: dict) -> None:
     assert (
         client.post(f"/api/sources/{source['id']}/mute", json={"minutes": 0}, headers=UI).json()["muted_until"] is None
     )
+
+
+PROXMOX_ESCAPED = (
+    b'{\n  "title": "vzdump backup status (pve01): backup successful",\n'
+    b'  "message": "Details\\n=======\\nVMID  Name  Status\\n104   mail  ok\\n",\n'
+    b'  "severity": "info",\n  "type": "vzdump",\n  "host": "pve01"\n}'
+)
+
+
+def test_proxmox_body_as_the_template_renders_it(client: TestClient, operator: dict) -> None:
+    """What Proxmox sends with the body from the setup hint: no Content-Type, message with escaped line breaks."""
+    source = add_source(client, "proxmox")
+    response = client.post("/api/v1/hook/" + source["connection"]["token"], content=PROXMOX_ESCAPED)
+    assert response.status_code == 202
+    [thread] = inbox(client)
+    assert thread["title"] == "vzdump backup status (pve01): backup successful"
+    assert thread["priority"] == "info"
+    detail = client.get(f"/api/threads/{thread['id']}").json()
+    assert detail["events"][0]["recognized"] is True
+    assert "104   mail  ok" in detail["events"][0]["body"]
+
+
+def test_raw_line_breaks_inside_json_strings_are_tolerated(client: TestClient, operator: dict) -> None:
+    """A template without escape (older Proxmox examples, own scripts) puts real line breaks into the JSON
+    strings. Strict JSON refuses that; nexsift reads it anyway instead of losing the structure."""
+    source = add_source(client, "proxmox")
+    raw = PROXMOX_ESCAPED.replace(b"\\n", b"\n")
+    assert raw != PROXMOX_ESCAPED
+    client.post("/api/v1/hook/" + source["connection"]["token"], content=raw)
+    [thread] = inbox(client)
+    assert thread["title"] == "vzdump backup status (pve01): backup successful"
+    detail = client.get(f"/api/threads/{thread['id']}").json()
+    assert detail["events"][0]["recognized"] is True

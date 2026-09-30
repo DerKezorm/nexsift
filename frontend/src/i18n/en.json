@@ -3,7 +3,9 @@
     "back": "Back",
     "cancel": "Cancel",
     "close": "Close",
+    "copied": "Copied",
     "copy": "Copy",
+    "copyFailed": "Selected, now press Ctrl+C",
     "done": "Done",
     "hide": "Hide",
     "loading": "Loading …",
@@ -549,7 +551,6 @@
       "body": "Body",
       "compose": "Or in docker-compose.yml",
       "env": "Environment variable",
-      "header": "Header",
       "method": "Method",
       "recipient": "Recipient",
       "requestBody": "Request body",
@@ -575,6 +576,7 @@
       "noAuth": "Without sign-in, without encryption (no SSL/TLS).",
       "paperlessBody": "Paperless fills the placeholders in curly braces itself. Switch on \"Send as JSON\".",
       "proxmoxBody": "Proxmox fills the placeholders in double curly braces itself.",
+      "proxmoxNoHeader": "No header is needed. Delete the empty header row in Proxmox with the bin icon, otherwise it will not save. Leave secrets empty.",
       "recipient": "The name before the @ ties the mail to this source. The domain does not matter.",
       "sender": "Anything; many devices just want some address here.",
       "syslogHostname": "The device must carry this name in its syslog lines.",
@@ -652,9 +654,10 @@
         "name": "Proxmox VE",
         "short": "Backups, replication, updates and failures from Proxmox.",
         "steps": {
-          "s1": "In Proxmox: Datacenter, Notifications, Notification targets, Add, \"Webhook\".",
-          "s2": "Enter method, address, header and body from here.",
-          "s3": "Add a notification matcher that points to this target, then \"Test\"."
+          "s1": "In Proxmox: Datacenter, Notifications, Add under Notification Targets, \"Webhook\".",
+          "s2": "Any endpoint name, like nexsift. Method POST and the address from here.",
+          "s3": "Delete the empty header row with the bin icon; no header is needed. Paste the body from here into Body.",
+          "s4": "Add, then create a notification matcher that points to nexsift. Check with Test on the target."
         }
       },
       "synology": {

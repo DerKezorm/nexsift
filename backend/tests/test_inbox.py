@@ -99,7 +99,11 @@ def test_rule_can_drop_group_and_rename(client: TestClient, operator: dict) -> N
 
 
 def test_rule_validation_explains_itself(client: TestClient, operator: dict) -> None:
-    bad = {"name": "x", "conditions": [{"field": "title", "op": "regex", "value": "(unclosed"}], "actions": {"priority": "crit"}}
+    bad = {
+        "name": "x",
+        "conditions": [{"field": "title", "op": "regex", "value": "(unclosed"}],
+        "actions": {"priority": "crit"},
+    }
     response = client.post("/api/rules", json=bad, headers=UI)
     assert response.status_code == 422
     assert response.json()["detail"]["code"] == "rule_regex"
@@ -157,5 +161,43 @@ def test_settings_bounds(client: TestClient, operator: dict) -> None:
     response = client.put("/api/settings", json={"values": {"bundle_minutes": 0}}, headers=UI)
     assert response.status_code == 422 and response.json()["detail"]["code"] == "out_of_range"
     assert client.put("/api/settings", json={"values": {"nope": 1}}, headers=UI).status_code == 422
-    ok = client.put("/api/settings", json={"values": {"bundle_minutes": 30, "public_url": "https://nexsift.example.com/"}}, headers=UI)
+    ok = client.put(
+        "/api/settings",
+        json={"values": {"bundle_minutes": 30, "public_url": "https://nexsift.example.com/"}},
+        headers=UI,
+    )
     assert ok.json()["public_url"] == "https://nexsift.example.com"
+
+
+def test_same_kind_at_the_same_instant_still_bundles(client: TestClient, operator: dict) -> None:
+    import threading
+
+    from app.adapters.base import Incoming
+    from app.db import SessionLocal
+    from app.models import Source
+    from app.services import ingest
+
+    source_id = add_source(client, "webhook")["id"]
+
+    def send() -> None:
+        with SessionLocal() as db:
+            ingest.accept(db, db.get(Source, source_id), Incoming(title="Same thing"), {})
+
+    workers = [threading.Thread(target=send) for _ in range(8)]
+    for worker in workers:
+        worker.start()
+    for worker in workers:
+        worker.join()
+    [thread] = inbox(client)
+    assert thread["event_count"] == 8
+
+
+def test_a_single_event_keeps_its_own_title(client: TestClient, operator: dict) -> None:
+    from tests.conftest import add_source as add
+
+    source = add(client, "paperless")
+    path = "/api/v1/hook/" + source["connection"]["token"]
+    client.post(path, json={"title": "New document: Invoice"})
+    assert inbox(client)[0]["title"] == "New document: Invoice"
+    client.post(path, json={"title": "New document: Letter"})
+    assert inbox(client)[0]["title"] == "Paperless: 2 new documents"

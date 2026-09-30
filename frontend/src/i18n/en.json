@@ -1,0 +1,851 @@
+{
+  "common": {
+    "back": "Back",
+    "cancel": "Cancel",
+    "close": "Close",
+    "copy": "Copy",
+    "done": "Done",
+    "hide": "Hide",
+    "loading": "Loading …",
+    "save": "Save",
+    "saved": "Saved.",
+    "show": "Show"
+  },
+  "errors": {
+    "account_locked": "Too many failed attempts. The account is locked for a quarter of an hour.",
+    "already_set_up": "nexsift is already set up. Please sign in.",
+    "generic": "That did not work. Please try again.",
+    "hostname_required": "Enter the host name the device sends syslog as.",
+    "hostname_taken": "There is already a source for this host name.",
+    "internal_error": "Something went wrong on the server. The container log knows more.",
+    "invalid_email": "This is not an email address.",
+    "invalid_input": "The input does not fit. Please check the marked fields.",
+    "invalid_name": "Use 2 to 64 lowercase letters, digits, dots, dashes or underscores.",
+    "invalid_priority": "Unknown level.",
+    "invalid_quiet_hours": "Quiet hours need a start and an end, like 23:00 and 07:00.",
+    "invalid_state": "Unknown state.",
+    "issuer_invalid": "No OpenID Connect provider answers at this address. Is the issuer right?",
+    "issuer_unreachable": "nexsift cannot reach the provider. Check the address, the network and the certificate.",
+    "key_invalid": "Only lowercase letters, digits, dots, dashes and underscores.",
+    "key_taken": "Another source already uses this.",
+    "missing_header": "The request did not come from the interface. Please reload the page.",
+    "no_token": "This source has no token.",
+    "not_found": "This is gone. Reloading the page usually helps.",
+    "not_set_up": "nexsift is not set up yet.",
+    "not_signed_in": "Please sign in again.",
+    "offline": "The server cannot be reached. Is the container running?",
+    "oidc_denied": "The sign-in at the provider was cancelled or refused.",
+    "oidc_email_unverified": "The provider does not confirm the email address (email_verified). For authentik, the button in the settings sets that up.",
+    "oidc_exchange_failed": "The provider did not confirm the sign-in. Are client ID and secret right?",
+    "oidc_issuer_mismatch": "The provider names itself with a different address than the one entered.",
+    "oidc_no_account": "This account at the provider does not belong to nexsift. Whoever's confirmed address is under Settings, Account gets in.",
+    "oidc_not_configured": "Sign-in through a provider is not set up.",
+    "oidc_provider_invalid": "The provider does not answer like an OpenID Connect provider.",
+    "oidc_provider_unreachable": "The provider cannot be reached right now.",
+    "oidc_state_mismatch": "The sign-in expired or came twice. Please press the button again.",
+    "oidc_token_invalid": "The provider sent an invalid answer.",
+    "order_incomplete": "The order changed in the meantime. Please reload the page.",
+    "out_of_range": "Allowed are values from {{low}} to {{high}}.",
+    "password_login_off": "Sign-in with a password is switched off. Please sign in through the provider.",
+    "password_needed": "Set up a provider first; then the password can be switched off.",
+    "password_too_short": "At least {{minimum}} characters.",
+    "prefs_too_large": "Too many preferences at once.",
+    "public_url_invalid": "Only scheme and host, like https://nexsift.example.com.",
+    "rule_condition": "Unknown field or comparison.",
+    "rule_name": "The rule needs a name, at most 120 characters.",
+    "rule_no_action": "The rule needs at least one effect under \"Then\".",
+    "rule_no_condition": "The rule needs at least one condition.",
+    "rule_priority": "Unknown level.",
+    "rule_push": "Unknown push behaviour.",
+    "rule_regex": "The pattern is not a valid regular expression.",
+    "rule_value": "Every condition needs a value, at most 300 characters.",
+    "secret_required": "Please enter the client secret.",
+    "target_field_missing": "A required field is still missing for this target ({{field}}).",
+    "too_many_attempts": "Too many attempts. Please try again in {{retry_after}} seconds.",
+    "unknown_kind": "Unknown kind of target.",
+    "unknown_preset": "Unknown kind of source.",
+    "unknown_setting": "Unknown setting.",
+    "url_invalid": "The address must start with http:// or https://.",
+    "wrong_credentials": "Name or password is wrong.",
+    "wrong_password": "The current password is wrong."
+  },
+  "help": {
+    "about": "Help on \"{{what}}\"",
+    "open": "Help"
+  },
+  "inbox": {
+    "action": {
+      "archive": "Archive",
+      "delete": "Delete",
+      "markRead": "Mark as read",
+      "markUnread": "Mark as unread",
+      "mute": "Mute source for 1 hour",
+      "unarchive": "Back to the inbox",
+      "unmute": "Unmute"
+    },
+    "addSource": "Add source",
+    "archived": "Archived.",
+    "back": "Back to the list",
+    "deleted": "Deleted.",
+    "delivery": {
+      "allclear": "all clear",
+      "first": "message",
+      "followup": "follow-up",
+      "storm": "summary",
+      "test": "test"
+    },
+    "deliveryStatus": {
+      "failed": "given up",
+      "pending": "waiting, next try coming",
+      "sent": "delivered"
+    },
+    "detail": "Open message",
+    "empty": {
+      "archived": "The archive is empty",
+      "crit": "Nothing critical open",
+      "inbox": "Inbox zero",
+      "unread": "All read"
+    },
+    "emptyHint": "New messages show up here on their own, without reloading.",
+    "fact": {
+      "neverPush": "This kind of message never goes to the phone (rule).",
+      "noRule": "No rule; the level came from the sender.",
+      "notPushed": "Not sent to the phone",
+      "notPushedMuted": "The source was muted.",
+      "notPushedWhy": "Only what reaches a target's minimum level goes to the phone. This one is {{priority}}.",
+      "pushFailed": "Push failed",
+      "pushHelp": "When nexsift sends something to the phone is decided by the targets (from which level) and the push behaviour (at once, bundled or never). Both are under Rules.",
+      "pushWaiting": "Push waiting",
+      "pushed": "Sent to the phone",
+      "resolved": "Resolved after {{after}}",
+      "rule": "Why it was sorted like this",
+      "ruleHelp": "Rules decide level, bundling and push. These are all the ones that applied to this message.",
+      "rulesLink": "See rules",
+      "targetsLink": "See targets",
+      "throttled": "Throttled: {{count}} more only counted",
+      "throttledHelp": "When a source sends more messages per minute than allowed (under Rules, Defaults), nexsift only counts the rest. That keeps the inbox usable when a container runs amok.",
+      "throttledText": "Above the limit messages are only counted, not stored and never forwarded."
+    },
+    "filters": "Views and sources",
+    "hideRaw": "Hide raw data",
+    "list": "Messages",
+    "loadMore": "Load older",
+    "markAllRead": "Mark everything in this view as read",
+    "markedRead_one": "One message marked as read.",
+    "markedRead_other": "{{count}} messages marked as read.",
+    "movedBack": "Back in the inbox.",
+    "muted": "{{name}} is muted for an hour. Messages keep arriving, only nothing goes to the phone.",
+    "noHits": "Nothing found",
+    "noHitsHint": "The search looks at title and text of all messages in this view.",
+    "nothingSelected": "Pick a message on the left",
+    "nothingYet": "The open message shows up here once the first one is in.",
+    "olderGone_one": "One older message of this bundle is not shown here any more.",
+    "olderGone_other": "{{count}} older messages of this bundle are not shown here any more.",
+    "onlySource": "Only {{name}}",
+    "onlyThisSource": "Show only messages of this source",
+    "openLink": "Open",
+    "pushed": "Phone",
+    "resolved": "Resolved",
+    "search": "Search",
+    "setUpPhone": "No target for the phone yet? This way.",
+    "shortcutsHint": "Keyboard shortcuts",
+    "showAll": "Show {{count}} more",
+    "showAllSources": "Show all sources again",
+    "showFewer": "Show fewer",
+    "showRaw": "Raw data",
+    "sources": "Sources",
+    "sourcesHelp": "Every sender that reports to nexsift is a source. A click filters the inbox to it. A yellow warning sign means its format was not recognized lately.",
+    "span": "{{count}} messages, {{from}} to {{to}}",
+    "throttledChip": "+{{count}} throttled",
+    "undo": "Undo",
+    "unmuted": "{{name}} is back.",
+    "unread": "Unread",
+    "unrecognized": "Format not recognized",
+    "unrecognizedHelp": "nexsift knows this sender's format, but this message looked different. It is complete anyway, only without extras like bundling or the all-clear. \"Raw data\" shows exactly what arrived.",
+    "via": "via {{protocol}}",
+    "view": {
+      "archived": "Archive",
+      "crit": "Critical open",
+      "inbox": "Inbox",
+      "unread": "Unread"
+    },
+    "viewHelp": {
+      "archived": "What you cleared away. Key 4.",
+      "crit": "Critical problems without an all-clear yet. Key 3.",
+      "inbox": "Everything but the archive. Key 1.",
+      "unread": "Only what you have not opened yet. Key 2."
+    }
+  },
+  "language": {
+    "label": "Language"
+  },
+  "languages": {
+    "active": "active",
+    "builtIn": "built in",
+    "by": "by {{author}}",
+    "confirmRemove": "Really remove",
+    "coverageHint": "Share of texts that are translated. The rest shows in English.",
+    "customShort": "custom",
+    "download": "Download file",
+    "downloadMissing": "Download missing texts",
+    "error": {
+      "badCode": "The _meta block needs a valid language code, such as fr, pt-BR or sr-Latn.",
+      "badLabel": "The _meta block needs a short label, three characters at most.",
+      "badName": "The _meta block needs the name of the language, 40 characters at most.",
+      "builtInCode": "German and English are built in and cannot be replaced. Please choose another language code.",
+      "noMeta": "The _meta block is missing. The template is the easiest start.",
+      "noTexts": "The file contains not a single usable text.",
+      "notJson": "This is not a valid JSON file.",
+      "tooLarge": "The file is larger than {{max}}."
+    },
+    "intro": "Upload your own translations. What is missing shows in English, so a half-done translation already works.",
+    "madeFor": "for version {{version}}",
+    "mode": {
+      "add": "Add",
+      "addHint": "The new texts are added or replace those with the same key, everything else stays. Right for a file with the missing texts.",
+      "replace": "Replace",
+      "replaceHint": "The old version is dropped, only this file counts."
+    },
+    "none": "No custom language yet.",
+    "reason": {
+      "empty": "empty",
+      "notText": "not a text",
+      "placeholders": "placeholders like {{example}} do not match English",
+      "tooLong": "longer than 2000 characters",
+      "unknown": "unknown key, ignored"
+    },
+    "remove": "Remove",
+    "removed": "{{name}} removed.",
+    "report": {
+      "covered": "{{percent}} of the texts translated.",
+      "details": "Show details",
+      "exists": "{{name}} already exists",
+      "failed": "File not taken",
+      "missing_one": "One text is missing and shows in English.",
+      "missing_other": "{{count}} texts are missing and show in English.",
+      "rejected_one": "One text was not taken, it shows in English.",
+      "rejected_other": "{{count}} texts were not taken, they show in English.",
+      "save": "Only save",
+      "saveAndUse": "Save and switch",
+      "title": "Check {{name}}",
+      "unknown_one": "One key is unknown and ignored.",
+      "unknown_other": "{{count}} keys are unknown and ignored."
+    },
+    "saved": "{{name}} saved.",
+    "step": {
+      "one": "Download the template. It holds every text in English and the _meta block on top.",
+      "three": "Upload it here. nexsift checks the file and shows what is missing before anything is stored.",
+      "two": "Translate the texts, fill in code, name and label in the _meta block. Leave placeholders like {{example}} as they are."
+    },
+    "template": "Template",
+    "title": "Languages",
+    "upload": "Upload language",
+    "use": "Use"
+  },
+  "live": {
+    "off": "Disconnected",
+    "offHelp": "The live connection to the server is down right now. It comes back on its own.",
+    "on": "Live",
+    "onHelp": "New messages show up at once, without reloading."
+  },
+  "login": {
+    "forgot": "Forgot the password? Run in the container:",
+    "lead": "Sign in to see your inbox.",
+    "name": "Name",
+    "or": "or with a password",
+    "password": "Password",
+    "providerFailed": "The sign-in through the provider did not work.",
+    "submit": "Sign in",
+    "title": "Sign in",
+    "withProvider": "Sign in with {{name}}"
+  },
+  "nav": {
+    "home": "To the inbox",
+    "inbox": "Inbox",
+    "main": "Main navigation",
+    "rules": "Rules",
+    "settings": "Settings",
+    "signOut": "Sign out",
+    "sources": "Sources"
+  },
+  "priority": {
+    "crit": "Critical",
+    "info": "Info",
+    "warn": "Warning"
+  },
+  "protocol": {
+    "discord": "Discord webhook",
+    "gotify": "Gotify API",
+    "ntfy": "ntfy API",
+    "smtp": "Email",
+    "syslog": "Syslog",
+    "webhook": "Webhook"
+  },
+  "push": {
+    "hint": {
+      "immediate": "The first critical event of a topic goes out at once. More are counted quietly; at the end of the bundle window a follow-up comes if there were more.",
+      "never": "Stays in the inbox, never goes to the phone.",
+      "single": "Every event on its own, at once. Only throttling and the storm guard slow it down.",
+      "window": "A single push at the end of the bundle window, with the count. Quieter, but up to one window later."
+    },
+    "immediate": "At once, then bundle quietly",
+    "never": "Never push",
+    "single": "Each on its own",
+    "window": "Wait for the window"
+  },
+  "rules": {
+    "add": "New rule",
+    "anySource": "any source",
+    "builtIn": "built in",
+    "builtInName": {
+      "keywordsCritical": "Words for failures make it critical",
+      "keywordsWarning": "Words for trouble make it a warning",
+      "paperless": "Paperless: bundle new documents, never push them",
+      "sshd": "sshd: failed sign-ins in one line",
+      "watchtower": "Watchtower: bundle updates, never push them"
+    },
+    "defaults": {
+      "help": "These values hold as long as no rule says otherwise.",
+      "intro": "What applies when no rule says otherwise.",
+      "push": "Push behaviour",
+      "pushHelp": "How critical messages reach the phone. \"At once, then bundle quietly\" is right for nearly everyone.",
+      "throttle": "Throttle above per minute",
+      "throttleHelp": "When a source sends more than this many messages per minute, nexsift only counts the rest. Protects against endless loops.",
+      "title": "Defaults",
+      "window": "Bundle window (minutes)",
+      "windowHelp": "The same message within this time lands in one line. An open critical problem stays one line until it is resolved."
+    },
+    "down": "Move down",
+    "drop": "Drop",
+    "editHint": "Click to edit",
+    "editor": {
+      "addCondition": "Condition",
+      "builtInNote": "nexsift brought this rule along. You can change it, switch it off or delete it.",
+      "confirmDelete": "Really delete?",
+      "default": "Default",
+      "delete": "Delete",
+      "drop": "Drop",
+      "dropHint": "The message is counted but not stored. For noise nobody wants to read.",
+      "edit": "Edit rule",
+      "field": "Field",
+      "groupKey": "Bundle by",
+      "groupKeyHelp": "Messages with the same key land in one line. Values from the message in curly braces, like vm-{vmid}. Empty: nexsift bundles messages that read the same on its own.",
+      "keep": "From the sender",
+      "name": "Name",
+      "nameHelp": "What the rule is for, in your words. The name shows on every message it hits.",
+      "new": "New rule",
+      "op": "Comparison",
+      "placeholder": {
+        "contains": "like: backup",
+        "regex": "like: VM \\d+ stopped",
+        "word": "like: FAILED|ERROR"
+      },
+      "priority": "Level",
+      "priorityHelp": "Info stays quiet, warning is yellow, critical is red and goes to the phone if a target wants it.",
+      "push": "To the phone",
+      "pushHelp": "Overrides the default push behaviour for these messages.",
+      "removeCondition": "Remove condition",
+      "resolves": "All-clear for",
+      "resolvesHelp": "When the rule hits, the message closes the open problem with this bundle key instead of opening a line of its own. Like: rule on \"is UP\", all-clear for monitor-{monitor}.",
+      "source": "Source",
+      "sourceHelp": "Only for messages of this source, or for all.",
+      "thenHelp": "What happens with a matching message. Several rules can work together: for every effect the topmost rule that sets it wins.",
+      "titleTemplate": "Title of the bundle",
+      "titleTemplateHelp": "What the line in the inbox is called. {count} becomes the number, like: Watchtower: {count} containers updated.",
+      "value": "Value",
+      "whenHelp": "All conditions must hold. Upper and lower case do not matter.",
+      "wordHint": "\"whole word\" only hits whole words, so not \"0 errors\" for ERROR. Several words with a vertical bar: FAIL|ERROR."
+    },
+    "field": {
+      "any": "title or text",
+      "body": "text",
+      "title": "title"
+    },
+    "groupBy": "bundle by",
+    "lead": "What matters how much, what belongs together and what may reach the phone.",
+    "list": {
+      "help": "Rules are checked top to bottom. All matching ones apply; for every effect the topmost wins. The arrows change the order, the switch turns a rule off without deleting it.",
+      "intro": "All matching rules apply, top to bottom. For every effect the topmost wins.",
+      "title": "Rules"
+    },
+    "op": {
+      "contains": "contains",
+      "regex": "matches pattern",
+      "word": "contains whole word"
+    },
+    "resolves": "closes the open problem",
+    "storm": {
+      "count": "Count",
+      "from": "From",
+      "help": "When the power goes, twenty services report at once. Instead of twenty pushes one summary comes when the wave is over. The inbox still shows everything on its own.",
+      "hint": "When many services fail at once, one summary comes instead of twenty pushes.",
+      "minutes": "Minutes",
+      "then": "minutes, only one summary.",
+      "title": "Storm guard across all sources",
+      "within": "critical pushes within"
+    },
+    "tester": {
+      "anySource": "No particular source",
+      "body": "Text",
+      "help": "Type a message the way a sender would send it. nexsift shows which rules apply and what comes out. Nothing lands in the inbox.",
+      "intro": "Try a message before it arrives.",
+      "matched_one": "One rule matches:",
+      "matched_other": "{{count}} rules match:",
+      "messageTitle": "Title",
+      "none": "No rule matches. The level then comes from the sender.",
+      "result": "Result:",
+      "senderPriority": "level from the sender",
+      "source": "Source",
+      "title": "Try a rule"
+    },
+    "then": "Then",
+    "title": "Rules",
+    "titleAs": "title",
+    "up": "Move up",
+    "when": "When"
+  },
+  "settings": {
+    "about": {
+      "lead": "Version and emergency exit.",
+      "reset": "Forgot the password and no provider set up? Run on the server:",
+      "title": "About nexsift"
+    },
+    "account": {
+      "changePassword": "Change password",
+      "current": "Current password",
+      "email": "Email address",
+      "emailHelp": "nexsift recognizes you by this address when you sign in through authentik or another provider. The provider must confirm it.",
+      "emailHint": "For signing in through a provider.",
+      "help": "nexsift has exactly one account. Other browsers are signed out when the password changes.",
+      "intro": "Signed in as {{name}}.",
+      "linked": "Linked with the provider.",
+      "new": "New password",
+      "passwordChanged": "Password changed. Other browsers are signed out.",
+      "passwordTitle": "Password",
+      "repeat": "Repeat the new password",
+      "title": "Account"
+    },
+    "authentik": {
+      "again": "Set up again",
+      "already": "authentik is set up ({{issuer}}).",
+      "blueprint": "Rather without a token: blueprint file",
+      "blueprintHelp": "A YAML file for authentik's blueprint import. It creates the same as the button. Then enter client ID and secret below under \"Other provider\".",
+      "done": "authentik is set up. You no longer need the token; best delete it in authentik right away. The button shows on the sign-in page from the next sign-out.",
+      "failed": "The setup stopped. The red line says where. Fix it and simply run it again.",
+      "help": "The button creates provider, application, signing key and the mapping for email_verified in authentik and fills everything into nexsift. A second run updates instead of creating duplicates.",
+      "lead": "nexsift creates everything in authentik itself. It needs an API token once for that.",
+      "setUp": "Set up",
+      "step": {
+        "application": "Application \"nexsift\" created",
+        "filled": "Client ID and secret filled into nexsift",
+        "mapping": "Mapping for email_verified created",
+        "provider": "Provider \"nexsift\" created, redirect {{redirect}}",
+        "reached": "authentik reached",
+        "signingKey": "Signing key chosen (RS256)"
+      },
+      "title": "Sign in with authentik",
+      "token": "API token",
+      "tokenHelp": "In authentik: Directory, Tokens and App passwords, Create, intent \"API Token\". The user needs admin rights.",
+      "tokenHint": "nexsift uses it once and does not store it.",
+      "url": "Address of authentik",
+      "urlHelp": "As nexsift reaches authentik, like https://auth.example.com. Without /application at the end."
+    },
+    "lead": "Sign-in, address, retention and languages.",
+    "other": {
+      "active": "Set up: {{name}}.",
+      "clientId": "Client ID",
+      "clientSecret": "Client secret",
+      "help": "For Keycloak, Pocket ID, Authelia, Zitadel and every other one with OpenID Connect. Create an application at the provider, enter the redirect address shown below, then issuer, client ID and secret here.",
+      "issuer": "Issuer address",
+      "issuerHelp": "The address under which the provider serves /.well-known/openid-configuration, without that part.",
+      "lead": "Keycloak, Pocket ID, Authelia, Zitadel and every other one with OpenID Connect.",
+      "providerName": "Name on the button",
+      "providerNameHelp": "Shows on the sign-in page: \"Sign in with …\".",
+      "redirect": "Redirect address",
+      "redirectHelp": "Enter this address at the provider as redirect URI. It follows the public address under \"Sign-in\".",
+      "remove": "Remove provider",
+      "removed": "Provider removed. Sign-in with a password is on again.",
+      "secretKept": "stored; leave empty to keep",
+      "title": "Other provider"
+    },
+    "recommended": "Recommended",
+    "retention": {
+      "archive": "Archive (days)",
+      "archiveHelp": "Archived messages are deleted after this many days.",
+      "events": "Inbox (days)",
+      "eventsHelp": "Messages in the inbox are deleted after this many days without news. An open critical problem always stays.",
+      "help": "Cleaning up happens every five minutes in the background.",
+      "lead": "What gets deleted after that. Open critical problems always stay.",
+      "raw": "Raw data (days)",
+      "rawHelp": "Raw data is what the sender sent word for word. Useful while setting up, rarely afterwards. The message itself stays.",
+      "title": "Retention"
+    },
+    "signin": {
+      "help": "The public address shows in the setup hints of the sources and is the redirect address at the provider.",
+      "lead": "Address to the outside and sign-in with a password.",
+      "password": "Allow sign-in with a password",
+      "passwordHelp": "Off: only through the provider. For emergencies a command in the container resets the password and switches the password sign-in back on.",
+      "passwordHint": "Off: only through the provider.",
+      "passwordNeedsProvider": "Set up a provider first; then this can be switched off.",
+      "publicUrl": "Public address",
+      "publicUrlHelp": "Behind a reverse proxy, the address you type into the browser. Empty: nexsift takes the address of the request.",
+      "publicUrlHint": "Like https://nexsift.example.com",
+      "title": "Sign-in and address"
+    },
+    "title": "Settings"
+  },
+  "setup": {
+    "email": "Email address (optional)",
+    "emailHelp": "Only needed if you want to sign in through authentik or another provider later. Can be added in the settings any time.",
+    "emailHint": "For signing in through authentik and the like. Can be changed later.",
+    "lead": "Welcome. nexsift gathers your homelab's messages in one place, bundles the noise and only pushes what matters to your phone. First the account you sign in with.",
+    "mismatch": "The two passwords are not the same.",
+    "name": "Name",
+    "nameHelp": "Your sign-in name. Lowercase letters, digits, dots and dashes.",
+    "password": "Password",
+    "passwordHint": "At least 12 characters. A sentence is easier to remember than special characters.",
+    "repeat": "Repeat the password",
+    "submit": "Create the account and start",
+    "title": "Set up nexsift",
+    "tooShort": "Still too short: at least 12 characters."
+  },
+  "shortcuts": {
+    "archive": "Archive or bring back",
+    "delete": "Delete",
+    "help": "This help",
+    "link": "Open the message's first button",
+    "mute": "Mute the source for an hour",
+    "nextPrev": "Next, previous",
+    "open": "Open (narrow view)",
+    "read": "Read, unread",
+    "search": "Search",
+    "title": "Keyboard shortcuts",
+    "views": "Switch view"
+  },
+  "sources": {
+    "add": "Add source",
+    "countTotal": "Messages in total",
+    "delete": "Delete",
+    "deleteText": "The source, all its messages and its own rules are deleted. The sender gets a refusal from then on. This cannot be undone.",
+    "deleteTitle": "Delete {{name}}?",
+    "deleted": "{{name}} deleted.",
+    "dialog": {
+      "arrived": "The first message has arrived. Everything is set up right.",
+      "create": "Create",
+      "hostname": "Host name in syslog",
+      "hostnameHelp": "Every syslog line names the machine it comes from. Enter that here. If you do not know it: just let the device send; nexsift lists unknown senders at the top of this page.",
+      "hostnameHint": "As the device names itself in syslog, like gw or router. Its IP address if nothing else.",
+      "name": "Name",
+      "nameHelp": "What the source is called in the inbox. Free to choose, can be changed later.",
+      "ownKey": "The sender already uses \"{{key}}\". The new source takes exactly that; nothing changes at the sender.",
+      "pick": "What should report?",
+      "pickLead": "Pick the sender. If it is not listed, take the kind it speaks: Gotify, ntfy, Discord, webhook or email.",
+      "toInbox": "To the inbox",
+      "waiting": "Waiting for the first message. Set up the sender and trigger a test message there."
+    },
+    "explain": "Every service that reports to nexsift is a source. nexsift acts as the service the sender already knows (Gotify, ntfy, Discord, email, syslog). You only enter nexsift's address in the sender. The lines to copy are under \"Set up\" at every source.",
+    "explainTitle": "How messages get in",
+    "field": {
+      "body": "Body",
+      "compose": "Or in docker-compose.yml",
+      "env": "Environment variable",
+      "header": "Header",
+      "method": "Method",
+      "recipient": "Recipient",
+      "requestBody": "Request body",
+      "sender": "Sender",
+      "server": "Server",
+      "smtpPort": "Port",
+      "smtpServer": "SMTP server",
+      "syslogHostname": "Host name",
+      "syslogPort": "Port",
+      "syslogServer": "Syslog server",
+      "test": "To try it in a terminal",
+      "token": "Token",
+      "topic": "Topic",
+      "url": "Address (URL)",
+      "webhookUrl": "Webhook address"
+    },
+    "lastSeen": "Last reported",
+    "lead": "Who reports, and by which way.",
+    "lineHint": {
+      "curlTest": "Sends a test message. It shows up in the inbox at once.",
+      "discordUrl": "Enter it where the Discord webhook address would go.",
+      "kumaPreset": "In Uptime Kuma, choose the preset \"application/json\" under \"Request Body\".",
+      "noAuth": "Without sign-in, without encryption (no SSL/TLS).",
+      "paperlessBody": "Paperless fills the placeholders in curly braces itself. Switch on \"Send as JSON\".",
+      "proxmoxBody": "Proxmox fills the placeholders in double curly braces itself.",
+      "recipient": "The name before the @ ties the mail to this source. The domain does not matter.",
+      "sender": "Anything; many devices just want some address here.",
+      "syslogHostname": "The device must carry this name in its syslog lines.",
+      "watchtowerEnv": "Then restart the Watchtower container. The address holds the token, so do not pass it on."
+    },
+    "mute": "Mute 1 hour",
+    "muteHelp": "Messages keep arriving, only nothing goes to the phone.",
+    "neverHeard": "No message yet. \"Set up\" shows what to enter in the sender.",
+    "none": "No source yet",
+    "noneHint": "Create the first one. The dialog shows exactly what to enter in the sender.",
+    "ports": {
+      "discord": "Discord webhooks only work where the full address is entered (Uptime Kuma, Proxmox). Watchtower and other shoutrrr tools send to discord.com, fixed. Use the Gotify way there.",
+      "gotify": "Gotify API",
+      "help": "nexsift opens several doors, each speaks like the service a sender expects. The numbers are the ports on your server. Struck through: this door is switched off.",
+      "lead": "On these ports nexsift takes messages.",
+      "ntfy": "ntfy API",
+      "smtp": "Email (SMTP), no sign-in",
+      "syslog": "Syslog, UDP and TCP",
+      "title": "Entrances",
+      "web": "Interface, webhooks, Discord"
+    },
+    "preset": {
+      "discord": {
+        "name": "Discord webhook",
+        "short": "For anything that can send to a Discord webhook.",
+        "steps": {
+          "s1": "Open the Discord notification in the sender.",
+          "s2": "Enter this address instead of the Discord one, save, test."
+        }
+      },
+      "email": {
+        "name": "Email (generic)",
+        "short": "For devices that can only send mail.",
+        "steps": {
+          "s1": "Open the mail notification in the device.",
+          "s2": "Enter SMTP server, port and recipient from here, no sign-in and no SSL.",
+          "s3": "Send a test mail."
+        }
+      },
+      "gotify": {
+        "name": "Gotify (generic)",
+        "short": "For anything that speaks Gotify.",
+        "steps": {
+          "s1": "Choose Gotify as the target in the sender.",
+          "s2": "Enter server and token from here, save, test."
+        }
+      },
+      "homeassistant": {
+        "name": "Home Assistant",
+        "short": "Through Home Assistant's built-in ntfy integration.",
+        "steps": {
+          "s1": "In Home Assistant: Settings, Devices and services, Add integration, \"ntfy\".",
+          "s2": "The server address from here, without sign-in.",
+          "s3": "Add the topic from here. Then use \"notify.send_message\" in automations."
+        }
+      },
+      "ntfy": {
+        "name": "ntfy (generic)",
+        "short": "For anything that can send to an ntfy server.",
+        "steps": {
+          "s1": "Choose ntfy as the target in the sender.",
+          "s2": "Enter server and topic from here, save, test."
+        }
+      },
+      "paperless": {
+        "name": "Paperless-ngx",
+        "short": "New documents, bundled, no phone.",
+        "steps": {
+          "s1": "In Paperless: Workflows, new workflow, trigger \"Document added\".",
+          "s2": "Action \"Webhook\", address and body from here, switch on \"Send as JSON\".",
+          "s3": "Save and upload a document."
+        }
+      },
+      "proxmox": {
+        "name": "Proxmox VE",
+        "short": "Backups, replication, updates and failures from Proxmox.",
+        "steps": {
+          "s1": "In Proxmox: Datacenter, Notifications, Notification targets, Add, \"Webhook\".",
+          "s2": "Enter method, address, header and body from here.",
+          "s3": "Add a notification matcher that points to this target, then \"Test\"."
+        }
+      },
+      "synology": {
+        "name": "Synology (email)",
+        "short": "DSM warnings, through the email notification.",
+        "steps": {
+          "s1": "In DSM: Control Panel, Notification, Email, \"Enable email notifications\".",
+          "s2": "Service provider \"Custom SMTP server\", server, port and recipient from here, no SSL/TLS and no authentication.",
+          "s3": "\"Send a test email\"."
+        }
+      },
+      "syslog": {
+        "name": "Syslog (router, switch, firewall)",
+        "short": "For network devices that send syslog to a server.",
+        "steps": {
+          "s1": "Look for \"Remote syslog\" or \"Syslog server\" in the device.",
+          "s2": "Enter server and port from here, protocol UDP.",
+          "s3": "nexsift recognizes the source by the host name in the lines."
+        }
+      },
+      "ups": {
+        "name": "UPS, router, printer (email)",
+        "short": "For devices that can only send mail.",
+        "steps": {
+          "s1": "Open the mail notification in the device.",
+          "s2": "Enter SMTP server, port and recipient from here, no sign-in and no SSL.",
+          "s3": "Send a test mail."
+        }
+      },
+      "uptimekuma": {
+        "name": "Uptime Kuma",
+        "short": "Failures and all-clears, paired automatically.",
+        "steps": {
+          "s1": "In Uptime Kuma: Settings, Notifications, Setup notification, type \"Webhook\".",
+          "s2": "Address from here, request body \"application/json\".",
+          "s3": "Press \"Test\", then switch it on for the monitors you want."
+        }
+      },
+      "watchtower": {
+        "name": "Watchtower",
+        "short": "Container updates, bundled into one line, never to the phone.",
+        "steps": {
+          "s1": "Put the line below into the environment of the Watchtower container.",
+          "s2": "Restart Watchtower. The updates come with its next run."
+        }
+      },
+      "webhook": {
+        "name": "Webhook (own scripts)",
+        "short": "For your own scripts: JSON with title, message, priority.",
+        "steps": {
+          "s1": "POST to the address, JSON with title, message and priority (info, warning, critical).",
+          "s2": "Addresses in the text become buttons, or send links: [{label, url}]."
+        }
+      }
+    },
+    "rename": "Rename",
+    "renew": "New token",
+    "renewConfirm": "The old token stops working at once. Go on?",
+    "renewHelp": "In case the token ended up where it does not belong. Then enter the new line in the sender.",
+    "renewed": "New token. Now enter it in the sender.",
+    "setup": "Set up",
+    "setupFor": "Set up {{name}}",
+    "strangers": {
+      "count_one": "once",
+      "count_other": "{{count}} times",
+      "create": "Create as source",
+      "help": "These senders already send to nexsift, but no source fits: usually a typo or a device that names itself differently than expected. One click creates the matching source; nothing needs to change at the device.",
+      "ntfy": "ntfy topic \"{{key}}\"",
+      "smtp": "Mail to \"{{key}}@…\"",
+      "syslog": "Syslog from \"{{key}}\"",
+      "title": "Senders without a source"
+    },
+    "test": "Test message",
+    "testHelp": "Puts a test message into the inbox as if it came from this source. Shows that nexsift works, but does not replace the test at the real sender.",
+    "testSent": "The test message is in the inbox.",
+    "title": "Sources",
+    "unmute": "Muted, lift",
+    "unrecognizedHelp": "The messages are there anyway, only without extras like bundling or the all-clear. Usually the sender changed its format with an update. \"Raw data\" in the message shows what arrived.",
+    "unrecognizedTitle": "Unknown format",
+    "unrecognized_one": "The last message had an unknown format.",
+    "unrecognized_other": "The last {{count}} messages had an unknown format."
+  },
+  "targets": {
+    "add": "Target",
+    "chatId": "Chat ID",
+    "chatIdHelp": "The number of the chat or group. Easiest: write to the bot, then open https://api.telegram.org/bot<token>/getUpdates and read the \"id\" under \"chat\".",
+    "confirmDelete": "Really delete",
+    "delete": "Delete",
+    "edit": "Edit target",
+    "editHint": "Click to edit",
+    "from": "from",
+    "fromPriority": {
+      "crit": "Only critical",
+      "info": "Everything, info too",
+      "warn": "Warnings and critical"
+    },
+    "help": "Targets are where nexsift forwards what matters, usually the ntfy or Gotify app on the phone. Everything below the minimum level stays quietly in the inbox.",
+    "how": {
+      "apprise": "Apprise API: the address of an Apprise server with a key, like http://apprise:8000/notify/phone. Apprise spreads it further.",
+      "gotify": "A real Gotify server with the Gotify app on the phone. Create an application there and enter its token here.",
+      "ntfy": "The ntfy app on the phone, with ntfy.sh or your own ntfy server. Subscribe to a topic in the app and enter its full address here.",
+      "telegram": "A Telegram bot writes to you. Create the bot with @BotFather, enter the token here, write to the bot once, then the chat ID.",
+      "webhook": "Any service that takes JSON: nexsift POSTs title, message, priority and link."
+    },
+    "intro": "Where nexsift sends what matters. Everything else stays quietly in the inbox.",
+    "kind": {
+      "apprise": "Apprise",
+      "gotify": "Gotify",
+      "ntfy": "ntfy",
+      "telegram": "Telegram",
+      "webhook": "Webhook"
+    },
+    "kindHelp": "Which service delivers the pushes. If you already have the ntfy or Gotify app, take that.",
+    "kindLabel": "Kind",
+    "lastError": "Last failed: {{error}}",
+    "lastOk": "Last delivered {{when}}",
+    "minPriority": "What should arrive?",
+    "minPriorityHelp": "Right for nearly everyone: only critical. Warnings then only land in the inbox.",
+    "name": "Name",
+    "nameHelp": "Free to choose, like \"Phone\" or \"Family group\".",
+    "namePlaceholder": "Phone",
+    "new": "New target",
+    "none": "Nothing goes to the phone yet. Add a target; the ntfy app is the easiest.",
+    "noneTitle": "No target yet",
+    "optional": "optional",
+    "quiet": "quiet {{from}} to {{to}}",
+    "quietFrom": "From",
+    "quietHelp": "During this time only critical messages get through. Warnings and info do not wait; they simply stay in the inbox.",
+    "quietHint": "At night only critical.",
+    "quietTitle": "Quiet hours",
+    "quietTo": "To",
+    "test": "Test",
+    "testFailed": "Test failed: {{error}}",
+    "testHelp": "Sends a test message to this target right now.",
+    "testOk": "The test to {{name}} is out. Did it arrive?",
+    "title": "Forwarding to the phone",
+    "token": {
+      "gotify": "App token",
+      "ntfy": "Access token",
+      "telegram": "Bot token"
+    },
+    "tokenHelp": {
+      "gotify": "In Gotify: Apps, Create application, copy the token.",
+      "ntfy": "Only needed if your ntfy server asks for a sign-in (tk_…). Leave empty for ntfy.sh.",
+      "telegram": "From @BotFather, looks like 123456:ABC…"
+    },
+    "tokenKept": "stored; leave empty to keep",
+    "url": {
+      "apprise": "Apprise address",
+      "gotify": "Gotify server",
+      "ntfy": "Topic address",
+      "webhook": "Address"
+    },
+    "urlExample": {
+      "apprise": "http://apprise:8000/notify/phone",
+      "gotify": "https://gotify.example.com",
+      "ntfy": "https://ntfy.sh/my-secret-topic",
+      "webhook": "https://example.com/hook"
+    },
+    "urlHelp": {
+      "apprise": "The full address of the Apprise API endpoint, with the key.",
+      "gotify": "The address of your Gotify server, without /message.",
+      "ntfy": "Server and topic together, exactly as subscribed in the app. A long, random topic keeps others from reading along.",
+      "webhook": "nexsift sends the JSON here."
+    }
+  },
+  "theme": {
+    "dark": "Dark",
+    "label": "Color scheme",
+    "light": "Light"
+  },
+  "unreachable": {
+    "lead": "The interface cannot reach the nexsift server. Is the container running?",
+    "retry": "Try again",
+    "title": "Server not reachable"
+  },
+  "welcome": {
+    "keys": "Tip: in the inbox everything works with the keyboard. The ? key shows how.",
+    "lead": "nexsift gathers all your homelab's messages in one place, bundles the noise and only pushes what matters to your phone. This is how to start:",
+    "phone": {
+      "text": "Enter the ntfy or Gotify app on your phone as a target. From then on critical things arrive at once.",
+      "title": "Connect the phone"
+    },
+    "source": {
+      "text": "Watchtower, Proxmox, Uptime Kuma, Synology … The dialog shows exactly what to enter in the sender.",
+      "title": "Add the first source"
+    },
+    "test": {
+      "text": "Trigger a test message in the sender. It shows up here at once.",
+      "title": "Send a test message"
+    },
+    "title": "Welcome to nexsift"
+  }
+}

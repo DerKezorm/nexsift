@@ -140,7 +140,13 @@ def test_failed_push_is_retried_and_shown(client: TestClient, operator: dict) ->
 
 
 def test_target_secrets_never_come_back(client: TestClient, operator: dict) -> None:
-    body = {"kind": "gotify", "name": "Old", "url": "https://gotify.example.com", "token": "AppToken123", "min_priority": "warn"}
+    body = {
+        "kind": "gotify",
+        "name": "Old",
+        "url": "https://gotify.example.com",
+        "token": "AppToken123",
+        "min_priority": "warn",
+    }
     created = client.post("/api/targets", json=body, headers=UI).json()
     assert "AppToken123" not in json.dumps(created)
     assert created["has_token"] is True
@@ -153,7 +159,10 @@ def test_target_test_button_reports(client: TestClient, operator: dict) -> None:
     target = _phone(client)
     assert client.post(f"/api/targets/{target['id']}/test", headers=UI).json() == {"ok": True}
     push.transport_for_tests = httpx.MockTransport(lambda request: httpx.Response(401))
-    assert client.post(f"/api/targets/{target['id']}/test", headers=UI).json() == {"ok": False, "error": "answered HTTP 401"}
+    assert client.post(f"/api/targets/{target['id']}/test", headers=UI).json() == {
+        "ok": False,
+        "error": "answered HTTP 401",
+    }
 
 
 def test_quiet_hours_hold_back_below_critical(client: TestClient, operator: dict) -> None:
@@ -173,5 +182,9 @@ def test_quiet_hours_hold_back_below_critical(client: TestClient, operator: dict
 def test_target_validation(client: TestClient, operator: dict) -> None:
     missing = client.post("/api/targets", json={"kind": "telegram", "name": "T", "token": "x"}, headers=UI)
     assert missing.status_code == 422 and missing.json()["detail"]["field"] == "chat_id"
-    quiet = client.post("/api/targets", json={"kind": "ntfy", "name": "n", "url": "https://x.example.com/a", "quiet_from": "23:00"}, headers=UI)
+    quiet = client.post(
+        "/api/targets",
+        json={"kind": "ntfy", "name": "n", "url": "https://x.example.com/a", "quiet_from": "23:00"},
+        headers=UI,
+    )
     assert quiet.json()["detail"]["code"] == "invalid_quiet_hours"

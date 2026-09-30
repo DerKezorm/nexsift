@@ -19,6 +19,8 @@ from . import presets, settings_service
 
 TOKEN_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789"
 HOSTNAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
+#: A topic or mail name the operator picks (usually one a device already uses, from the list of strangers).
+OWN_KEY = re.compile(r"^[a-z0-9][a-z0-9._-]{0,63}$")
 
 
 class SourceError(ValueError):
@@ -40,7 +42,9 @@ def slug(name: str) -> str:
     return cleaned[:40] or "source"
 
 
-def create(db: Session, preset: str, name: str, hostname: str = "") -> Source:
+def create(db: Session, preset: str, name: str, hostname: str = "", key: str = "") -> Source:
+    """``hostname`` is required for syslog. ``key`` optionally picks the ntfy topic or the mail name instead of a
+    generated one; that is how a sender that already knocks with its own topic gets its source in one click."""
     if preset not in presets.PRESETS:
         raise SourceError("unknown_preset", "Unknown kind of source.")
     info = presets.PRESETS[preset]
@@ -54,6 +58,13 @@ def create(db: Session, preset: str, name: str, hostname: str = "") -> Source:
     if protocol == "discord":
         # Discord's webhook address has a number and a token; the number only has to look like one.
         source.match_key = f"discord:{secrets.randbelow(9 * 10**17) + 10**17}"
+    elif protocol in ("ntfy", "smtp") and key.strip():
+        own = key.strip().lower()
+        if not OWN_KEY.match(own):
+            raise SourceError("key_invalid", "Use letters, digits, dots, dashes or underscores.")
+        if db.scalar(select(Source).where(Source.match_key == f"{protocol}:{own}")) is not None:
+            raise SourceError("key_taken", "Another source already uses this.", 409)
+        source.match_key = f"{protocol}:{own}"
     elif protocol == "ntfy":
         source.match_key = f"ntfy:{slug(name)}-{_token(6).lower()}"
     elif protocol == "smtp":

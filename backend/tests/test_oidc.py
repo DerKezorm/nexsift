@@ -8,7 +8,13 @@ from app.services.oidc import Identity
 
 
 def _identity(subject: str = "sub-1", email: str | None = "admin@example.com", verified: bool = True) -> Identity:
-    return Identity(issuer="https://auth.example.com/application/o/nexsift/", subject=subject, email=email, email_verified=verified, username="admin")
+    return Identity(
+        issuer="https://auth.example.com/application/o/nexsift/",
+        subject=subject,
+        email=email,
+        email_verified=verified,
+        username="admin",
+    )
 
 
 def test_verified_matching_address_links_the_operator(client: TestClient, operator: dict) -> None:
@@ -34,4 +40,8 @@ def test_other_people_at_the_provider_do_not_get_in(client: TestClient, operator
 
 
 def test_state_tells_the_login_page_what_to_show(client: TestClient) -> None:
-    assert client.get("/api/oidc/state").json() == {"enabled": False, "provider_name": "OpenID Connect", "password_login": True}
+    assert client.get("/api/oidc/state").json() == {
+        "enabled": False,
+        "provider_name": "OpenID Connect",
+        "password_login": True,
+    }

@@ -24,6 +24,8 @@ class SourceIn(BaseModel):
     name: str = Field(default="", max_length=80)
     #: Syslog only: the host name the device sends as.
     hostname: str = Field(default="", max_length=128)
+    #: ntfy and email only: use this topic or mail name instead of a generated one.
+    key: str = Field(default="", max_length=64)
 
 
 class SourceEdit(BaseModel):
@@ -60,7 +62,7 @@ def list_strangers(account: CurrentAccount) -> list[dict[str, Any]]:
 @router.post("", status_code=201, summary="Add a source from a preset")
 def create(payload: SourceIn, request: Request, account: CurrentAccount, db: DbSession) -> dict[str, Any]:
     try:
-        source = sources_service.create(db, payload.preset, payload.name, payload.hostname)
+        source = sources_service.create(db, payload.preset, payload.name, payload.hostname, payload.key)
     except sources_service.SourceError as error:
         raise fehler(error.code, str(error), error.status) from error
     if source.match_key:

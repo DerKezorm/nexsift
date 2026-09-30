@@ -58,7 +58,9 @@ def test_uptime_kuma_test_button_is_understood() -> None:
 
 
 def test_unknown_format_arrives_anyway_and_says_so() -> None:
-    [event] = _refine("uptimekuma", doors.webhook(b'{"title": "something new", "monitor": {"id": 1}}', "application/json"))
+    [event] = _refine(
+        "uptimekuma", doors.webhook(b'{"title": "something new", "monitor": {"id": 1}}', "application/json")
+    )
     assert event.recognized is False
     assert event.title == "something new"
 
@@ -75,13 +77,22 @@ def test_watchtower_session_report_is_understood_too() -> None:
 
 
 def test_proxmox_severity_and_grouping() -> None:
-    body = {"title": "vzdump backup status (pve01): backup failed", "message": "VM 104 failed", "severity": "error", "type": "vzdump", "host": "pve01"}
+    body = {
+        "title": "vzdump backup status (pve01): backup failed",
+        "message": "VM 104 failed",
+        "severity": "error",
+        "type": "vzdump",
+        "host": "pve01",
+    }
     [event] = _refine("proxmox", doors.webhook(json.dumps(body).encode(), "application/json"))
     assert (event.priority, event.group_key) == ("crit", "vzdump-pve01")
 
 
 def test_syslog_formats() -> None:
-    incoming, payload = doors.syslog("<38>Sep 30 21:14:02 gw sshd[48211]: Failed password for invalid user admin from 203.0.113.47 port 51122 ssh2", "192.0.2.1")
+    incoming, payload = doors.syslog(
+        "<38>Sep 30 21:14:02 gw sshd[48211]: Failed password for invalid user admin from 203.0.113.47 port 51122 ssh2",
+        "192.0.2.1",
+    )
     assert payload["host"] == "gw" and incoming.title.startswith("sshd: Failed password")
     assert incoming.priority == "info"
     incoming, payload = doors.syslog("<11>1 2026-09-30T21:14:02Z nas01 kernel - - - disk error on sda", "192.0.2.2")
@@ -137,7 +148,12 @@ def test_changed_format_counts_on_the_source(client: TestClient, operator: dict)
 
 def test_rename_and_mute(client: TestClient, operator: dict) -> None:
     source = add_source(client, "webhook")
-    assert client.put(f"/api/sources/{source['id']}", json={"name": "  My   script "}, headers=UI).json()["name"] == "My script"
+    assert (
+        client.put(f"/api/sources/{source['id']}", json={"name": "  My   script "}, headers=UI).json()["name"]
+        == "My script"
+    )
     muted = client.post(f"/api/sources/{source['id']}/mute", json={"minutes": 60}, headers=UI).json()
     assert muted["muted_until"] is not None
-    assert client.post(f"/api/sources/{source['id']}/mute", json={"minutes": 0}, headers=UI).json()["muted_until"] is None
+    assert (
+        client.post(f"/api/sources/{source['id']}/mute", json={"minutes": 0}, headers=UI).json()["muted_until"] is None
+    )

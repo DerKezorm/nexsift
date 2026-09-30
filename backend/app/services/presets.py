@@ -27,7 +27,7 @@ PRESETS: dict[str, dict[str, str]] = {
     "ntfy": {"kind": "generic", "protocol": "ntfy", "name": "ntfy sender"},
     "discord": {"kind": "generic", "protocol": "discord", "name": "Discord sender"},
     "webhook": {"kind": "generic", "protocol": "webhook", "name": "Script"},
-    "email": {"kind": "generic", "protocol": "smtp", "name": "Email sender"},
+    "email": {"kind": "email", "protocol": "smtp", "name": "Email sender"},
 }
 
 #: Built-in rules per preset, created with the source and bound to it.

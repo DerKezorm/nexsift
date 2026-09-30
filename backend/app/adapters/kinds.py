@@ -227,6 +227,7 @@ REFINERS: dict[str, Refiner] = {
     "watchtower": watchtower,
     "synology": mail,
     "ups": mail,
+    "email": mail,
     "syslog": syslog,
     "paperless": paperless,
 }

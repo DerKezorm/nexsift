@@ -62,12 +62,21 @@ class _Counter:
 
 counter = _Counter()
 
+#: One message at a time. The doors run in several threads; without this, two messages of the same kind that
+#: arrive in the same instant both find no open thread and each opens one (seen with two syslog lines).
+_ingest_lock = threading.Lock()
+
 
 def accept(db: Session, source: Source, incoming: Incoming, payload: dict, *, test: bool = False) -> list[int]:
     """Refines what a door made and stores it. Returns the ids of the threads that changed.
 
     ``test``: the test button on the sources page. Skips the adapter and leaves the source's counters alone, so a
     test never hides that the real sender has not been heard from yet."""
+    with _ingest_lock:
+        return _accept(db, source, incoming, payload, test=test)
+
+
+def _accept(db: Session, source: Source, incoming: Incoming, payload: dict, *, test: bool) -> list[int]:
     changed: list[int] = []
     events = [incoming.clean()] if test else refine(source.kind, incoming, payload)
     now = utcnow()
@@ -190,7 +199,9 @@ def _store(db: Session, source: Source, item: Incoming) -> int | None:
         if thread.state != UNREAD:
             thread.state = UNREAD
     event = _add_event(db, thread, item, priority=priority)
-    if thread.title_template:
+    # A bundle title only makes sense for a bundle: a single event keeps its own words ("Updated redis", not
+    # "1 containers updated").
+    if thread.title_template and thread.event_count > 1:
         thread.title = thread.title_template.replace("{count}", str(thread.event_count))[:300]
     elif not is_new:
         thread.title = item.title

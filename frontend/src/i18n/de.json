@@ -1,0 +1,851 @@
+{
+  "common": {
+    "back": "Zurück",
+    "cancel": "Abbrechen",
+    "close": "Schließen",
+    "copy": "Kopieren",
+    "done": "Fertig",
+    "hide": "Ausblenden",
+    "loading": "Lädt …",
+    "save": "Speichern",
+    "saved": "Gespeichert.",
+    "show": "Einblenden"
+  },
+  "errors": {
+    "account_locked": "Zu viele Fehlversuche. Das Konto ist eine Viertelstunde gesperrt.",
+    "already_set_up": "nexsift ist schon eingerichtet. Bitte anmelden.",
+    "generic": "Das hat nicht geklappt. Bitte noch einmal versuchen.",
+    "hostname_required": "Bitte den Hostnamen eintragen, mit dem das Gerät Syslog schickt.",
+    "hostname_taken": "Für diesen Hostnamen gibt es schon eine Quelle.",
+    "internal_error": "Auf dem Server ist etwas schiefgegangen. Das Protokoll des Containers weiß mehr.",
+    "invalid_email": "Das ist keine E-Mail-Adresse.",
+    "invalid_input": "Die Eingabe passt nicht. Bitte die markierten Felder prüfen.",
+    "invalid_name": "Der Name darf nur Kleinbuchstaben, Ziffern, Punkt, Bindestrich und Unterstrich enthalten, 2 bis 64 Zeichen.",
+    "invalid_priority": "Unbekannte Stufe.",
+    "invalid_quiet_hours": "Ruhezeit braucht Beginn und Ende, etwa 23:00 und 07:00.",
+    "invalid_state": "Unbekannter Zustand.",
+    "issuer_invalid": "Unter dieser Adresse antwortet kein OpenID-Connect-Anbieter. Stimmt die Aussteller-Adresse?",
+    "issuer_unreachable": "Der Anbieter ist von nexsift aus nicht erreichbar. Adresse, Netz und Zertifikat prüfen.",
+    "key_invalid": "Nur Kleinbuchstaben, Ziffern, Punkt, Bindestrich und Unterstrich.",
+    "key_taken": "Das benutzt schon eine andere Quelle.",
+    "missing_header": "Die Anfrage kam nicht von der Oberfläche. Bitte die Seite neu laden.",
+    "no_token": "Diese Quelle hat keinen Token.",
+    "not_found": "Das gibt es nicht mehr. Die Seite neu laden hilft meist.",
+    "not_set_up": "nexsift ist noch nicht eingerichtet.",
+    "not_signed_in": "Bitte neu anmelden.",
+    "offline": "Der Server ist nicht erreichbar. Läuft der Container?",
+    "oidc_denied": "Die Anmeldung beim Anbieter wurde abgebrochen oder abgelehnt.",
+    "oidc_email_unverified": "Der Anbieter bestätigt die E-Mail-Adresse nicht (email_verified). Bei authentik richtet der Knopf in den Einstellungen das mit ein.",
+    "oidc_exchange_failed": "Der Anbieter hat die Anmeldung nicht bestätigt. Stimmen Client-ID und Geheimnis?",
+    "oidc_issuer_mismatch": "Der Anbieter meldet sich mit einer anderen Adresse als eingetragen.",
+    "oidc_no_account": "Dieses Konto beim Anbieter gehört nicht zu nexsift. Angemeldet wird, wessen bestätigte Adresse unter Einstellungen, Konto steht.",
+    "oidc_not_configured": "Anmeldung über einen Anbieter ist nicht eingerichtet.",
+    "oidc_provider_invalid": "Der Anbieter antwortet nicht wie ein OpenID-Connect-Anbieter.",
+    "oidc_provider_unreachable": "Der Anbieter ist gerade nicht erreichbar.",
+    "oidc_state_mismatch": "Die Anmeldung ist abgelaufen oder kam doppelt. Bitte noch einmal auf den Knopf.",
+    "oidc_token_invalid": "Der Anbieter hat eine ungültige Antwort geschickt.",
+    "order_incomplete": "Die Reihenfolge hat sich inzwischen geändert. Bitte die Seite neu laden.",
+    "out_of_range": "Erlaubt sind Werte von {{low}} bis {{high}}.",
+    "password_login_off": "Die Anmeldung mit Passwort ist ausgeschaltet. Bitte über den Anbieter anmelden.",
+    "password_needed": "Erst einen Anbieter einrichten, dann lässt sich das Passwort ausschalten.",
+    "password_too_short": "Mindestens {{minimum}} Zeichen.",
+    "prefs_too_large": "Zu viele Einstellungen auf einmal.",
+    "public_url_invalid": "Bitte nur Schema und Host, etwa https://nexsift.example.com.",
+    "rule_condition": "Unbekanntes Feld oder unbekannter Vergleich.",
+    "rule_name": "Die Regel braucht einen Namen, höchstens 120 Zeichen.",
+    "rule_no_action": "Die Regel braucht mindestens eine Wirkung unter „Dann“.",
+    "rule_no_condition": "Die Regel braucht mindestens eine Bedingung.",
+    "rule_priority": "Unbekannte Stufe.",
+    "rule_push": "Unbekanntes Push-Verhalten.",
+    "rule_regex": "Das Muster ist kein gültiger regulärer Ausdruck.",
+    "rule_value": "Jede Bedingung braucht einen Wert, höchstens 300 Zeichen.",
+    "secret_required": "Bitte das Client-Geheimnis eintragen.",
+    "target_field_missing": "Für dieses Ziel fehlt noch ein Pflichtfeld ({{field}}).",
+    "too_many_attempts": "Zu viele Versuche. Bitte in {{retry_after}} Sekunden noch einmal.",
+    "unknown_kind": "Unbekannte Art von Ziel.",
+    "unknown_preset": "Unbekannte Art von Quelle.",
+    "unknown_setting": "Unbekannte Einstellung.",
+    "url_invalid": "Die Adresse muss mit http:// oder https:// beginnen.",
+    "wrong_credentials": "Name oder Passwort stimmt nicht.",
+    "wrong_password": "Das aktuelle Passwort stimmt nicht."
+  },
+  "help": {
+    "about": "Hilfe zu „{{what}}“",
+    "open": "Hilfe"
+  },
+  "inbox": {
+    "action": {
+      "archive": "Archivieren",
+      "delete": "Löschen",
+      "markRead": "Als gelesen markieren",
+      "markUnread": "Als ungelesen markieren",
+      "mute": "Quelle 1 Stunde stumm",
+      "unarchive": "Zurück in den Posteingang",
+      "unmute": "Stummschaltung aufheben"
+    },
+    "addSource": "Quelle hinzufügen",
+    "archived": "Archiviert.",
+    "back": "Zurück zur Liste",
+    "deleted": "Gelöscht.",
+    "delivery": {
+      "allclear": "Entwarnung",
+      "first": "Meldung",
+      "followup": "Nachtrag",
+      "storm": "Sammelmeldung",
+      "test": "Test"
+    },
+    "deliveryStatus": {
+      "failed": "aufgegeben",
+      "pending": "wartet, nächster Versuch folgt",
+      "sent": "angekommen"
+    },
+    "detail": "Geöffnete Meldung",
+    "empty": {
+      "archived": "Das Archiv ist leer",
+      "crit": "Nichts Kritisches offen",
+      "inbox": "Posteingang leer",
+      "unread": "Alles gelesen"
+    },
+    "emptyHint": "Neue Meldungen erscheinen hier von selbst, ohne Neuladen.",
+    "fact": {
+      "neverPush": "Diese Art Meldung geht nie aufs Handy (Regel).",
+      "noRule": "Keine Regel, die Stufe kam vom Absender.",
+      "notPushed": "Nicht aufs Handy geschickt",
+      "notPushedMuted": "Die Quelle war stummgeschaltet.",
+      "notPushedWhy": "Aufs Handy geht nur, was die Mindeststufe eines Ziels erreicht. Das hier ist {{priority}}.",
+      "pushFailed": "Push fehlgeschlagen",
+      "pushHelp": "Wann nexsift etwas aufs Handy schickt, bestimmen die Ziele (ab welcher Stufe) und das Push-Verhalten (sofort, gesammelt oder nie). Beides steht unter Regeln.",
+      "pushWaiting": "Push wartet",
+      "pushed": "Aufs Handy geschickt",
+      "resolved": "Erledigt nach {{after}}",
+      "rule": "Warum so eingeordnet",
+      "ruleHelp": "Regeln bestimmen Stufe, Bündelung und Push. Hier stehen alle, die bei dieser Meldung gegriffen haben.",
+      "rulesLink": "Regeln ansehen",
+      "targetsLink": "Ziele ansehen",
+      "throttled": "Gedrosselt: {{count}} weitere nur gezählt",
+      "throttledHelp": "Schickt eine Quelle mehr Meldungen pro Minute als erlaubt (Einstellung unter Regeln, Standard), zählt nexsift nur noch mit. So bleibt der Posteingang benutzbar, wenn ein Container Amok läuft.",
+      "throttledText": "Über der Grenze werden Meldungen nur gezählt, nicht gespeichert und nie weitergeleitet."
+    },
+    "filters": "Ansichten und Quellen",
+    "hideRaw": "Rohdaten ausblenden",
+    "list": "Meldungen",
+    "loadMore": "Ältere laden",
+    "markAllRead": "Alle in dieser Ansicht als gelesen markieren",
+    "markedRead_one": "Eine Meldung als gelesen markiert.",
+    "markedRead_other": "{{count}} Meldungen als gelesen markiert.",
+    "movedBack": "Zurück im Posteingang.",
+    "muted": "{{name}} ist eine Stunde stumm. Meldungen kommen weiter an, nur nichts aufs Handy.",
+    "noHits": "Nichts gefunden",
+    "noHitsHint": "Gesucht wird in Titel und Text aller Meldungen dieser Ansicht.",
+    "nothingSelected": "Links eine Meldung auswählen",
+    "nothingYet": "Hier erscheint die geöffnete Meldung, sobald die erste da ist.",
+    "olderGone_one": "Eine ältere Meldung dieses Bündels wird hier nicht mehr gezeigt.",
+    "olderGone_other": "{{count}} ältere Meldungen dieses Bündels werden hier nicht mehr gezeigt.",
+    "onlySource": "Nur {{name}}",
+    "onlyThisSource": "Nur Meldungen dieser Quelle zeigen",
+    "openLink": "Öffnen",
+    "pushed": "Handy",
+    "resolved": "Erledigt",
+    "search": "Suchen",
+    "setUpPhone": "Noch kein Ziel fürs Handy eingerichtet? Hier entlang.",
+    "shortcutsHint": "Tastenkürzel",
+    "showAll": "{{count}} weitere anzeigen",
+    "showAllSources": "Wieder alle Quellen zeigen",
+    "showFewer": "Weniger anzeigen",
+    "showRaw": "Rohdaten",
+    "sources": "Quellen",
+    "sourcesHelp": "Jeder Absender, der an nexsift meldet, ist eine Quelle. Ein Klick filtert den Posteingang auf sie. Ein gelbes Warnzeichen heißt: Ihr Format wurde zuletzt nicht erkannt.",
+    "span": "{{count}} Meldungen, {{from}} bis {{to}}",
+    "throttledChip": "+{{count}} gedrosselt",
+    "undo": "Rückgängig",
+    "unmuted": "{{name}} meldet sich wieder.",
+    "unread": "Ungelesen",
+    "unrecognized": "Format nicht erkannt",
+    "unrecognizedHelp": "nexsift kennt das Format dieses Absenders, diese Meldung sah aber anders aus. Sie ist trotzdem vollständig da, nur ohne Extras wie Bündeln oder Entwarnung. Unter „Rohdaten“ steht, was genau ankam.",
+    "via": "über {{protocol}}",
+    "view": {
+      "archived": "Archiv",
+      "crit": "Kritisch offen",
+      "inbox": "Posteingang",
+      "unread": "Ungelesen"
+    },
+    "viewHelp": {
+      "archived": "Was du weggeräumt hast. Taste 4.",
+      "crit": "Kritische Probleme, die noch keine Entwarnung haben. Taste 3.",
+      "inbox": "Alles außer dem Archiv. Taste 1.",
+      "unread": "Nur, was du noch nicht geöffnet hast. Taste 2."
+    }
+  },
+  "language": {
+    "label": "Sprache"
+  },
+  "languages": {
+    "active": "aktiv",
+    "builtIn": "eingebaut",
+    "by": "von {{author}}",
+    "confirmRemove": "Wirklich entfernen",
+    "coverageHint": "Anteil der Texte, die übersetzt sind. Der Rest erscheint auf Englisch.",
+    "customShort": "eigene",
+    "download": "Datei herunterladen",
+    "downloadMissing": "Fehlende Texte herunterladen",
+    "error": {
+      "badCode": "Im Block _meta fehlt ein gültiger Sprachcode, etwa fr, pt-BR oder sr-Latn.",
+      "badLabel": "Im Block _meta fehlt das Kürzel (label), höchstens drei Zeichen.",
+      "badName": "Im Block _meta fehlt der Name der Sprache (name), höchstens 40 Zeichen.",
+      "builtInCode": "Deutsch und Englisch sind eingebaut und lassen sich nicht ersetzen. Bitte einen anderen Sprachcode wählen.",
+      "noMeta": "Der Block _meta fehlt. Am einfachsten mit der Vorlage anfangen.",
+      "noTexts": "In der Datei steht kein einziger brauchbarer Text.",
+      "notJson": "Das ist keine gültige JSON-Datei.",
+      "tooLarge": "Die Datei ist größer als {{max}}."
+    },
+    "intro": "Eigene Übersetzungen hochladen. Was fehlt, erscheint auf Englisch, eine halbe Übersetzung funktioniert also schon.",
+    "madeFor": "für Version {{version}}",
+    "mode": {
+      "add": "Ergänzen",
+      "addHint": "Die neuen Texte kommen dazu oder ersetzen gleichnamige, alles andere bleibt. Richtig für eine Datei mit den fehlenden Texten.",
+      "replace": "Ersetzen",
+      "replaceHint": "Die alte Fassung fliegt raus, es gilt nur noch diese Datei."
+    },
+    "none": "Noch keine eigene Sprache.",
+    "reason": {
+      "empty": "leer",
+      "notText": "kein Text",
+      "placeholders": "Platzhalter wie {{example}} passen nicht zum Englischen",
+      "tooLong": "länger als 2000 Zeichen",
+      "unknown": "unbekannter Schlüssel, ignoriert"
+    },
+    "remove": "Entfernen",
+    "removed": "{{name}} entfernt.",
+    "report": {
+      "covered": "{{percent}} der Texte übersetzt.",
+      "details": "Einzelheiten zeigen",
+      "exists": "{{name}} gibt es schon",
+      "failed": "Datei nicht übernommen",
+      "missing_one": "Ein Text fehlt und erscheint auf Englisch.",
+      "missing_other": "{{count}} Texte fehlen und erscheinen auf Englisch.",
+      "rejected_one": "Ein Text wurde nicht übernommen, er erscheint auf Englisch.",
+      "rejected_other": "{{count}} Texte wurden nicht übernommen, sie erscheinen auf Englisch.",
+      "save": "Nur speichern",
+      "saveAndUse": "Speichern und umschalten",
+      "title": "{{name}} prüfen",
+      "unknown_one": "Ein Schlüssel ist unbekannt und wird ignoriert.",
+      "unknown_other": "{{count}} Schlüssel sind unbekannt und werden ignoriert."
+    },
+    "saved": "{{name}} gespeichert.",
+    "step": {
+      "one": "Vorlage herunterladen. Sie enthält alle Texte auf Englisch und oben den Block _meta.",
+      "three": "Hier hochladen. nexsift prüft die Datei und zeigt, was fehlt, bevor etwas gespeichert wird.",
+      "two": "Texte übersetzen, im Block _meta Code, Name und Kürzel eintragen. Platzhalter wie {{example}} stehen lassen."
+    },
+    "template": "Vorlage",
+    "title": "Sprachen",
+    "upload": "Sprache hochladen",
+    "use": "Verwenden"
+  },
+  "live": {
+    "off": "Getrennt",
+    "offHelp": "Die Live-Verbindung zum Server steht gerade nicht. Sie baut sich von selbst wieder auf.",
+    "on": "Live",
+    "onHelp": "Neue Meldungen erscheinen sofort, ohne Neuladen."
+  },
+  "login": {
+    "forgot": "Passwort vergessen? Im Container ausführen:",
+    "lead": "Melde dich an, um deinen Posteingang zu sehen.",
+    "name": "Name",
+    "or": "oder mit Passwort",
+    "password": "Passwort",
+    "providerFailed": "Die Anmeldung über den Anbieter hat nicht geklappt.",
+    "submit": "Anmelden",
+    "title": "Anmelden",
+    "withProvider": "Mit {{name}} anmelden"
+  },
+  "nav": {
+    "home": "Zum Posteingang",
+    "inbox": "Posteingang",
+    "main": "Hauptnavigation",
+    "rules": "Regeln",
+    "settings": "Einstellungen",
+    "signOut": "Abmelden",
+    "sources": "Quellen"
+  },
+  "priority": {
+    "crit": "Kritisch",
+    "info": "Info",
+    "warn": "Warnung"
+  },
+  "protocol": {
+    "discord": "Discord-Webhook",
+    "gotify": "Gotify-Schnittstelle",
+    "ntfy": "ntfy-Schnittstelle",
+    "smtp": "E-Mail",
+    "syslog": "Syslog",
+    "webhook": "Webhook"
+  },
+  "push": {
+    "hint": {
+      "immediate": "Das erste kritische Ereignis eines Themas geht sofort raus. Weitere zählen still mit, am Ende des Bündelfensters kommt ein Nachtrag, wenn es mehr geworden sind.",
+      "never": "Bleibt im Posteingang, geht nie aufs Handy.",
+      "single": "Jedes Ereignis einzeln und sofort. Nur Drosselung und Sturmschutz bremsen.",
+      "window": "Ein einziger Push am Ende des Bündelfensters, mit der Anzahl. Ruhiger, dafür bis zu ein Fenster später."
+    },
+    "immediate": "Sofort, dann still bündeln",
+    "never": "Nie pushen",
+    "single": "Jedes einzeln",
+    "window": "Fenster abwarten"
+  },
+  "rules": {
+    "add": "Neue Regel",
+    "anySource": "jede Quelle",
+    "builtIn": "ab Werk",
+    "builtInName": {
+      "keywordsCritical": "Wörter für Fehler machen es kritisch",
+      "keywordsWarning": "Wörter für Ärger machen es zur Warnung",
+      "paperless": "Paperless: neue Dokumente bündeln, nie aufs Handy",
+      "sshd": "sshd: fehlgeschlagene Anmeldungen in einer Zeile",
+      "watchtower": "Watchtower: Updates bündeln, nie aufs Handy"
+    },
+    "defaults": {
+      "help": "Diese Werte gelten, solange keine Regel etwas anderes sagt.",
+      "intro": "Was gilt, wenn keine Regel etwas anderes sagt.",
+      "push": "Push-Verhalten",
+      "pushHelp": "Wie kritische Meldungen aufs Handy kommen. „Sofort, dann still bündeln“ ist für fast alle richtig.",
+      "throttle": "Drosselung ab je Minute",
+      "throttleHelp": "Schickt eine Quelle mehr als so viele Meldungen pro Minute, zählt nexsift den Rest nur noch. Schützt vor Endlosschleifen.",
+      "title": "Standard",
+      "window": "Bündelfenster (Minuten)",
+      "windowHelp": "Gleiche Meldungen innerhalb dieser Zeit landen in einer Zeile. Ein offenes kritisches Problem bleibt eine Zeile, bis es erledigt ist."
+    },
+    "down": "Nach unten",
+    "drop": "Verwerfen",
+    "editHint": "Zum Bearbeiten klicken",
+    "editor": {
+      "addCondition": "Bedingung",
+      "builtInNote": "Diese Regel hat nexsift mitgebracht. Du kannst sie ändern, ausschalten oder löschen.",
+      "confirmDelete": "Wirklich löschen?",
+      "default": "Standard",
+      "delete": "Löschen",
+      "drop": "Verwerfen",
+      "dropHint": "Die Meldung wird gezählt, aber nicht gespeichert. Für Rauschen, das niemand lesen will.",
+      "edit": "Regel bearbeiten",
+      "field": "Feld",
+      "groupKey": "Bündeln nach",
+      "groupKeyHelp": "Meldungen mit gleichem Schlüssel landen in einer Zeile. Werte aus der Meldung in geschweiften Klammern, etwa vm-{vmid}. Leer lassen: nexsift bündelt gleich lautende Meldungen von selbst.",
+      "keep": "Vom Absender",
+      "name": "Name",
+      "nameHelp": "Wofür die Regel da ist, in deinen Worten. Der Name erscheint bei jeder Meldung, die sie trifft.",
+      "new": "Neue Regel",
+      "op": "Vergleich",
+      "placeholder": {
+        "contains": "etwa: backup",
+        "regex": "etwa: VM \\d+ stopped",
+        "word": "etwa: FAILED|ERROR"
+      },
+      "priority": "Stufe",
+      "priorityHelp": "Info bleibt still, Warnung ist gelb, Kritisch ist rot und geht aufs Handy, wenn ein Ziel das will.",
+      "push": "Aufs Handy",
+      "pushHelp": "Überschreibt das Standard-Push-Verhalten für diese Meldungen.",
+      "removeCondition": "Bedingung entfernen",
+      "resolves": "Entwarnung für",
+      "resolvesHelp": "Trifft die Regel, schließt die Meldung das offene Problem mit diesem Bündel-Schlüssel, statt eine eigene Zeile zu öffnen. Etwa: Regel auf „is UP“, Entwarnung für monitor-{monitor}.",
+      "source": "Quelle",
+      "sourceHelp": "Nur für Meldungen dieser Quelle, oder für alle.",
+      "thenHelp": "Was mit einer passenden Meldung passiert. Mehrere Regeln können zusammenwirken: Für jede Wirkung gilt die oberste Regel, die sie setzt.",
+      "titleTemplate": "Titel des Bündels",
+      "titleTemplateHelp": "So heißt die Zeile im Posteingang. {count} wird zur Anzahl, etwa: Watchtower: {count} Container aktualisiert.",
+      "value": "Wert",
+      "whenHelp": "Alle Bedingungen müssen zutreffen. Groß- und Kleinschreibung spielt keine Rolle.",
+      "wordHint": "„ganzes Wort“ trifft nur ganze Wörter, also nicht „0 errors“ bei ERROR. Mehrere Wörter mit senkrechtem Strich: FAIL|ERROR."
+    },
+    "field": {
+      "any": "Titel oder Text",
+      "body": "Text",
+      "title": "Titel"
+    },
+    "groupBy": "bündeln nach",
+    "lead": "Was wie wichtig ist, was zusammengehört und was aufs Handy darf.",
+    "list": {
+      "help": "Regeln werden von oben nach unten geprüft. Alle passenden wirken, für jede Wirkung gilt die oberste. Mit den Pfeilen änderst du die Reihenfolge, mit dem Schalter schaltest du eine Regel aus, ohne sie zu löschen.",
+      "intro": "Alle passenden Regeln wirken, von oben nach unten. Für jede Wirkung gilt die oberste.",
+      "title": "Regeln"
+    },
+    "op": {
+      "contains": "enthält",
+      "regex": "passt auf Muster",
+      "word": "enthält ganzes Wort"
+    },
+    "resolves": "schließt offenes Problem",
+    "storm": {
+      "count": "Anzahl",
+      "from": "Ab",
+      "help": "Fällt etwa der Strom aus, melden sich zwanzig Dienste gleichzeitig. Statt zwanzig Pushes kommt dann eine Sammelmeldung, sobald die Welle vorbei ist. Im Posteingang steht trotzdem alles einzeln.",
+      "hint": "Fallen viele Dienste zugleich aus, kommt eine Sammelmeldung statt zwanzig Pushes.",
+      "minutes": "Minuten",
+      "then": "Minuten nur noch eine Sammelmeldung.",
+      "title": "Sturmschutz über alle Quellen",
+      "within": "kritischen Pushes in"
+    },
+    "tester": {
+      "anySource": "Keine bestimmte Quelle",
+      "body": "Text",
+      "help": "Tipp eine Meldung ein, so wie ein Absender sie schicken würde. nexsift zeigt, welche Regeln greifen und was daraus wird. Nichts landet dabei im Posteingang.",
+      "intro": "Eine Meldung ausprobieren, bevor sie kommt.",
+      "matched_one": "Eine Regel passt:",
+      "matched_other": "{{count}} Regeln passen:",
+      "messageTitle": "Titel",
+      "none": "Keine Regel passt. Die Stufe kommt dann vom Absender.",
+      "result": "Ergebnis:",
+      "senderPriority": "Stufe vom Absender",
+      "source": "Quelle",
+      "title": "Regel ausprobieren"
+    },
+    "then": "Dann",
+    "title": "Regeln",
+    "titleAs": "Titel",
+    "up": "Nach oben",
+    "when": "Wenn"
+  },
+  "settings": {
+    "about": {
+      "lead": "Version und Notausgang.",
+      "reset": "Passwort vergessen und kein Anbieter eingerichtet? Auf dem Server ausführen:",
+      "title": "Über nexsift"
+    },
+    "account": {
+      "changePassword": "Passwort ändern",
+      "current": "Aktuelles Passwort",
+      "email": "E-Mail-Adresse",
+      "emailHelp": "Über diese Adresse erkennt nexsift dich beim Anmelden über authentik oder einen anderen Anbieter. Der Anbieter muss sie bestätigen.",
+      "emailHint": "Für die Anmeldung über einen Anbieter.",
+      "help": "nexsift hat genau ein Konto. Andere Browser werden beim Passwortwechsel abgemeldet.",
+      "intro": "Angemeldet als {{name}}.",
+      "linked": "Mit dem Anbieter verbunden.",
+      "new": "Neues Passwort",
+      "passwordChanged": "Passwort geändert. Andere Browser sind abgemeldet.",
+      "passwordTitle": "Passwort",
+      "repeat": "Neues Passwort wiederholen",
+      "title": "Konto"
+    },
+    "authentik": {
+      "again": "Noch einmal einrichten",
+      "already": "authentik ist eingerichtet ({{issuer}}).",
+      "blueprint": "Lieber ohne Token: Blueprint-Datei",
+      "blueprintHelp": "Eine YAML-Datei für den Blueprint-Import in authentik. Sie legt dasselbe an wie der Knopf. Danach Client-ID und Geheimnis unten bei „Anderer Anbieter“ eintragen.",
+      "done": "authentik ist eingerichtet. Den Token brauchst du nicht mehr, lösch ihn am besten gleich in authentik. Beim nächsten Abmelden erscheint der Knopf auf der Anmeldeseite.",
+      "failed": "Die Einrichtung ist stehen geblieben. Die rote Zeile sagt, woran. Nach dem Beheben einfach noch einmal.",
+      "help": "Der Knopf legt in authentik Anbieter, Anwendung, Signaturschlüssel und die Zuordnung für email_verified an und trägt alles in nexsift ein. Ein zweiter Lauf ändert statt doppelt anzulegen.",
+      "lead": "nexsift legt in authentik alles selbst an. Dafür braucht es einmal einen API-Token.",
+      "setUp": "Einrichten",
+      "step": {
+        "application": "Anwendung „nexsift“ angelegt",
+        "filled": "Client-ID und Geheimnis in nexsift eingetragen",
+        "mapping": "Zuordnung für email_verified angelegt",
+        "provider": "Anbieter „nexsift“ angelegt, Weiterleitung {{redirect}}",
+        "reached": "authentik erreicht",
+        "signingKey": "Signaturschlüssel gewählt (RS256)"
+      },
+      "title": "Mit authentik anmelden",
+      "token": "API-Token",
+      "tokenHelp": "In authentik: Verzeichnis, Tokens und App-Passwörter, Erstellen, Zweck „API-Token“. Der Benutzer braucht Admin-Rechte.",
+      "tokenHint": "nexsift nutzt ihn einmal und speichert ihn nicht.",
+      "url": "Adresse von authentik",
+      "urlHelp": "So, wie nexsift authentik erreicht, etwa https://auth.example.com. Ohne /application am Ende."
+    },
+    "lead": "Anmeldung, Adresse, Aufbewahrung und Sprachen.",
+    "other": {
+      "active": "Eingerichtet: {{name}}.",
+      "clientId": "Client-ID",
+      "clientSecret": "Client-Geheimnis",
+      "help": "Für Keycloak, Pocket ID, Authelia, Zitadel und alle anderen mit OpenID Connect. Beim Anbieter eine Anwendung anlegen, als Weiterleitungsadresse die unten angezeigte eintragen, dann Aussteller, Client-ID und Geheimnis hier.",
+      "issuer": "Aussteller-Adresse (Issuer)",
+      "issuerHelp": "Die Adresse, unter der der Anbieter /.well-known/openid-configuration ausliefert, ohne diesen Teil.",
+      "lead": "Keycloak, Pocket ID, Authelia, Zitadel und alle anderen mit OpenID Connect.",
+      "providerName": "Name auf dem Knopf",
+      "providerNameHelp": "Steht auf der Anmeldeseite: „Mit … anmelden“.",
+      "redirect": "Weiterleitungsadresse",
+      "redirectHelp": "Diese Adresse beim Anbieter als Redirect-URI eintragen. Sie folgt der öffentlichen Adresse unter „Anmeldung“.",
+      "remove": "Anbieter entfernen",
+      "removed": "Anbieter entfernt. Anmeldung mit Passwort ist wieder an.",
+      "secretKept": "gespeichert, leer lassen zum Behalten",
+      "title": "Anderer Anbieter"
+    },
+    "recommended": "Empfohlen",
+    "retention": {
+      "archive": "Archiv (Tage)",
+      "archiveHelp": "Archivierte Meldungen werden nach so vielen Tagen gelöscht.",
+      "events": "Posteingang (Tage)",
+      "eventsHelp": "Meldungen im Posteingang werden nach so vielen Tagen ohne neue Nachricht gelöscht. Ein offenes kritisches Problem bleibt immer.",
+      "help": "Aufgeräumt wird alle fünf Minuten im Hintergrund.",
+      "lead": "Was danach gelöscht wird. Offene kritische Probleme bleiben immer.",
+      "raw": "Rohdaten (Tage)",
+      "rawHelp": "Rohdaten sind das, was der Absender wörtlich geschickt hat. Nützlich beim Einrichten, danach selten. Die Meldung selbst bleibt.",
+      "title": "Aufbewahrung"
+    },
+    "signin": {
+      "help": "Die öffentliche Adresse steht in den Einrichtungshinweisen der Quellen und ist die Rückkehradresse beim Anbieter.",
+      "lead": "Adresse nach außen und Anmeldung mit Passwort.",
+      "password": "Anmeldung mit Passwort erlauben",
+      "passwordHelp": "Aus: nur noch über den Anbieter. Für den Notfall setzt ein Befehl im Container das Passwort zurück und schaltet die Anmeldung mit Passwort wieder ein.",
+      "passwordHint": "Aus: nur noch über den Anbieter.",
+      "passwordNeedsProvider": "Erst einen Anbieter einrichten, dann lässt sich das ausschalten.",
+      "publicUrl": "Öffentliche Adresse",
+      "publicUrlHelp": "Hinter einem Reverse Proxy die Adresse, die du im Browser tippst. Leer: nexsift nimmt die Adresse der Anfrage.",
+      "publicUrlHint": "Etwa https://nexsift.example.com",
+      "title": "Anmeldung und Adresse"
+    },
+    "title": "Einstellungen"
+  },
+  "setup": {
+    "email": "E-Mail-Adresse (optional)",
+    "emailHelp": "Nur nötig, wenn du dich später über authentik oder einen anderen Anbieter anmelden willst. Lässt sich jederzeit in den Einstellungen nachtragen.",
+    "emailHint": "Für die Anmeldung über authentik und Co. Später änderbar.",
+    "lead": "Willkommen. nexsift sammelt die Meldungen deines Homelabs an einem Ort, bündelt das Rauschen und schickt nur Wichtiges aufs Handy. Zuerst das Konto, mit dem du dich anmeldest.",
+    "mismatch": "Die beiden Passwörter sind nicht gleich.",
+    "name": "Name",
+    "nameHelp": "Dein Anmeldename. Kleinbuchstaben, Ziffern, Punkt und Bindestrich.",
+    "password": "Passwort",
+    "passwordHint": "Mindestens 12 Zeichen. Ein Satz ist leichter zu merken als Sonderzeichen.",
+    "repeat": "Passwort wiederholen",
+    "submit": "Konto anlegen und loslegen",
+    "title": "nexsift einrichten",
+    "tooShort": "Noch zu kurz: mindestens 12 Zeichen."
+  },
+  "shortcuts": {
+    "archive": "Archivieren oder zurückholen",
+    "delete": "Löschen",
+    "help": "Diese Hilfe",
+    "link": "Ersten Knopf der Meldung öffnen",
+    "mute": "Quelle eine Stunde stumm",
+    "nextPrev": "Nächste, vorige",
+    "open": "Öffnen (schmale Ansicht)",
+    "read": "Gelesen, ungelesen",
+    "search": "Suchen",
+    "title": "Tastenkürzel",
+    "views": "Ansicht wechseln"
+  },
+  "sources": {
+    "add": "Quelle hinzufügen",
+    "countTotal": "Meldungen gesamt",
+    "delete": "Löschen",
+    "deleteText": "Die Quelle, alle ihre Meldungen und ihre eigenen Regeln werden gelöscht. Der Absender bekommt danach eine Absage. Das lässt sich nicht rückgängig machen.",
+    "deleteTitle": "{{name}} löschen?",
+    "deleted": "{{name}} gelöscht.",
+    "dialog": {
+      "arrived": "Die erste Meldung ist angekommen. Alles richtig eingerichtet.",
+      "create": "Anlegen",
+      "hostname": "Hostname im Syslog",
+      "hostnameHelp": "Jede Syslog-Zeile nennt den Rechner, von dem sie kommt. Den trägst du hier ein. Weißt du ihn nicht: einfach das Gerät schicken lassen, nexsift zeigt unbekannte Absender oben auf dieser Seite an.",
+      "hostnameHint": "So, wie sich das Gerät im Syslog nennt, etwa gw oder router. Notfalls seine IP-Adresse.",
+      "name": "Name",
+      "nameHelp": "Wie die Quelle im Posteingang heißen soll. Frei wählbar, später änderbar.",
+      "ownKey": "Der Absender benutzt schon „{{key}}“. Die neue Quelle übernimmt genau das, am Absender musst du nichts ändern.",
+      "pick": "Was soll melden?",
+      "pickLead": "Such dir den Absender aus. Ist er nicht dabei, nimm die Art, die er beherrscht: Gotify, ntfy, Discord, Webhook oder E-Mail.",
+      "toInbox": "Zum Posteingang",
+      "waiting": "Warte auf die erste Meldung. Stell den Absender ein und lös dort eine Testnachricht aus."
+    },
+    "explain": "Jeder Dienst, der an nexsift meldet, ist eine Quelle. nexsift tut dabei so, als wäre es der Dienst, den der Absender schon kennt (Gotify, ntfy, Discord, E-Mail, Syslog). Du trägst im Absender nur die Adresse von nexsift ein. Die Zeilen zum Kopieren stehen bei jeder Quelle unter „Einrichten“.",
+    "explainTitle": "So kommen Meldungen herein",
+    "field": {
+      "body": "Inhalt (Body)",
+      "compose": "Oder in docker-compose.yml",
+      "env": "Umgebungsvariable",
+      "header": "Header",
+      "method": "Methode",
+      "recipient": "Empfänger",
+      "requestBody": "Request Body",
+      "sender": "Absender",
+      "server": "Server",
+      "smtpPort": "Port",
+      "smtpServer": "SMTP-Server",
+      "syslogHostname": "Hostname",
+      "syslogPort": "Port",
+      "syslogServer": "Syslog-Server",
+      "test": "Zum Ausprobieren im Terminal",
+      "token": "Token",
+      "topic": "Topic",
+      "url": "Adresse (URL)",
+      "webhookUrl": "Webhook-Adresse"
+    },
+    "lastSeen": "Zuletzt gemeldet",
+    "lead": "Wer sich meldet, und über welchen Weg.",
+    "lineHint": {
+      "curlTest": "Schickt eine Testmeldung. Sie erscheint sofort im Posteingang.",
+      "discordUrl": "Dort eintragen, wo sonst die Discord-Webhook-Adresse steht.",
+      "kumaPreset": "In Uptime Kuma unter „Request Body“ die Vorlage „application/json“ wählen.",
+      "noAuth": "Ohne Anmeldung, ohne Verschlüsselung (kein SSL/TLS).",
+      "paperlessBody": "Die Platzhalter in geschweiften Klammern füllt Paperless selbst. „Als JSON senden“ einschalten.",
+      "proxmoxBody": "Die Platzhalter in doppelten geschweiften Klammern füllt Proxmox selbst.",
+      "recipient": "Der Name vor dem @ ordnet die Mail dieser Quelle zu. Die Domain ist egal.",
+      "sender": "Beliebig, viele Geräte wollen hier nur irgendeine Adresse.",
+      "syslogHostname": "Diesen Namen muss das Gerät in seinen Syslog-Zeilen tragen.",
+      "watchtowerEnv": "Danach den Watchtower-Container neu starten. Die Adresse enthält den Token, also nicht weitergeben."
+    },
+    "mute": "1 Stunde stumm",
+    "muteHelp": "Meldungen kommen weiter an, nur nichts aufs Handy.",
+    "neverHeard": "Noch keine Meldung angekommen. Unter „Einrichten“ steht, was im Absender einzutragen ist.",
+    "none": "Noch keine Quelle",
+    "noneHint": "Leg die erste an. Der Dialog zeigt genau, was du im Absender eintragen musst.",
+    "ports": {
+      "discord": "Discord-Webhooks gehen nur, wo man die ganze Adresse einträgt (Uptime Kuma, Proxmox). Watchtower und andere shoutrrr-Werkzeuge schicken fest an discord.com. Dort den Gotify-Weg nehmen.",
+      "gotify": "Gotify-Schnittstelle",
+      "help": "nexsift öffnet mehrere Türen, jede spricht wie der Dienst, den ein Absender erwartet. Die Nummern sind die Ports auf deinem Server. Durchgestrichen: diese Tür ist abgeschaltet.",
+      "lead": "Auf diesen Ports nimmt nexsift Meldungen an.",
+      "ntfy": "ntfy-Schnittstelle",
+      "smtp": "E-Mail (SMTP), ohne Anmeldung",
+      "syslog": "Syslog, UDP und TCP",
+      "title": "Eingänge",
+      "web": "Oberfläche, Webhooks, Discord"
+    },
+    "preset": {
+      "discord": {
+        "name": "Discord-Webhook",
+        "short": "Für alles, was an einen Discord-Webhook schicken kann.",
+        "steps": {
+          "s1": "Im Absender die Discord-Benachrichtigung öffnen.",
+          "s2": "Statt der Discord-Adresse diese hier eintragen, speichern, testen."
+        }
+      },
+      "email": {
+        "name": "E-Mail (allgemein)",
+        "short": "Für Geräte, die nur Mails verschicken können.",
+        "steps": {
+          "s1": "Im Gerät die Mail-Benachrichtigung öffnen.",
+          "s2": "SMTP-Server, Port und Empfänger von hier eintragen, ohne Anmeldung und ohne SSL.",
+          "s3": "Testmail schicken."
+        }
+      },
+      "gotify": {
+        "name": "Gotify (allgemein)",
+        "short": "Für alles, was Gotify kann.",
+        "steps": {
+          "s1": "Im Absender Gotify als Ziel wählen.",
+          "s2": "Server und Token von hier eintragen, speichern, testen."
+        }
+      },
+      "homeassistant": {
+        "name": "Home Assistant",
+        "short": "Über die eingebaute ntfy-Integration von Home Assistant.",
+        "steps": {
+          "s1": "In Home Assistant: Einstellungen, Geräte und Dienste, Integration hinzufügen, „ntfy“.",
+          "s2": "Als Server die Adresse von hier, ohne Anmeldung.",
+          "s3": "Das Topic von hier als Thema anlegen. Danach in Automationen „notify.send_message“ benutzen."
+        }
+      },
+      "ntfy": {
+        "name": "ntfy (allgemein)",
+        "short": "Für alles, was an einen ntfy-Server schicken kann.",
+        "steps": {
+          "s1": "Im Absender ntfy als Ziel wählen.",
+          "s2": "Server und Topic von hier eintragen, speichern, testen."
+        }
+      },
+      "paperless": {
+        "name": "Paperless-ngx",
+        "short": "Neue Dokumente, gebündelt, ohne Handy.",
+        "steps": {
+          "s1": "In Paperless: Workflows, neuer Workflow, Auslöser „Dokument hinzugefügt“.",
+          "s2": "Aktion „Webhook“, Adresse und Inhalt von hier, „Als JSON senden“ einschalten.",
+          "s3": "Speichern und ein Dokument hochladen."
+        }
+      },
+      "proxmox": {
+        "name": "Proxmox VE",
+        "short": "Backups, Replikation, Updates und Ausfälle von Proxmox.",
+        "steps": {
+          "s1": "In Proxmox: Rechenzentrum, Benachrichtigungen, Ziele, Hinzufügen, „Webhook“.",
+          "s2": "Methode, Adresse, Header und Inhalt von hier eintragen.",
+          "s3": "Unter „Benachrichtigungs-Matcher“ eine Regel anlegen, die auf dieses Ziel zeigt, dann „Test“."
+        }
+      },
+      "synology": {
+        "name": "Synology (E-Mail)",
+        "short": "Warnungen des DSM, über die E-Mail-Benachrichtigung.",
+        "steps": {
+          "s1": "Im DSM: Systemsteuerung, Benachrichtigung, E-Mail, „E-Mail-Benachrichtigungen aktivieren“.",
+          "s2": "Dienstanbieter „Benutzerdefinierter SMTP-Server“, Server, Port und Empfänger von hier, ohne SSL/TLS und ohne Authentifizierung.",
+          "s3": "„Test-E-Mail senden“."
+        }
+      },
+      "syslog": {
+        "name": "Syslog (Router, Switch, Firewall)",
+        "short": "Für Netzwerkgeräte, die Syslog an einen Server schicken.",
+        "steps": {
+          "s1": "Im Gerät „Remote Syslog“ oder „Syslog-Server“ suchen.",
+          "s2": "Server und Port von hier eintragen, Protokoll UDP.",
+          "s3": "Die Quelle erkennt nexsift am Hostnamen in den Zeilen."
+        }
+      },
+      "ups": {
+        "name": "USV, Router, Drucker (E-Mail)",
+        "short": "Für Geräte, die nur Mails verschicken können.",
+        "steps": {
+          "s1": "Im Gerät die Mail-Benachrichtigung öffnen.",
+          "s2": "SMTP-Server, Port und Empfänger von hier eintragen, ohne Anmeldung und ohne SSL.",
+          "s3": "Testmail schicken."
+        }
+      },
+      "uptimekuma": {
+        "name": "Uptime Kuma",
+        "short": "Ausfälle und Entwarnungen, automatisch gekoppelt.",
+        "steps": {
+          "s1": "In Uptime Kuma: Einstellungen, Benachrichtigungen, Einrichten, Typ „Webhook“.",
+          "s2": "Adresse von hier, Request Body „application/json“.",
+          "s3": "„Test“ drücken, dann bei den gewünschten Monitoren einschalten."
+        }
+      },
+      "watchtower": {
+        "name": "Watchtower",
+        "short": "Container-Updates, gebündelt zu einer Zeile, nie aufs Handy.",
+        "steps": {
+          "s1": "Die Zeile unten in die Umgebung des Watchtower-Containers.",
+          "s2": "Watchtower neu starten. Beim nächsten Lauf kommen die Updates."
+        }
+      },
+      "webhook": {
+        "name": "Webhook (eigene Skripte)",
+        "short": "Für eigene Skripte: JSON mit title, message, priority.",
+        "steps": {
+          "s1": "Mit POST an die Adresse schicken, JSON mit title, message und priority (info, warning, critical).",
+          "s2": "Adressen im Text werden zu Knöpfen, oder als links: [{label, url}]."
+        }
+      }
+    },
+    "rename": "Umbenennen",
+    "renew": "Neuer Token",
+    "renewConfirm": "Der alte Token hört sofort auf zu gehen. Weiter?",
+    "renewHelp": "Falls der Token irgendwo gelandet ist, wo er nicht hingehört. Danach im Absender die neue Zeile eintragen.",
+    "renewed": "Neuer Token. Jetzt im Absender eintragen.",
+    "setup": "Einrichten",
+    "setupFor": "{{name}} einrichten",
+    "strangers": {
+      "count_one": "einmal",
+      "count_other": "{{count}} mal",
+      "create": "Als Quelle anlegen",
+      "help": "Diese Absender schicken schon an nexsift, aber keine Quelle passt: meist ein Tippfehler oder ein Gerät, das sich anders nennt als gedacht. Ein Klick legt die passende Quelle an, am Gerät musst du dann nichts mehr ändern.",
+      "ntfy": "ntfy-Topic „{{key}}“",
+      "smtp": "Mail an „{{key}}@…“",
+      "syslog": "Syslog von „{{key}}“",
+      "title": "Absender ohne Quelle"
+    },
+    "test": "Testmeldung",
+    "testHelp": "Legt eine Testmeldung in den Posteingang, als käme sie von dieser Quelle. Zeigt, dass nexsift läuft, ersetzt aber nicht den Test am echten Absender.",
+    "testSent": "Testmeldung liegt im Posteingang.",
+    "title": "Quellen",
+    "unmute": "Stumm, aufheben",
+    "unrecognizedHelp": "Die Meldungen sind trotzdem da, nur ohne Extras wie Bündeln oder Entwarnung. Meist hat der Absender nach einem Update sein Format geändert. In der Meldung unter „Rohdaten“ steht, was ankam.",
+    "unrecognizedTitle": "Unbekanntes Format",
+    "unrecognized_one": "Die letzte Meldung hatte ein unbekanntes Format.",
+    "unrecognized_other": "Die letzten {{count}} Meldungen hatten ein unbekanntes Format."
+  },
+  "targets": {
+    "add": "Ziel",
+    "chatId": "Chat-ID",
+    "chatIdHelp": "Die Nummer des Chats oder der Gruppe. Am einfachsten: dem Bot schreiben, dann https://api.telegram.org/bot<Token>/getUpdates öffnen und bei „chat“ die „id“ ablesen.",
+    "confirmDelete": "Wirklich löschen",
+    "delete": "Löschen",
+    "edit": "Ziel bearbeiten",
+    "editHint": "Zum Bearbeiten klicken",
+    "from": "ab",
+    "fromPriority": {
+      "crit": "Nur Kritisches",
+      "info": "Alles, auch Info",
+      "warn": "Warnungen und Kritisches"
+    },
+    "help": "Ziele sind die Stellen, an die nexsift Wichtiges weiterschickt, meist die ntfy- oder Gotify-App auf dem Handy. Alles unterhalb der Mindeststufe bleibt still im Posteingang.",
+    "how": {
+      "apprise": "Apprise API: die Adresse eines Apprise-Servers mit Schlüssel, etwa http://apprise:8000/notify/handy. Apprise verteilt dann weiter.",
+      "gotify": "Ein echter Gotify-Server mit der Gotify-App auf dem Handy. Dort eine Anwendung anlegen und ihren Token hier eintragen.",
+      "ntfy": "Die ntfy-App auf dem Handy, mit ntfy.sh oder einem eigenen ntfy-Server. In der App ein Thema abonnieren und hier dessen volle Adresse eintragen.",
+      "telegram": "Ein Telegram-Bot schreibt dir. Bot bei @BotFather anlegen, Token hier eintragen, dem Bot einmal schreiben, dann die Chat-ID.",
+      "webhook": "Irgendein Dienst, der JSON annimmt: nexsift schickt title, message, priority und link per POST."
+    },
+    "intro": "Wohin nexsift Wichtiges schickt. Alles andere bleibt leise im Posteingang.",
+    "kind": {
+      "apprise": "Apprise",
+      "gotify": "Gotify",
+      "ntfy": "ntfy",
+      "telegram": "Telegram",
+      "webhook": "Webhook"
+    },
+    "kindHelp": "Welcher Dienst die Pushes zustellt. Wer schon die ntfy- oder Gotify-App hat, nimmt die.",
+    "kindLabel": "Art",
+    "lastError": "Zuletzt fehlgeschlagen: {{error}}",
+    "lastOk": "Zuletzt angekommen {{when}}",
+    "minPriority": "Was soll ankommen?",
+    "minPriorityHelp": "Für fast alle richtig: nur Kritisches. Warnungen landen dann nur im Posteingang.",
+    "name": "Name",
+    "nameHelp": "Frei wählbar, etwa „Handy“ oder „Familiengruppe“.",
+    "namePlaceholder": "Handy",
+    "new": "Neues Ziel",
+    "none": "Noch geht nichts aufs Handy. Leg ein Ziel an, am einfachsten mit der ntfy-App.",
+    "noneTitle": "Noch kein Ziel",
+    "optional": "optional",
+    "quiet": "Ruhe {{from}} bis {{to}}",
+    "quietFrom": "Von",
+    "quietHelp": "In dieser Zeit kommen nur kritische Meldungen durch. Warnungen und Info warten nicht, sie bleiben einfach im Posteingang.",
+    "quietHint": "Nachts nur Kritisches.",
+    "quietTitle": "Ruhezeit",
+    "quietTo": "Bis",
+    "test": "Testen",
+    "testFailed": "Test fehlgeschlagen: {{error}}",
+    "testHelp": "Schickt sofort eine Testnachricht an dieses Ziel.",
+    "testOk": "Test an {{name}} ist raus. Kam er an?",
+    "title": "Weiterleitung aufs Handy",
+    "token": {
+      "gotify": "App-Token",
+      "ntfy": "Zugangstoken",
+      "telegram": "Bot-Token"
+    },
+    "tokenHelp": {
+      "gotify": "In Gotify: Apps, Anwendung erstellen, den Token kopieren.",
+      "ntfy": "Nur nötig, wenn dein ntfy-Server eine Anmeldung verlangt (tk_…). Bei ntfy.sh leer lassen.",
+      "telegram": "Von @BotFather, sieht aus wie 123456:ABC…"
+    },
+    "tokenKept": "gespeichert, leer lassen zum Behalten",
+    "url": {
+      "apprise": "Apprise-Adresse",
+      "gotify": "Gotify-Server",
+      "ntfy": "Adresse des Themas",
+      "webhook": "Adresse"
+    },
+    "urlExample": {
+      "apprise": "http://apprise:8000/notify/handy",
+      "gotify": "https://gotify.example.com",
+      "ntfy": "https://ntfy.sh/mein-geheimes-thema",
+      "webhook": "https://example.com/hook"
+    },
+    "urlHelp": {
+      "apprise": "Die volle Adresse des Apprise-API-Endpunkts, mit Schlüssel.",
+      "gotify": "Die Adresse deines Gotify-Servers, ohne /message.",
+      "ntfy": "Server und Thema zusammen, genau wie in der App abonniert. Ein langes, zufälliges Thema schützt vor Mitlesern.",
+      "webhook": "Hierhin schickt nexsift das JSON."
+    }
+  },
+  "theme": {
+    "dark": "Dunkel",
+    "label": "Farbschema",
+    "light": "Hell"
+  },
+  "unreachable": {
+    "lead": "Die Oberfläche erreicht den nexsift-Server nicht. Läuft der Container?",
+    "retry": "Noch einmal versuchen",
+    "title": "Server nicht erreichbar"
+  },
+  "welcome": {
+    "keys": "Tipp: Im Posteingang geht alles mit der Tastatur. Die Taste ? zeigt wie.",
+    "lead": "nexsift sammelt alle Meldungen deines Homelabs an einem Ort, bündelt das Rauschen und schickt nur Wichtiges aufs Handy. So geht es los:",
+    "phone": {
+      "text": "Die ntfy- oder Gotify-App auf dem Handy als Ziel eintragen. Ab dann kommt Kritisches sofort.",
+      "title": "Handy verbinden"
+    },
+    "source": {
+      "text": "Watchtower, Proxmox, Uptime Kuma, Synology … Der Dialog zeigt genau, was im Absender einzutragen ist.",
+      "title": "Erste Quelle anlegen"
+    },
+    "test": {
+      "text": "Im Absender eine Testnachricht auslösen. Sie erscheint hier sofort.",
+      "title": "Testmeldung schicken"
+    },
+    "title": "Willkommen bei nexsift"
+  }
+}

@@ -1,0 +1,151 @@
+@import 'tailwindcss';
+
+/* nexsift: the same gray tones as the other nexapps, accent platinum. Nearly colorless, so only the priorities glow. */
+@theme {
+  --color-ink-950: #0b0b0f; /* page background */
+  --color-ink-900: #101016;
+  --color-ink-850: #16161d; /* cards */
+  --color-ink-800: #1d1d26; /* cards on hover */
+  --color-ink-700: #26262f; /* border */
+  --color-ink-600: #3a3a46;
+
+  --color-mist-100: #f2f2f5; /* text */
+  --color-mist-200: #dcdce4;
+  --color-mist-300: #c3c3ce;
+  --color-mist-400: #aeaebc;
+  --color-mist-500: #9a9aa8; /* dimmed text */
+  --color-mist-600: #6f6f80;
+
+  --color-accent-300: #fafafa;
+  --color-accent-400: #f4f4f5;
+  --color-accent-500: #d4d4d8; /* main accent */
+  --color-accent-600: #a1a1aa;
+  --color-accent-700: #71717a;
+
+  /* Text on platinum. */
+  --color-on-accent: #111114;
+
+  /* The logo: dark tile with a silver funnel here, white tile with a dark funnel in light mode. */
+  --color-mark-bg: #111114;
+  --color-mark-light: #fafafa;
+  --color-mark-mid: #d4d4d8;
+  --color-mark-dark: #71717a;
+
+  /* The three priorities. Deliberately not the accent: green means "the app", not "all good". */
+  --color-crit-500: #fb7185;
+  --color-warn-500: #fbbf24;
+  --color-info-500: #7dd3fc;
+  --color-ok-500: #4ade80;
+  /* Errors in forms, same as critical. */
+  --color-bad-500: #fb7185;
+
+  --color-scrim: rgb(6 6 10 / 0.85);
+
+  --font-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Cascadia Mono', 'Cascadia Code', Consolas, 'DejaVu Sans Mono', monospace;
+}
+
+/* Light mode: only swap the values behind the same names. */
+:root[data-theme='light'] {
+  --color-ink-950: #f5f5f8;
+  --color-ink-900: #ffffff;
+  --color-ink-850: #ffffff;
+  --color-ink-800: #ececf2;
+  --color-ink-700: #dcdce4;
+  --color-ink-600: #b4b4c2;
+
+  --color-mist-100: #14141a;
+  --color-mist-200: #26262f;
+  --color-mist-300: #3c3c48;
+  --color-mist-400: #4e4e5c;
+  --color-mist-500: #61616f;
+  --color-mist-600: #8a8a97;
+
+  --color-on-accent: #ffffff;
+
+  --color-crit-500: #e11d48;
+  --color-warn-500: #b45309;
+  --color-info-500: #0369a1;
+  --color-ok-500: #16a34a;
+  --color-bad-500: #e11d48;
+
+  --color-accent-300: #18181b;
+  --color-accent-400: #27272a;
+  --color-accent-500: #3f3f46;
+  --color-accent-600: #27272a;
+  --color-accent-700: #18181b;
+
+  --color-mark-bg: #ffffff;
+  --color-mark-light: #71717a;
+  --color-mark-mid: #3f3f46;
+  --color-mark-dark: #09090b;
+}
+
+
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+
+  html[data-theme='light'] {
+    color-scheme: light;
+  }
+
+  body {
+    @apply bg-ink-950 text-mist-100 font-sans antialiased;
+    min-height: 100dvh;
+  }
+
+  :focus-visible {
+    @apply outline-accent-500 outline-2 outline-offset-2;
+  }
+
+  ::selection {
+    @apply bg-accent-500/40;
+  }
+
+  kbd {
+    @apply rounded-md border border-ink-600 bg-ink-800 px-1.5 py-px font-mono text-[11px] text-mist-300;
+  }
+}
+
+@layer components {
+  /* Glow in the accent behind the content, like the red one in Nexview and the violet one in nextrmnl. */
+  .ns-glow::before {
+    content: '';
+    position: fixed;
+    inset: -20% -10% auto -10%;
+    height: 60vh;
+    background:
+      radial-gradient(45rem 26rem at 18% 0%, color-mix(in srgb, var(--color-accent-500) 9%, transparent), transparent 65%),
+      radial-gradient(38rem 22rem at 88% 8%, color-mix(in srgb, var(--color-accent-700) 15%, transparent), transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  :root[data-theme='light'] .ns-glow::before {
+    background:
+      radial-gradient(45rem 26rem at 18% 0%, color-mix(in srgb, var(--color-accent-500) 7%, transparent), transparent 65%),
+      radial-gradient(38rem 22rem at 88% 8%, color-mix(in srgb, var(--color-accent-700) 5%, transparent), transparent 70%);
+  }
+
+  .ns-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-ink-600) transparent;
+  }
+
+  /* A new row slides in and glows briefly, so live arrivals are noticed without a sound. */
+  @keyframes ns-arrive {
+    from {
+      background-color: color-mix(in srgb, var(--color-accent-500) 18%, transparent);
+    }
+    to {
+      background-color: transparent;
+    }
+  }
+
+  .ns-arrive {
+    animation: ns-arrive 2.4s ease-out;
+  }
+}

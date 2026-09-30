@@ -59,7 +59,9 @@ def test_gotify_door_answers_like_gotify(client: TestClient, gotify_client: Test
     assert response.status_code == 200
     assert response.json()["title"] == "Hello"
     # The header way and the form way, as the official clients do it.
-    gotify_client.post("/message", headers={"X-Gotify-Key": token}, data={"title": "Form", "message": "x", "priority": "5"})
+    gotify_client.post(
+        "/message", headers={"X-Gotify-Key": token}, data={"title": "Form", "message": "x", "priority": "5"}
+    )
     titles = {thread["title"]: thread["priority"] for thread in inbox(client)}
     assert titles == {"Hello": "crit", "Form": "warn"}
     assert gotify_client.get("/version").status_code == 200
@@ -146,3 +148,16 @@ def test_a_token_only_opens_its_own_door(client: TestClient, gotify_client: Test
     assert client.post("/api/v1/hook/" + gotify_source["connection"]["token"], json={"title": "x"}).status_code == 401
     wrong = gotify_client.post("/message?token=" + webhook_source["connection"]["token"], json={"message": "x"})
     assert wrong.status_code == 401
+
+
+def test_a_stranger_gets_its_source_with_its_own_topic(
+    client: TestClient, ntfy_client: TestClient, operator: dict
+) -> None:
+    ntfy_client.post("/homeassistant", content=b"hello")
+    created = client.post("/api/sources", json={"preset": "ntfy", "name": "HA", "key": "homeassistant"}, headers=UI)
+    assert created.status_code == 201
+    assert created.json()["connection"]["topic"] == "homeassistant"
+    assert client.get("/api/sources/strangers").json() == []
+    assert ntfy_client.post("/homeassistant", content=b"hello").status_code == 200
+    bad = client.post("/api/sources", json={"preset": "email", "key": "Not Valid!"}, headers=UI)
+    assert bad.json()["detail"]["code"] == "key_invalid"

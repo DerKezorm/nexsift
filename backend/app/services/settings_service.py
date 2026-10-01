@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import ipaddress
+import re
 from typing import Any
 from urllib.parse import urlsplit
 
@@ -21,6 +23,10 @@ DEFAULTS: dict[str, Any] = {
     "oidc_client_secret_enc": "",
     "oidc_provider_name": "",
     "public_url": "",
+    #: Host or IP the devices at home reach nexsift by, for the setup hints of all doors. Empty: from the
+    #: public address, else from the request. Behind a reverse proxy the two differ: the browser goes through
+    #: the proxy, a router's syslog or Watchtower's Gotify call cannot.
+    "sender_host": "",
     #: What happens with a critical event when no rule says otherwise.
     "push_mode": "immediate",
     #: How long a thread stays open for more of the same, in minutes.
@@ -42,6 +48,7 @@ DEFAULTS: dict[str, Any] = {
 PUBLIC_KEYS = (
     "password_login",
     "public_url",
+    "sender_host",
     "push_mode",
     "bundle_minutes",
     "throttle_per_minute",
@@ -107,6 +114,29 @@ def normalize_public_url(value: str) -> str:
     except ValueError as error:
         raise ValueError("port") from error
     return f"{parts.scheme.lower()}://{parts.netloc}"
+
+
+_LABEL = r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?"
+HOST_NAME = re.compile(rf"^(?=.{{1,253}}$){_LABEL}(?:\.{_LABEL})*$")
+
+
+def normalize_sender_host(value: str) -> str:
+    """A host name or an IP address, or empty. A pasted ``http://`` and a trailing slash are taken off; a port or
+    a path is refused, because the ports come from the doors. Raises ``ValueError`` otherwise."""
+    text = value.strip()
+    for prefix in ("http://", "https://"):
+        if text.lower().startswith(prefix):
+            text = text[len(prefix) :]
+    text = text.rstrip("/")
+    if not text:
+        return ""
+    try:
+        return str(ipaddress.ip_address(text.strip("[]")))
+    except ValueError:
+        pass
+    if not HOST_NAME.match(text):
+        raise ValueError("host")
+    return text.lower()
 
 
 def public_url(db: Session) -> str:

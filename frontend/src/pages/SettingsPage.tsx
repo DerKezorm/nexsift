@@ -279,12 +279,17 @@ function SignIn({ settings, configured, onSaved }: { settings: Settings; configu
   const { t } = useTranslation()
   const notify = useNotice()
   const [publicUrl, setPublicUrl] = useState(settings.public_url)
+  const [senderHost, setSenderHost] = useState(settings.sender_host)
   const [error, setError] = useState<string | null>(null)
 
   async function save(values: Partial<Settings>) {
     setError(null)
     try {
-      onSaved(await api.put<Settings>('/api/settings', { values }))
+      const saved = await api.put<Settings>('/api/settings', { values })
+      onSaved(saved)
+      // The server tidies addresses up (a pasted http:// goes); the fields show what was stored.
+      setPublicUrl(saved.public_url)
+      setSenderHost(saved.sender_host)
       notify({ text: t('common.saved') })
     } catch (caught) {
       setError(errorMessage(caught))
@@ -298,6 +303,14 @@ function SignIn({ settings, configured, onSaved }: { settings: Settings; configu
           <Field label={t('settings.signin.publicUrl')} hint={t('settings.signin.publicUrlHint')} value={publicUrl} onChange={(event: ChangeEvent<HTMLInputElement>) => setPublicUrl(event.target.value)} placeholder="https://nexsift.example.com" help={t('settings.signin.publicUrlHelp')} />
         </div>
         <Button variant="ghost" onClick={() => void save({ public_url: publicUrl })} disabled={publicUrl === settings.public_url} className="mb-10">
+          {t('common.save')}
+        </Button>
+      </div>
+      <div className="flex items-end gap-2">
+        <div className="flex-1">
+          <Field label={t('settings.signin.senderHost')} hint={t('settings.signin.senderHostHint')} value={senderHost} onChange={(event: ChangeEvent<HTMLInputElement>) => setSenderHost(event.target.value)} placeholder="192.168.1.10" help={t('settings.signin.senderHostHelp')} />
+        </div>
+        <Button variant="ghost" onClick={() => void save({ sender_host: senderHost })} disabled={senderHost === settings.sender_host} className="mb-10">
           {t('common.save')}
         </Button>
       </div>

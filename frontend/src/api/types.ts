@@ -34,6 +34,8 @@ export interface Source {
 
 export interface Connection {
   host: string
+  /** Where the host came from: the sender address in Settings, the public address, or the request. */
+  host_from: 'sender' | 'public' | 'request'
   ports: Record<string, number>
   token: string
   server?: string
@@ -165,6 +167,7 @@ export interface Target {
 export interface Settings {
   password_login: boolean
   public_url: string
+  sender_host: string
   push_mode: PushMode
   bundle_minutes: number
   throttle_per_minute: number

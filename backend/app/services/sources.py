@@ -120,24 +120,30 @@ def is_muted(source: Source) -> bool:
     return source.muted_until is not None and source.muted_until > utcnow()
 
 
-def _host(db: Session, request_host: str) -> tuple[str, str]:
-    """Scheme and host the senders should use: from the public address, else from the request."""
+def _host(db: Session, request_host: str) -> tuple[str, str, str]:
+    """Scheme and host the senders should use, and where they came from: the sender address set for the devices
+    at home, else the public address, else the request."""
+    sender = settings_service.get(db, "sender_host")
+    if sender:
+        return "http", sender, "sender"
     public = settings_service.public_url(db)
     if public:
         parts = urlsplit(public)
-        return parts.scheme, parts.hostname or request_host
-    return "http", request_host.split(":", 1)[0] or "localhost"
+        return parts.scheme, parts.hostname or request_host, "public"
+    return "http", request_host.split(":", 1)[0] or "localhost", "request"
 
 
 def connection(db: Session, source: Source, request_host: str) -> dict[str, Any]:
     """Everything the setup hint needs, already put together. The interface only arranges it into sentences."""
-    scheme, host = _host(db, request_host)
+    scheme, host, origin = _host(db, request_host)
     ports = get_settings().outside_ports()
     public = settings_service.public_url(db)
-    web = public or f"{scheme}://{host}:{ports['web']}"
+    shown = f"[{host}]" if ":" in host else host
+    web = f"http://{shown}:{ports['web']}" if origin == "sender" else (public or f"{scheme}://{shown}:{ports['web']}")
+    host = shown
     token = crypto.decrypt_secret(source.token_enc) if source.token_enc else ""
     key = (source.match_key or "").split(":", 1)[-1]
-    info: dict[str, Any] = {"host": host, "ports": ports, "token": token}
+    info: dict[str, Any] = {"host": host, "host_from": origin, "ports": ports, "token": token}
     if source.protocol == "gotify":
         info["server"] = f"http://{host}:{ports['gotify']}"
         info["shoutrrr"] = f"gotify://{host}:{ports['gotify']}/{token}?disabletls=yes"

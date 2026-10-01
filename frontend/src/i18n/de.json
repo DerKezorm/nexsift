@@ -62,6 +62,7 @@
     "rule_regex": "Das Muster ist kein gültiger regulärer Ausdruck.",
     "rule_value": "Jede Bedingung braucht einen Wert, höchstens 300 Zeichen.",
     "secret_required": "Bitte das Client-Geheimnis eintragen.",
+    "sender_host_invalid": "Bitte nur einen Hostnamen oder eine IP-Adresse, etwa 192.168.1.10, ohne Port.",
     "target_field_missing": "Für dieses Ziel fehlt noch ein Pflichtfeld ({{field}}).",
     "too_many_attempts": "Zu viele Versuche. Bitte in {{retry_after}} Sekunden noch einmal.",
     "unknown_kind": "Unbekannte Art von Ziel.",
@@ -484,7 +485,7 @@
       "title": "Aufbewahrung"
     },
     "signin": {
-      "help": "Die öffentliche Adresse steht in den Einrichtungshinweisen der Quellen und ist die Rückkehradresse beim Anbieter.",
+      "help": "Die öffentliche Adresse ist die Rückkehradresse beim Anmeldeanbieter. Die Adresse für Absender steht in den Einrichtungshinweisen der Quellen.",
       "lead": "Adresse nach außen und Anmeldung mit Passwort.",
       "password": "Anmeldung mit Passwort erlauben",
       "passwordHelp": "Aus: nur noch über den Anbieter. Für den Notfall setzt ein Befehl im Container das Passwort zurück und schaltet die Anmeldung mit Passwort wieder ein.",
@@ -493,6 +494,9 @@
       "publicUrl": "Öffentliche Adresse",
       "publicUrlHelp": "Hinter einem Reverse Proxy die Adresse, die du im Browser tippst. Leer: nexsift nimmt die Adresse der Anfrage.",
       "publicUrlHint": "Etwa https://nexsift.example.com",
+      "senderHost": "Adresse für Absender im Heimnetz",
+      "senderHostHelp": "Über diese Adresse erreichen Router, NAS, Proxmox und Co. nexsift. Sie steht in allen Einrichtungshinweisen. Nötig, sobald nexsift hinter einem Reverse Proxy steht: Syslog, E-Mail und die Gotify- und ntfy-Schnittstelle gehen nicht über den Proxy. Leer: nexsift nimmt die öffentliche Adresse.",
+      "senderHostHint": "Etwa 192.168.1.10 oder nas.fritz.box, ohne Port.",
       "title": "Anmeldung und Adresse"
     },
     "title": "Einstellungen"
@@ -555,6 +559,8 @@
       "theSender": "den Absender",
       "toInbox": "Zum Posteingang",
       "valuesTitle": "Diese Werte eintragen",
+      "viaPublic": "Die Absender bekommen hier die öffentliche Adresse {{host}}. Steht nexsift hinter einem Reverse Proxy, erreichen Geräte im Heimnetz es darüber oft nicht. Trag dann die Adresse im Heimnetz ein.",
+      "viaPublicLink": "Zu den Einstellungen",
       "waiting": "Warte auf die erste Meldung. Stell den Absender ein und lös dort eine Testnachricht aus.",
       "waysHelp": "nexsift versteht alle diese Wege. Die Reihenfolge ist eine Empfehlung: Ein Webhook trägt am meisten mit, E-Mail kann fast jedes Gerät. Ankommen tut die Meldung auf jedem Weg.",
       "waysLead": "Schau in den Benachrichtigungs-Einstellungen deines Geräts, welche dieser Möglichkeiten es anbietet. Nimm die oberste, die es kennt.",

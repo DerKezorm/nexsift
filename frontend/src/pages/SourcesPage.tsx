@@ -361,6 +361,14 @@ function SetupInstructions({ source }: { source: SourceWithConnection }) {
         ))}
       </ol>
       <h3 className="mt-2 text-sm font-semibold text-mist-200">{t('sources.dialog.valuesTitle')}</h3>
+      {source.connection.host_from === 'public' && (
+        <Banner tone="info">
+          {t('sources.dialog.viaPublic', { host: source.connection.host })}{' '}
+          <Link to="/settings" className="font-medium underline">
+            {t('sources.dialog.viaPublicLink')}
+          </Link>
+        </Banner>
+      )}
       {setupLines(preset, source.connection).map((line) => (
         <CopyField key={line.label} label={t(`sources.field.${line.label}`)} value={line.value} multiline={line.multiline} hint={line.hint ? t(`sources.lineHint.${line.hint}`) : undefined} />
       ))}

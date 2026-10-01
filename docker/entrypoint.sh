@@ -46,6 +46,12 @@ if ! gosu nexsift sh -c 'touch /data/.write-test' 2>/dev/null; then
     echo "" >&2
     echo "  PUID and PGID are set in your compose file. To find your own," >&2
     echo "  run 'id' on the host and use the uid and gid it reports." >&2
+    echo "" >&2
+    echo "  On a Synology the folder usually carries an access list that only" >&2
+    echo "  lets the administrators group write (ls -l shows a + after the" >&2
+    echo "  rights). Remove it for this folder, then run the chown above:" >&2
+    echo "" >&2
+    echo "      sudo synoacltool -del /path/to/your/data" >&2
     exit 1
 fi
 rm -f /data/.write-test

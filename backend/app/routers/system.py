@@ -77,6 +77,13 @@ def write_settings(payload: SettingsIn, account: CurrentAccount, db: DbSession) 
                 raise fehler(
                     "public_url_invalid", "Use an address like https://nexsift.example.com.", 422, field=key
                 ) from error
+        elif key == "sender_host":
+            try:
+                value = settings_service.normalize_sender_host(str(value))
+            except ValueError as error:
+                raise fehler(
+                    "sender_host_invalid", "Use a host name or an IP address, like 192.168.1.10.", 422, field=key
+                ) from error
         if key == "password_login" and value is False and not settings_service.get(db, "oidc_issuer"):
             raise fehler(
                 "password_needed", "Set up a sign-in provider before turning the password off.", 409, field=key

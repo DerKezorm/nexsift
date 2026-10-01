@@ -62,6 +62,7 @@
     "rule_regex": "The pattern is not a valid regular expression.",
     "rule_value": "Every condition needs a value, at most 300 characters.",
     "secret_required": "Please enter the client secret.",
+    "sender_host_invalid": "Only a host name or an IP address, like 192.168.1.10, without a port.",
     "target_field_missing": "A required field is still missing for this target ({{field}}).",
     "too_many_attempts": "Too many attempts. Please try again in {{retry_after}} seconds.",
     "unknown_kind": "Unknown kind of target.",
@@ -484,7 +485,7 @@
       "title": "Retention"
     },
     "signin": {
-      "help": "The public address shows in the setup hints of the sources and is the redirect address at the provider.",
+      "help": "The public address is where the sign-in provider sends you back to. The address for senders goes into the setup hints of the sources.",
       "lead": "Address to the outside and sign-in with a password.",
       "password": "Allow sign-in with a password",
       "passwordHelp": "Off: only through the provider. For emergencies a command in the container resets the password and switches the password sign-in back on.",
@@ -493,6 +494,9 @@
       "publicUrl": "Public address",
       "publicUrlHelp": "Behind a reverse proxy, the address you type into the browser. Empty: nexsift takes the address of the request.",
       "publicUrlHint": "Like https://nexsift.example.com",
+      "senderHost": "Address for senders at home",
+      "senderHostHelp": "The address routers, the NAS, Proxmox and the like reach nexsift by. It goes into every setup hint. Needed once nexsift sits behind a reverse proxy: syslog, email and the Gotify and ntfy doors do not go through the proxy. Empty: nexsift takes the public address.",
+      "senderHostHint": "Like 192.168.1.10 or nas.home.arpa, without a port.",
       "title": "Sign-in and address"
     },
     "title": "Settings"
@@ -555,6 +559,8 @@
       "theSender": "the sender",
       "toInbox": "To the inbox",
       "valuesTitle": "Enter these values",
+      "viaPublic": "The senders are given the public address {{host}} here. If nexsift sits behind a reverse proxy, devices at home often cannot reach it that way. Then enter the address at home.",
+      "viaPublicLink": "To the settings",
       "waiting": "Waiting for the first message. Set up the sender and trigger a test message there.",
       "waysHelp": "nexsift understands all of these ways. The order is a recommendation: a webhook carries the most, almost every device can send email. The message arrives either way.",
       "waysLead": "Look in your device's notification settings for which of these it offers. Take the topmost one it knows.",

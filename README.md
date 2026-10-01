@@ -100,6 +100,22 @@ Remove a port line to close that door. If a host port is taken, use another one 
 Put the interface (port 8490) behind a reverse proxy with TLS if you open it beyond your own network. The other
 doors are meant for the devices in your network.
 
+### On a Synology
+
+- Find your user's numbers with `id` over SSH and put them into `PUID` and `PGID`. The first administrator is
+  often 1026, later users are not.
+- DSM puts an access list on folders created in a shared folder, and it only lets the administrators group write.
+  nexsift then stops with "the data directory is not writable". Remove the list for the data folder only:
+  `sudo synoacltool -del /volume1/docker/nexsift/data`, then `sudo chown -R <uid>:<gid>` on the same folder.
+- Port 514 is taken when the Log Center receives logs, port 25 when MailPlus runs. Map another port and say so in
+  `NEXSIFT_PUBLIC_PORTS`.
+
+### Behind a reverse proxy
+
+Set two addresses under Settings: the **public address** you type in the browser (`https://nexsift.example.com`),
+and the **address for senders at home** (`192.168.1.10`). Syslog, email and the Gotify and ntfy doors do not go
+through a proxy, so the setup hints have to send the devices to nexsift directly.
+
 ## Where things are stored
 
 Everything lives in `/data`: the SQLite database `nexsift.db` and `secret.key`. Mount it from a local disk, never

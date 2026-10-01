@@ -153,6 +153,10 @@ def webhook(body: bytes, content_type: str) -> tuple[Incoming, Payload]:
     text. The field names of the usual suspects (text, body, content, severity, level, status) work too, so a
     sender with fixed JSON can often be pointed here unchanged."""
     data = _as_json(body)
+    if isinstance(data, str) and data.lstrip().startswith("{"):
+        # JSON written into a JSON string: what Paperless sends when its body is a template and "send as JSON"
+        # is on anyway. Read the inner object instead of showing the quoted text.
+        data = _as_json(data.encode("utf-8"))
     if not isinstance(data, dict) and "x-www-form-urlencoded" in content_type.lower():
         # DSM's custom webhook sends a form unless JSON is chosen: text=<message>. Read as the same fields.
         from urllib.parse import parse_qsl

@@ -26,10 +26,12 @@ const PROXMOX_BODY = `{
   "host": "{{ fields.hostname }}"
 }`
 
+// Paperless 3 fills Jinja placeholders. tojson writes each value as a JSON string itself, so a title with
+// quotes still makes valid JSON (measured with Paperless-ngx 3.2.1 on 01.10.2026).
 const PAPERLESS_BODY = `{
-  "title": "New document: {doc_title}",
-  "message": "{correspondent}",
-  "url": "{doc_url}"
+  "title": {{ ("New document: " ~ doc_title) | tojson }},
+  "message": {{ correspondent | tojson }},
+  "url": {{ doc_url | tojson }}
 }`
 
 /** The same webhook as a shoutrrr address, for tools that only take those. template=json sends the title too. */

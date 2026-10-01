@@ -591,7 +591,7 @@
       "discordUrl": "Enter it where the Discord webhook address would go.",
       "kumaPreset": "In Uptime Kuma, choose the preset \"application/json\" under \"Request Body\".",
       "noAuth": "Without sign-in, without encryption (no SSL/TLS).",
-      "paperlessBody": "Paperless fills the placeholders in curly braces itself. Switch on \"Send as JSON\".",
+      "paperlessBody": "Take it exactly like this. Paperless fills the double curly braces itself, and a title with quotes still arrives intact.",
       "proxmoxBody": "Proxmox fills the placeholders in double curly braces itself.",
       "proxmoxNoHeader": "No header is needed. Delete the empty header row in Proxmox with the bin icon, otherwise it will not save. Leave secrets empty.",
       "recipient": "The name before the @ ties the mail to this source. The domain does not matter.",
@@ -668,9 +668,11 @@
         "name": "Paperless-ngx",
         "short": "New documents, bundled, not to the phone.",
         "steps": {
-          "s1": "In Paperless: Workflows, new workflow, trigger \"Document added\".",
-          "s2": "Action \"Webhook\", address and body from here, switch on \"Send as JSON\".",
-          "s3": "Save and upload a document."
+          "s1": "In Paperless: Workflows, \"Add Workflow\". Any name, like nexsift.",
+          "s2": "Under Triggers: \"Add Trigger\", trigger type \"Document Added\".",
+          "s3": "Under Actions: \"Add Action\", action type \"Webhook\".",
+          "s4": "Webhook url from here. Leave both \"Use parameters for webhook body\" and \"Send webhook payload as JSON\" off. The body from here into \"Webhook body\".",
+          "s5": "Save and upload a document. nexsift collects new documents in one line, none of them go to the phone."
         }
       },
       "proxmox": {

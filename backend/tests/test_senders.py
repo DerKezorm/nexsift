@@ -330,3 +330,13 @@ def test_synology_webhook_as_json_and_as_form(client: TestClient, operator: dict
         "The system has detected that Volume 1 is degraded.": "warn",
         "Scheduled S.M.A.R.T. test on Drive 3 failed.": "crit",
     }
+
+
+def test_paperless_json_inside_a_json_string_is_read_as_the_object(client: TestClient, operator: dict) -> None:
+    """Paperless with "send webhook payload as JSON" on wraps the body template into a JSON string (measured with
+    Paperless-ngx 3.2.1 on 01.10.2026)."""
+    source = add_source(client, "paperless")
+    inner = '{"title": "New document: Offer", "message": "", "url": "http://paperless.example.com/documents/2/"}'
+    client.post("/api/v1/hook/" + source["connection"]["token"], json=inner)
+    (thread,) = inbox(client)
+    assert thread["title"] == "New document: Offer"

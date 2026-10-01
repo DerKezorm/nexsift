@@ -591,7 +591,7 @@
       "discordUrl": "Dort eintragen, wo sonst die Discord-Webhook-Adresse steht.",
       "kumaPreset": "In Uptime Kuma unter „Request Body“ die Vorlage „application/json“ wählen.",
       "noAuth": "Ohne Anmeldung, ohne Verschlüsselung (kein SSL/TLS).",
-      "paperlessBody": "Die Platzhalter in geschweiften Klammern füllt Paperless selbst. „Als JSON senden“ einschalten.",
+      "paperlessBody": "Genau so übernehmen. Die doppelten geschweiften Klammern füllt Paperless selbst, auch ein Titel mit Anführungszeichen kommt so heil an.",
       "proxmoxBody": "Die Platzhalter in doppelten geschweiften Klammern füllt Proxmox selbst.",
       "proxmoxNoHeader": "Einen Header braucht es nicht. Die leere Header-Zeile in Proxmox mit dem Papierkorb löschen, sonst lässt sich nicht speichern. Secrets bleiben leer.",
       "recipient": "Der Name vor dem @ ordnet die Mail dieser Quelle zu. Die Domain ist egal.",
@@ -668,9 +668,11 @@
         "name": "Paperless-ngx",
         "short": "Neue Dokumente, gebündelt, ohne Handy.",
         "steps": {
-          "s1": "In Paperless: Workflows, neuer Workflow, Auslöser „Dokument hinzugefügt“.",
-          "s2": "Aktion „Webhook“, Adresse und Inhalt von hier, „Als JSON senden“ einschalten.",
-          "s3": "Speichern und ein Dokument hochladen."
+          "s1": "In Paperless: Arbeitsabläufe (englisch Workflows), „Arbeitsablauf hinzufügen“. Name frei, etwa nexsift.",
+          "s2": "Bei Auslöser: „Auslöser hinzufügen“, Auslösertyp „Dokument hinzugefügt“ (Document Added).",
+          "s3": "Bei Aktionen: „Aktion hinzufügen“, Aktionstyp „Webhook“.",
+          "s4": "Webhook-URL von hier. „Parameter für Webhook-Inhalt verwenden“ und „Webhook-Payload als JSON senden“ beide aus lassen. Den Inhalt von hier ins Feld „Webhook-Inhalt“.",
+          "s5": "Speichern und ein Dokument hochladen. Neue Dokumente sammelt nexsift in einer Zeile, aufs Handy geht davon nichts."
         }
       },
       "proxmox": {

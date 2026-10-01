@@ -1,0 +1,4 @@
+# Everything in the repository uses LF. The container scripts do not start with CRLF.
+* text=auto eol=lf
+*.png binary
+*.ico binary

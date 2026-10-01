@@ -32,3 +32,22 @@ def test_a_sender_address_with_a_port_or_path_is_refused(client: TestClient, ope
         response = _settings(client, sender_host=value)
         assert response.status_code == 422, value
         assert response.json()["detail"]["code"] == "sender_host_invalid"
+
+
+def test_a_sender_name_that_leads_to_the_internet_is_flagged(client: TestClient, operator: dict, monkeypatch) -> None:
+    """nexsift.example.com pointing at the router's public address: the doors cannot be reached that way. (Documentation
+    ranges like 203.0.113.0/24 do not count as global, hence a real public address.)"""
+    from app.services import sources
+
+    def resolve(host, *args, **kwargs):
+        address = {"nexsift.example.com": "1.1.1.1", "nas.example.net": "192.168.1.10"}[host]
+        return [(2, 1, 6, "", (address, 0))]
+
+    monkeypatch.setattr(sources.socket, "getaddrinfo", resolve)
+    sources._resolved.clear()
+    _settings(client, sender_host="nexsift.example.com")
+    assert add_source(client, "webhook")["connection"]["host_outside"] == "1.1.1.1"
+    _settings(client, sender_host="nas.example.net")
+    assert add_source(client, "webhook")["connection"]["host_outside"] == ""
+    _settings(client, sender_host="192.168.1.10")
+    assert add_source(client, "webhook")["connection"]["host_outside"] == ""

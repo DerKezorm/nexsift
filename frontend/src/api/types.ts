@@ -36,6 +36,8 @@ export interface Connection {
   host: string
   /** Where the host came from: the sender address in Settings, the public address, or the request. */
   host_from: 'sender' | 'public' | 'request'
+  /** The internet address the host name leads to, when it leads out instead of home; empty otherwise. */
+  host_outside: string
   ports: Record<string, number>
   token: string
   server?: string

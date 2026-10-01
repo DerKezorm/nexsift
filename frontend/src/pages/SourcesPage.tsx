@@ -321,7 +321,7 @@ function SetupDialog({ id, onClose }: { id: number; onClose: () => void }) {
   const hasToken = ['gotify', 'webhook', 'discord'].includes(data.protocol)
   return (
     <Dialog title={t('sources.setupFor', { name: data.name })} onClose={onClose} wide>
-      <SetupInstructions source={data} />
+      <SetupInstructions source={data} onReload={source.set} />
       <div className="mt-5 flex flex-wrap items-center justify-between gap-2 border-t border-ink-700 pt-4">
         {hasToken ? (
           confirmRenew ? (
@@ -349,7 +349,7 @@ function SetupDialog({ id, onClose }: { id: number; onClose: () => void }) {
   )
 }
 
-function SetupInstructions({ source }: { source: SourceWithConnection }) {
+function SetupInstructions({ source, onReload }: { source: SourceWithConnection; onReload: (fresh: SourceWithConnection) => void }) {
   const { t } = useTranslation()
   const preset = presetOf(source.kind, source.protocol)
   return (
@@ -361,17 +361,62 @@ function SetupInstructions({ source }: { source: SourceWithConnection }) {
         ))}
       </ol>
       <h3 className="mt-2 text-sm font-semibold text-mist-200">{t('sources.dialog.valuesTitle')}</h3>
-      {source.connection.host_from === 'public' && (
-        <Banner tone="info">
-          {t('sources.dialog.viaPublic', { host: source.connection.host })}{' '}
-          <Link to="/settings" className="font-medium underline">
-            {t('sources.dialog.viaPublicLink')}
-          </Link>
-        </Banner>
-      )}
+      {(source.connection.host_outside || (source.connection.host_from !== 'sender' && !isAddress(source.connection.host))) && <SenderHostPrompt source={source} onReload={onReload} />}
       {setupLines(preset, source.connection).map((line) => (
         <CopyField key={line.label} label={t(`sources.field.${line.label}`)} value={line.value} multiline={line.multiline} hint={line.hint ? t(`sources.lineHint.${line.hint}`) : undefined} />
       ))}
+    </div>
+  )
+}
+
+/** An IP address needs no second thought; a name may lead to a reverse proxy the devices at home cannot use. */
+function isAddress(host: string): boolean {
+  return /^\d{1,3}(\.\d{1,3}){3}$/.test(host) || host.includes(':')
+}
+
+/** The hints carry a name, not an address: ask for the address at home right here instead of in Settings. */
+function SenderHostPrompt({ source, onReload }: { source: SourceWithConnection; onReload: (fresh: SourceWithConnection) => void }) {
+  const { t } = useTranslation()
+  const [value, setValue] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  async function save() {
+    setBusy(true)
+    setError(null)
+    try {
+      await api.put('/api/settings', { values: { sender_host: value } })
+      onReload(await api.get<SourceWithConnection>(`/api/sources/${source.id}`))
+    } catch (caught) {
+      setError(errorMessage(caught))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-3 rounded-xl border border-warn-500/40 bg-ink-900 p-3.5 text-sm text-mist-300" role="note">
+      <p>
+        {source.connection.host_outside
+          ? t('sources.dialog.viaOutside', { host: source.connection.host, address: source.connection.host_outside })
+          : t('sources.dialog.viaName', { host: source.connection.host })}
+      </p>
+      <form
+        className="flex flex-wrap items-end gap-2"
+        onSubmit={(event) => {
+          event.preventDefault()
+          void save()
+        }}
+      >
+        <div className="min-w-48 flex-1">
+          <Field label={t('settings.signin.senderHost')} value={value} onChange={(event) => setValue(event.target.value)} placeholder="192.168.1.10" help={t('settings.signin.senderHostHelp')} />
+        </div>
+        <Button type="submit" loading={busy} disabled={!value.trim()} className="mb-0.5">
+          {t('sources.dialog.viaNameSave')}
+        </Button>
+      </form>
+      {error && <Banner tone="bad">{error}</Banner>}
+      <p className="text-xs text-mist-500">{t('sources.dialog.viaNameLater')}</p>
     </div>
   )
 }
@@ -522,7 +567,7 @@ function AddSource({ initial, onClose }: { initial: { preset?: string; key?: str
       ) : (
         <div className="flex flex-col gap-5">
           <StepChip step={3} sender={t(`sources.preset.${preset}.name`)} />
-          <SetupInstructions source={created} />
+          <SetupInstructions source={created} onReload={setCreated} />
           {heard ? (
             <Banner tone="ok">
               {t('sources.dialog.arrived')}{' '}

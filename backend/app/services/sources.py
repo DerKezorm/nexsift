@@ -4,8 +4,11 @@ operator has to enter in the sender."""
 from __future__ import annotations
 
 import hashlib
+import ipaddress
 import re
 import secrets
+import socket
+import time
 from typing import Any
 from urllib.parse import urlsplit
 
@@ -133,6 +136,38 @@ def _host(db: Session, request_host: str) -> tuple[str, str, str]:
     return "http", request_host.split(":", 1)[0] or "localhost", "request"
 
 
+#: How long a name's resolution is trusted, in seconds. Short: the operator fixes DNS and looks again.
+_RESOLVE_SECONDS = 60
+_resolved: dict[str, tuple[float, str]] = {}
+
+
+def outside_address(host: str) -> str:
+    """The internet address a host name leads to, or empty when it leads home (or nowhere).
+
+    A name like nexsift.example.com often points at the router's public address even inside the house; the
+    router only forwards the reverse proxy's port, so syslog, SMTP and the doors on their own ports never reach
+    nexsift that way (seen on a Synology, 01.10.2026). The setup dialog warns when this is the case."""
+    try:
+        return "" if not ipaddress.ip_address(host.strip("[]")).is_global else host
+    except ValueError:
+        pass
+    if "." not in host or host.endswith((".local", ".lan", ".home.arpa", ".internal", ".fritz.box")):
+        # A single label or a home suffix never leads out; and no lookup that could stall on it.
+        return ""
+    now = time.monotonic()
+    cached = _resolved.get(host)
+    if cached and now - cached[0] < _RESOLVE_SECONDS:
+        return cached[1]
+    try:
+        addresses = {info[4][0] for info in socket.getaddrinfo(host, None, proto=socket.IPPROTO_TCP)}
+    except OSError:
+        addresses = set()
+    public = sorted(address for address in addresses if ipaddress.ip_address(address.split("%", 1)[0]).is_global)
+    result = public[0] if addresses and len(public) == len(addresses) else ""
+    _resolved[host] = (now, result)
+    return result
+
+
 def connection(db: Session, source: Source, request_host: str) -> dict[str, Any]:
     """Everything the setup hint needs, already put together. The interface only arranges it into sentences."""
     scheme, host, origin = _host(db, request_host)
@@ -143,7 +178,13 @@ def connection(db: Session, source: Source, request_host: str) -> dict[str, Any]
     host = shown
     token = crypto.decrypt_secret(source.token_enc) if source.token_enc else ""
     key = (source.match_key or "").split(":", 1)[-1]
-    info: dict[str, Any] = {"host": host, "host_from": origin, "ports": ports, "token": token}
+    info: dict[str, Any] = {
+        "host": host,
+        "host_from": origin,
+        "host_outside": outside_address(host.strip("[]")),
+        "ports": ports,
+        "token": token,
+    }
     if source.protocol == "gotify":
         info["server"] = f"http://{host}:{ports['gotify']}"
         info["shoutrrr"] = f"gotify://{host}:{ports['gotify']}/{token}?disabletls=yes"

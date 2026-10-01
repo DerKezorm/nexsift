@@ -537,13 +537,27 @@
       "hostname": "Hostname im Syslog",
       "hostnameHelp": "Jede Syslog-Zeile nennt den Rechner, von dem sie kommt. Den trägst du hier ein. Weißt du ihn nicht: einfach das Gerät schicken lassen, nexsift zeigt unbekannte Absender oben auf dieser Seite an.",
       "hostnameHint": "So, wie sich das Gerät im Syslog nennt, etwa gw oder router. Notfalls seine IP-Adresse.",
+      "howTitle": "So geht es",
+      "knownHelp": "Bei diesen Diensten weiß nexsift, wie ihre Meldungen aussehen. Ausfall und Entwarnung werden gekoppelt, Updates gebündelt, Wichtiges erkannt. Der kleine graue Hinweis sagt, auf welchem Weg der Dienst meldet.",
+      "knownLead": "Die Anleitung folgt Schritt für Schritt ihren Einstellungen.",
+      "knownTitle": "Bekannte Absender",
       "name": "Name",
       "nameHelp": "Wie die Quelle im Posteingang heißen soll. Frei wählbar, später änderbar.",
+      "nameLead": "Nach dem Anlegen zeigt nexsift, was im Gerät einzutragen ist.",
       "ownKey": "Der Absender benutzt schon „{{key}}“. Die neue Quelle übernimmt genau das, am Absender musst du nichts ändern.",
-      "pick": "Was soll melden?",
-      "pickLead": "Such dir den Absender aus. Ist er nicht dabei, nimm die Art, die er beherrscht: Gotify, ntfy, Discord, Webhook oder E-Mail.",
+      "pick": "Neue Quelle",
+      "pickLead": "Jedes Gerät meldet auf seine eigene Art. Wähl aus, was melden soll. Danach zeigt nexsift dir genau die Felder, die du dort eintragen musst, mit Werten zum Kopieren.",
+      "step1": "Absender wählen",
+      "step2": "Benennen",
+      "step3": "In {{sender}} eintragen",
+      "stepsLabel": "Schritte",
+      "theSender": "den Absender",
       "toInbox": "Zum Posteingang",
-      "waiting": "Warte auf die erste Meldung. Stell den Absender ein und lös dort eine Testnachricht aus."
+      "valuesTitle": "Diese Werte eintragen",
+      "waiting": "Warte auf die erste Meldung. Stell den Absender ein und lös dort eine Testnachricht aus.",
+      "waysHelp": "nexsift versteht alle diese Wege. Die Reihenfolge ist eine Empfehlung: Ein Webhook trägt am meisten mit, E-Mail kann fast jedes Gerät. Ankommen tut die Meldung auf jedem Weg.",
+      "waysLead": "Schau in den Benachrichtigungs-Einstellungen deines Geräts, welche dieser Möglichkeiten es anbietet. Nimm die oberste, die es kennt.",
+      "waysTitle": "Nicht dabei? Dann nach dem Weg"
     },
     "explain": "Jeder Dienst, der an nexsift meldet, ist eine Quelle. nexsift tut dabei so, als wäre es der Dienst, den der Absender schon kennt (Gotify, ntfy, Discord, E-Mail, Syslog). Du trägst im Absender nur die Adresse von nexsift ein. Die Zeilen zum Kopieren stehen bei jeder Quelle unter „Einrichten“.",
     "explainTitle": "So kommen Meldungen herein",
@@ -557,6 +571,7 @@
       "requestBody": "Request Body",
       "sender": "Absender",
       "server": "Server",
+      "shoutrrr": "Oder als shoutrrr-Adresse",
       "smtpPort": "Port",
       "smtpServer": "SMTP-Server",
       "syslogHostname": "Hostname",
@@ -580,6 +595,7 @@
       "proxmoxNoHeader": "Einen Header braucht es nicht. Die leere Header-Zeile in Proxmox mit dem Papierkorb löschen, sonst lässt sich nicht speichern. Secrets bleiben leer.",
       "recipient": "Der Name vor dem @ ordnet die Mail dieser Quelle zu. Die Domain ist egal.",
       "sender": "Beliebig, viele Geräte wollen hier nur irgendeine Adresse.",
+      "shoutrrrGeneric": "Nur für Programme, die Adressen wie gotify:// oder discord:// erwarten (shoutrrr). Alle anderen nehmen die Adresse oben.",
       "synologyBody": "Den Parameter „text“ im Body so lassen, wie er ist.",
       "syslogHostname": "Diesen Namen muss das Gerät in seinen Syslog-Zeilen tragen.",
       "watchtowerEnv": "Danach den Watchtower-Container neu starten. Die Adresse enthält den Token, also nicht weitergeben."
@@ -603,32 +619,35 @@
     "preset": {
       "discord": {
         "name": "Discord-Webhook",
-        "short": "Für alles, was an einen Discord-Webhook schicken kann.",
+        "short": "Für Programme, die nur an Discord melden können. Statt der Discord-Adresse kommt die von nexsift hinein.",
         "steps": {
-          "s1": "Im Absender die Discord-Benachrichtigung öffnen.",
-          "s2": "Statt der Discord-Adresse diese hier eintragen, speichern, testen."
+          "s1": "Im Programm die Discord-Benachrichtigung öffnen.",
+          "s2": "Ins Feld für die Discord-Webhook-Adresse die Adresse von hier eintragen.",
+          "s3": "Testnachricht auslösen."
         }
       },
       "email": {
-        "name": "E-Mail (allgemein)",
-        "short": "Für Geräte, die nur Mails verschicken können.",
+        "name": "E-Mail",
+        "short": "Für Geräte, die nur Mails verschicken können, etwa USV, Drucker oder ältere Router.",
         "steps": {
-          "s1": "Im Gerät die Mail-Benachrichtigung öffnen.",
-          "s2": "SMTP-Server, Port und Empfänger von hier eintragen, ohne Anmeldung und ohne SSL.",
-          "s3": "Testmail schicken."
+          "s1": "Im Gerät die Mail-Benachrichtigung öffnen (oft „SMTP“ oder „E-Mail-Server“).",
+          "s2": "SMTP-Server, Port und Empfänger von hier eintragen. Anmeldung und Verschlüsselung (SSL/TLS) ausschalten.",
+          "s3": "Als Absender irgendeine Adresse, wenn das Gerät eine verlangt.",
+          "s4": "Testmail schicken."
         }
       },
       "gotify": {
-        "name": "Gotify (allgemein)",
-        "short": "Für alles, was Gotify kann.",
+        "name": "Gotify",
+        "short": "Für Programme, die an einen Gotify-Server melden können. nexsift gibt sich als Gotify-Server aus.",
         "steps": {
-          "s1": "Im Absender Gotify als Ziel wählen.",
-          "s2": "Server und Token von hier eintragen, speichern, testen."
+          "s1": "Im Programm Gotify als Benachrichtigung wählen.",
+          "s2": "Server und Token (manchmal „App-Token“) von hier eintragen.",
+          "s3": "Testnachricht auslösen."
         }
       },
       "homeassistant": {
         "name": "Home Assistant",
-        "short": "Über die eingebaute ntfy-Integration von Home Assistant.",
+        "short": "Eigene Meldungen aus Automationen, über die ntfy-Integration.",
         "steps": {
           "s1": "In Home Assistant: Einstellungen, Geräte und Dienste, Integration hinzufügen, „ntfy“.",
           "s2": "Als Server die Adresse von hier, ohne Anmeldung.",
@@ -636,11 +655,12 @@
         }
       },
       "ntfy": {
-        "name": "ntfy (allgemein)",
-        "short": "Für alles, was an einen ntfy-Server schicken kann.",
+        "name": "ntfy",
+        "short": "Für Programme, die an einen ntfy-Server melden können. nexsift gibt sich als ntfy-Server aus.",
         "steps": {
-          "s1": "Im Absender ntfy als Ziel wählen.",
-          "s2": "Server und Topic von hier eintragen, speichern, testen."
+          "s1": "Im Programm ntfy als Benachrichtigung wählen.",
+          "s2": "Als Server die Adresse von hier, als Thema (Topic) das von hier. Keine Anmeldung.",
+          "s3": "Testnachricht auslösen."
         }
       },
       "paperless": {
@@ -654,7 +674,7 @@
       },
       "proxmox": {
         "name": "Proxmox VE",
-        "short": "Backups, Replikation, Updates und Ausfälle von Proxmox.",
+        "short": "Backups, Replikation, Updates und Ausfälle, über den Webhook von Proxmox.",
         "steps": {
           "s1": "In Proxmox: Datacenter, Notifications, bei Notification Targets auf Add, „Webhook“ (deutsch: Rechenzentrum, Benachrichtigungen).",
           "s2": "Endpoint Name frei wählen, etwa nexsift. Methode POST und die Adresse von hier.",
@@ -664,7 +684,7 @@
         }
       },
       "synology": {
-        "name": "Synology (Webhook)",
+        "name": "Synology",
         "short": "Warnungen des DSM über den eingebauten Webhook. Der Mailversand der NAS bleibt, wie er ist.",
         "steps": {
           "s1": "Im DSM: Systemsteuerung, Benachrichtigung, Reiter „Webhooks“, Hinzufügen.",
@@ -675,12 +695,12 @@
         }
       },
       "syslog": {
-        "name": "Syslog (Router, Switch, Firewall)",
-        "short": "Für Netzwerkgeräte, die Syslog an einen Server schicken.",
+        "name": "Syslog",
+        "short": "Für Router, Switches und Firewalls. Im Gerät meist „Remote Syslog“ oder „Syslog-Server“.",
         "steps": {
-          "s1": "Im Gerät „Remote Syslog“ oder „Syslog-Server“ suchen.",
+          "s1": "Im Gerät „Remote Syslog“ oder „Syslog-Server“ suchen und einschalten.",
           "s2": "Server und Port von hier eintragen, Protokoll UDP.",
-          "s3": "Die Quelle erkennt nexsift am Hostnamen in den Zeilen."
+          "s3": "nexsift ordnet die Zeilen am Hostnamen zu, den das Gerät mitschickt. Kommt nichts an, steht der richtige Name oben auf der Seite unter den unbekannten Absendern."
         }
       },
       "ups": {
@@ -710,11 +730,13 @@
         }
       },
       "webhook": {
-        "name": "Webhook (eigene Skripte)",
-        "short": "Für eigene Skripte: JSON mit title, message, priority.",
+        "name": "Webhook",
+        "short": "Im Gerät oft „Webhook“, „HTTP“ oder „Benutzerdefiniert“ genannt. Auch für eigene Skripte.",
         "steps": {
-          "s1": "Mit POST an die Adresse schicken, JSON mit title, message und priority (info, warning, critical).",
-          "s2": "Adressen im Text werden zu Knöpfen, oder als links: [{label, url}]."
+          "s1": "Im Gerät die Benachrichtigung „Webhook“ wählen (manchmal „HTTP-Anfrage“ oder „Benutzerdefiniert“).",
+          "s2": "Die Adresse von hier eintragen, Methode POST.",
+          "s3": "Lässt sich der Inhalt festlegen: JSON mit title, message und priority (info, warning oder critical). Lässt er sich nicht festlegen: egal, nexsift nimmt, was kommt.",
+          "s4": "Testnachricht auslösen. Sie erscheint unten, sobald sie da ist."
         }
       }
     },
@@ -743,7 +765,15 @@
     "unrecognizedHelp": "Die Meldungen sind trotzdem da, nur ohne Extras wie Bündeln oder Entwarnung. Meist hat der Absender nach einem Update sein Format geändert. In der Meldung unter „Rohdaten“ steht, was ankam.",
     "unrecognizedTitle": "Unbekanntes Format",
     "unrecognized_one": "Die letzte Meldung hatte ein unbekanntes Format.",
-    "unrecognized_other": "Die letzten {{count}} Meldungen hatten ein unbekanntes Format."
+    "unrecognized_other": "Die letzten {{count}} Meldungen hatten ein unbekanntes Format.",
+    "via": {
+      "discord": "über Discord",
+      "gotify": "über Gotify",
+      "ntfy": "über ntfy",
+      "smtp": "über E-Mail",
+      "syslog": "über Syslog",
+      "webhook": "über Webhook"
+    }
   },
   "targets": {
     "add": "Ziel",

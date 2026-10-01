@@ -32,6 +32,12 @@ const PAPERLESS_BODY = `{
   "url": "{doc_url}"
 }`
 
+/** The same webhook as a shoutrrr address, for tools that only take those. template=json sends the title too. */
+function shoutrrrGeneric(url: string): string {
+  if (url.startsWith('https://')) return `generic://${url.slice(8)}?template=json`
+  return `generic://${url.replace(/^http:\/\//, '')}?disabletls=yes&template=json`
+}
+
 export function setupLines(preset: string, connection: Connection): SetupLine[] {
   const c = connection
   switch (preset) {
@@ -59,6 +65,7 @@ export function setupLines(preset: string, connection: Connection): SetupLine[] 
     case 'webhook':
       return [
         { label: 'url', value: c.url ?? '' },
+        { label: 'shoutrrr', value: shoutrrrGeneric(c.url ?? ''), hint: 'shoutrrrGeneric' },
         {
           label: 'test',
           value: `curl -X POST ${c.url} -H "Content-Type: application/json" -d '{"title":"Hello","message":"First message","priority":"info"}'`,

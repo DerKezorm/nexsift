@@ -537,13 +537,27 @@
       "hostname": "Host name in syslog",
       "hostnameHelp": "Every syslog line names the machine it comes from. Enter that here. If you do not know it: just let the device send; nexsift lists unknown senders at the top of this page.",
       "hostnameHint": "As the device names itself in syslog, like gw or router. Its IP address if nothing else.",
+      "howTitle": "How to",
+      "knownHelp": "nexsift knows what messages from these services look like. Outages and all-clears are paired, updates bundled, important things recognized. The small gray note says which way the service reports.",
+      "knownLead": "The guide follows their settings step by step.",
+      "knownTitle": "Known senders",
       "name": "Name",
       "nameHelp": "What the source is called in the inbox. Free to choose, can be changed later.",
+      "nameLead": "After creating it, nexsift shows what to enter on the device.",
       "ownKey": "The sender already uses \"{{key}}\". The new source takes exactly that; nothing changes at the sender.",
-      "pick": "What should report?",
-      "pickLead": "Pick the sender. If it is not listed, take the kind it speaks: Gotify, ntfy, Discord, webhook or email.",
+      "pick": "New source",
+      "pickLead": "Every device reports in its own way. Pick what should report. nexsift then shows you exactly the fields to fill in over there, with values to copy.",
+      "step1": "Pick the sender",
+      "step2": "Name it",
+      "step3": "Enter in {{sender}}",
+      "stepsLabel": "Steps",
+      "theSender": "the sender",
       "toInbox": "To the inbox",
-      "waiting": "Waiting for the first message. Set up the sender and trigger a test message there."
+      "valuesTitle": "Enter these values",
+      "waiting": "Waiting for the first message. Set up the sender and trigger a test message there.",
+      "waysHelp": "nexsift understands all of these ways. The order is a recommendation: a webhook carries the most, almost every device can send email. The message arrives either way.",
+      "waysLead": "Look in your device's notification settings for which of these it offers. Take the topmost one it knows.",
+      "waysTitle": "Not listed? Then by the way it reports"
     },
     "explain": "Every service that reports to nexsift is a source. nexsift acts as the service the sender already knows (Gotify, ntfy, Discord, email, syslog). You only enter nexsift's address in the sender. The lines to copy are under \"Set up\" at every source.",
     "explainTitle": "How messages get in",
@@ -557,6 +571,7 @@
       "requestBody": "Request body",
       "sender": "Sender",
       "server": "Server",
+      "shoutrrr": "Or as a shoutrrr address",
       "smtpPort": "Port",
       "smtpServer": "SMTP server",
       "syslogHostname": "Host name",
@@ -580,6 +595,7 @@
       "proxmoxNoHeader": "No header is needed. Delete the empty header row in Proxmox with the bin icon, otherwise it will not save. Leave secrets empty.",
       "recipient": "The name before the @ ties the mail to this source. The domain does not matter.",
       "sender": "Anything; many devices just want some address here.",
+      "shoutrrrGeneric": "Only for programs that expect addresses like gotify:// or discord:// (shoutrrr). Everything else takes the address above.",
       "synologyBody": "Leave the parameter \"text\" in the body as it is.",
       "syslogHostname": "The device must carry this name in its syslog lines.",
       "watchtowerEnv": "Then restart the Watchtower container. The address holds the token, so do not pass it on."
@@ -603,32 +619,35 @@
     "preset": {
       "discord": {
         "name": "Discord webhook",
-        "short": "For anything that can send to a Discord webhook.",
+        "short": "For programs that can only report to Discord. nexsift's address goes where Discord's would.",
         "steps": {
-          "s1": "Open the Discord notification in the sender.",
-          "s2": "Enter this address instead of the Discord one, save, test."
+          "s1": "In the program, open the Discord notification.",
+          "s2": "Enter the address from here in the field for the Discord webhook URL.",
+          "s3": "Send a test message."
         }
       },
       "email": {
-        "name": "Email (generic)",
-        "short": "For devices that can only send mail.",
+        "name": "Email",
+        "short": "For devices that can only send mail, like a UPS, a printer or an older router.",
         "steps": {
-          "s1": "Open the mail notification in the device.",
-          "s2": "Enter SMTP server, port and recipient from here, no sign-in and no SSL.",
-          "s3": "Send a test mail."
+          "s1": "On the device, open the mail notification (often \"SMTP\" or \"Mail server\").",
+          "s2": "Enter SMTP server, port and recipient from here. Turn off sign-in and encryption (SSL/TLS).",
+          "s3": "As the sender, any address, if the device asks for one.",
+          "s4": "Send a test mail."
         }
       },
       "gotify": {
-        "name": "Gotify (generic)",
-        "short": "For anything that speaks Gotify.",
+        "name": "Gotify",
+        "short": "For programs that can report to a Gotify server. nexsift acts as one.",
         "steps": {
-          "s1": "Choose Gotify as the target in the sender.",
-          "s2": "Enter server and token from here, save, test."
+          "s1": "In the program, choose Gotify as the notification.",
+          "s2": "Enter server and token (sometimes \"app token\") from here.",
+          "s3": "Send a test message."
         }
       },
       "homeassistant": {
         "name": "Home Assistant",
-        "short": "Through Home Assistant's built-in ntfy integration.",
+        "short": "Your own messages from automations, through the ntfy integration.",
         "steps": {
           "s1": "In Home Assistant: Settings, Devices and services, Add integration, \"ntfy\".",
           "s2": "The server address from here, without sign-in.",
@@ -636,16 +655,17 @@
         }
       },
       "ntfy": {
-        "name": "ntfy (generic)",
-        "short": "For anything that can send to an ntfy server.",
+        "name": "ntfy",
+        "short": "For programs that can report to an ntfy server. nexsift acts as one.",
         "steps": {
-          "s1": "Choose ntfy as the target in the sender.",
-          "s2": "Enter server and topic from here, save, test."
+          "s1": "In the program, choose ntfy as the notification.",
+          "s2": "As the server the address from here, as the topic the one from here. No sign-in.",
+          "s3": "Send a test message."
         }
       },
       "paperless": {
         "name": "Paperless-ngx",
-        "short": "New documents, bundled, no phone.",
+        "short": "New documents, bundled, not to the phone.",
         "steps": {
           "s1": "In Paperless: Workflows, new workflow, trigger \"Document added\".",
           "s2": "Action \"Webhook\", address and body from here, switch on \"Send as JSON\".",
@@ -654,7 +674,7 @@
       },
       "proxmox": {
         "name": "Proxmox VE",
-        "short": "Backups, replication, updates and failures from Proxmox.",
+        "short": "Backups, replication, updates and failures, through Proxmox' webhook.",
         "steps": {
           "s1": "In Proxmox: Datacenter, Notifications, Add under Notification Targets, \"Webhook\".",
           "s2": "Any endpoint name, like nexsift. Method POST and the address from here.",
@@ -664,8 +684,8 @@
         }
       },
       "synology": {
-        "name": "Synology (webhook)",
-        "short": "DSM warnings through its built-in webhook. The NAS mail settings stay as they are.",
+        "name": "Synology",
+        "short": "DSM warnings through its built-in webhook. The NAS' mail stays as it is.",
         "steps": {
           "s1": "In DSM: Control Panel, Notification, tab \"Webhooks\", Add.",
           "s2": "Provider \"Custom\", rule \"All\". nexsift sorts out what matters itself.",
@@ -675,12 +695,12 @@
         }
       },
       "syslog": {
-        "name": "Syslog (router, switch, firewall)",
-        "short": "For network devices that send syslog to a server.",
+        "name": "Syslog",
+        "short": "For routers, switches and firewalls. On the device usually \"Remote syslog\" or \"Syslog server\".",
         "steps": {
-          "s1": "Look for \"Remote syslog\" or \"Syslog server\" in the device.",
+          "s1": "On the device, find \"Remote syslog\" or \"Syslog server\" and turn it on.",
           "s2": "Enter server and port from here, protocol UDP.",
-          "s3": "nexsift recognizes the source by the host name in the lines."
+          "s3": "nexsift matches the lines by the hostname the device sends along. If nothing arrives, the right name shows at the top of this page under unknown senders."
         }
       },
       "ups": {
@@ -694,7 +714,7 @@
       },
       "uptimekuma": {
         "name": "Uptime Kuma",
-        "short": "Failures and all-clears, paired automatically.",
+        "short": "Outages and all-clears, paired automatically.",
         "steps": {
           "s1": "In Uptime Kuma: Settings, Notifications, Setup notification, type \"Webhook\".",
           "s2": "Address from here, request body \"application/json\".",
@@ -710,11 +730,13 @@
         }
       },
       "webhook": {
-        "name": "Webhook (own scripts)",
-        "short": "For your own scripts: JSON with title, message, priority.",
+        "name": "Webhook",
+        "short": "Often called \"Webhook\", \"HTTP\" or \"Custom\" on the device. Also for your own scripts.",
         "steps": {
-          "s1": "POST to the address, JSON with title, message and priority (info, warning, critical).",
-          "s2": "Addresses in the text become buttons, or send links: [{label, url}]."
+          "s1": "On the device, choose the \"Webhook\" notification (sometimes \"HTTP request\" or \"Custom\").",
+          "s2": "Enter the address from here, method POST.",
+          "s3": "If the body can be set: JSON with title, message and priority (info, warning or critical). If it cannot: no matter, nexsift takes what comes.",
+          "s4": "Send a test message. It shows up below as soon as it arrives."
         }
       }
     },
@@ -743,7 +765,15 @@
     "unrecognizedHelp": "The messages are there anyway, only without extras like bundling or the all-clear. Usually the sender changed its format with an update. \"Raw data\" in the message shows what arrived.",
     "unrecognizedTitle": "Unknown format",
     "unrecognized_one": "The last message had an unknown format.",
-    "unrecognized_other": "The last {{count}} messages had an unknown format."
+    "unrecognized_other": "The last {{count}} messages had an unknown format.",
+    "via": {
+      "discord": "via Discord",
+      "gotify": "via Gotify",
+      "ntfy": "via ntfy",
+      "smtp": "via email",
+      "syslog": "via syslog",
+      "webhook": "via webhook"
+    }
   },
   "targets": {
     "add": "Target",

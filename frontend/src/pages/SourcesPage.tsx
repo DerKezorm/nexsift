@@ -17,8 +17,10 @@ import { presetOf, setupLines } from '../lib/setup'
 import { relative, useNow } from '../lib/time'
 import { useLoad } from '../lib/useLoad'
 
-/** The presets in the order the dialog offers them: the usual senders first, the general doors after. */
-const ORDER = ['watchtower', 'proxmox', 'uptimekuma', 'homeassistant', 'synology', 'paperless', 'ups', 'syslog', 'gotify', 'ntfy', 'discord', 'webhook', 'email']
+/** Senders nexsift knows by name: the setup follows their own settings page, their messages are understood. */
+const KNOWN = ['proxmox', 'synology', 'uptimekuma', 'watchtower', 'homeassistant', 'paperless']
+/** Everything else goes by what the device offers, the most capable way first. */
+const WAYS = ['webhook', 'email', 'syslog', 'ntfy', 'gotify', 'discord']
 
 export function SourcesPage() {
   const { t, i18n } = useTranslation()
@@ -352,15 +354,34 @@ function SetupInstructions({ source }: { source: SourceWithConnection }) {
   const preset = presetOf(source.kind, source.protocol)
   return (
     <div className="flex flex-col gap-3">
-      <ol className="flex list-decimal flex-col gap-1 pl-5 text-sm text-mist-300">
+      <h3 className="text-sm font-semibold text-mist-200">{t('sources.dialog.howTitle')}</h3>
+      <ol className="flex list-decimal flex-col gap-1.5 pl-5 text-sm text-mist-300">
         {Object.values(t(`sources.preset.${preset}.steps`, { returnObjects: true }) as Record<string, string>).map((step) => (
           <li key={step}>{step}</li>
         ))}
       </ol>
+      <h3 className="mt-2 text-sm font-semibold text-mist-200">{t('sources.dialog.valuesTitle')}</h3>
       {setupLines(preset, source.connection).map((line) => (
         <CopyField key={line.label} label={t(`sources.field.${line.label}`)} value={line.value} multiline={line.multiline} hint={line.hint ? t(`sources.lineHint.${line.hint}`) : undefined} />
       ))}
     </div>
+  )
+}
+
+/** Where the operator is in adding a source: pick, name, enter over there. */
+function StepChip({ step, sender }: { step: 1 | 2 | 3; sender?: string }) {
+  const { t } = useTranslation()
+  return (
+    <ol className="mb-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs" aria-label={t('sources.dialog.stepsLabel')}>
+      {([1, 2, 3] as const).map((number) => (
+        <li key={number} className="flex items-center gap-2" aria-current={number === step ? 'step' : undefined}>
+          {number > 1 && <span className="text-mist-600" aria-hidden="true">›</span>}
+          <span className={number === step ? 'font-semibold text-accent-300' : number < step ? 'text-mist-400' : 'text-mist-600'}>
+            {number}. {t(`sources.dialog.step${number}`, { sender: sender ?? t('sources.dialog.theSender') })}
+          </span>
+        </li>
+      ))}
+    </ol>
   )
 }
 
@@ -408,32 +429,47 @@ function AddSource({ initial, onClose }: { initial: { preset?: string; key?: str
   }
 
   if (!preset) {
-    const known = new Map((presets.data ?? []).map((item) => [item.key, item]))
+    const offered = new Map((presets.data ?? []).map((item) => [item.key, item]))
+    const card = (key: string, showWay: boolean) => {
+      const item = offered.get(key)
+      if (!item) return null
+      return (
+        <button
+          key={key}
+          type="button"
+          onClick={() => {
+            setPreset(key)
+            setName(t(`sources.preset.${key}.name`))
+          }}
+          className="flex items-start gap-3 rounded-xl border border-ink-700 bg-ink-900 p-3 text-left transition-colors hover:border-accent-500/50 hover:bg-ink-800"
+        >
+          <SourceMark kind={item.kind} protocol={item.protocol} className="h-8 w-8 text-[10px]" />
+          <span className="min-w-0">
+            <span className="flex flex-wrap items-center gap-x-2 text-sm font-medium text-mist-100">
+              {t(`sources.preset.${key}.name`)}
+              {showWay && <span className="text-[11px] font-normal text-mist-500">{t(`sources.via.${item.protocol}`)}</span>}
+            </span>
+            <span className="block text-xs text-mist-500">{t(`sources.preset.${key}.short`)}</span>
+          </span>
+        </button>
+      )
+    }
     return (
       <Dialog title={t('sources.dialog.pick')} onClose={onClose} wide>
-        <p className="mb-4 text-sm text-mist-400">{t('sources.dialog.pickLead')}</p>
-        <div className="grid gap-2 sm:grid-cols-2">
-          {ORDER.filter((key) => known.has(key)).map((key) => {
-            const item = known.get(key)!
-            return (
-              <button
-                key={key}
-                type="button"
-                onClick={() => {
-                  setPreset(key)
-                  setName(t(`sources.preset.${key}.name`))
-                }}
-                className="flex items-start gap-3 rounded-xl border border-ink-700 bg-ink-900 p-3 text-left transition-colors hover:border-accent-500/50 hover:bg-ink-800"
-              >
-                <SourceMark kind={item.kind} protocol={item.protocol} className="h-8 w-8 text-[10px]" />
-                <span className="min-w-0">
-                  <span className="block text-sm font-medium text-mist-100">{t(`sources.preset.${key}.name`)}</span>
-                  <span className="block text-xs text-mist-500">{t(`sources.preset.${key}.short`)}</span>
-                </span>
-              </button>
-            )
-          })}
-        </div>
+        <StepChip step={1} />
+        <p className="mb-5 text-sm text-mist-400">{t('sources.dialog.pickLead')}</p>
+        <h3 className="mb-1 flex items-center gap-2 text-sm font-semibold text-mist-200">
+          {t('sources.dialog.knownTitle')}
+          <Help label={t('sources.dialog.knownTitle')}>{t('sources.dialog.knownHelp')}</Help>
+        </h3>
+        <p className="mb-2 text-xs text-mist-500">{t('sources.dialog.knownLead')}</p>
+        <div className="grid gap-2 sm:grid-cols-2">{KNOWN.map((key) => card(key, true))}</div>
+        <h3 className="mt-6 mb-1 flex items-center gap-2 text-sm font-semibold text-mist-200">
+          {t('sources.dialog.waysTitle')}
+          <Help label={t('sources.dialog.waysTitle')}>{t('sources.dialog.waysHelp')}</Help>
+        </h3>
+        <p className="mb-2 text-xs text-mist-500">{t('sources.dialog.waysLead')}</p>
+        <div className="grid gap-2 sm:grid-cols-2">{WAYS.map((key) => card(key, false))}</div>
       </Dialog>
     )
   }
@@ -448,7 +484,10 @@ function AddSource({ initial, onClose }: { initial: { preset?: string; key?: str
             void create()
           }}
         >
-          <p className="text-sm text-mist-400">{t(`sources.preset.${preset}.short`)}</p>
+          <StepChip step={2} />
+          <p className="text-sm text-mist-400">
+            {t(`sources.preset.${preset}.short`)} {t('sources.dialog.nameLead')}
+          </p>
           <Field label={t('sources.dialog.name')} value={name} onChange={(event) => setName(event.target.value)} help={t('sources.dialog.nameHelp')} autoFocus />
           {preset === 'syslog' && (
             <Field
@@ -474,6 +513,7 @@ function AddSource({ initial, onClose }: { initial: { preset?: string; key?: str
         </form>
       ) : (
         <div className="flex flex-col gap-5">
+          <StepChip step={3} sender={t(`sources.preset.${preset}.name`)} />
           <SetupInstructions source={created} />
           {heard ? (
             <Banner tone="ok">

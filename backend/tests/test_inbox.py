@@ -251,3 +251,16 @@ def test_the_source_counter_survives_messages_at_the_same_instant(client: TestCl
     for worker in workers:
         worker.join()
     assert client.get(f"/api/sources/{source_id}").json()["count_total"] == 6
+
+
+def test_a_deleted_built_in_rule_stays_deleted_after_a_restart(client: TestClient, operator: dict) -> None:
+    """The built-in rules are handed out at every start; one the operator deleted must not come back."""
+    from app.services import presets
+
+    rules = client.get("/api/rules").json()
+    keyword = next(rule for rule in rules if rule["built_in"] == "keywords-critical")
+    assert client.delete(f"/api/rules/{keyword['id']}", headers=UI).status_code == 204
+    with SessionLocal() as db:
+        presets.install_defaults(db)
+    assert all(rule["built_in"] != "keywords-critical" for rule in client.get("/api/rules").json())
+    assert any(rule["built_in"] == "keywords-warning" for rule in client.get("/api/rules").json())

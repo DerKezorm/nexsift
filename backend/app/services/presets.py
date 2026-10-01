@@ -13,6 +13,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ..models import CRIT, WARN, Rule
+from . import settings_service
 
 PRESETS: dict[str, dict[str, str]] = {
     "watchtower": {"kind": "watchtower", "protocol": "gotify", "name": "Watchtower"},
@@ -81,7 +82,13 @@ DEFAULT_RULE_POSITION = 1000
 
 
 def install_defaults(db: Session) -> None:
+    """Hands out each built-in rule once. Runs at every start, so it remembers what it gave: a rule the operator
+    deleted would otherwise be back after the next update."""
+    installed = list(settings_service.get(db, "installed_rules") or [])
     for index, rule in enumerate(DEFAULT_RULES):
+        if rule["key"] in installed:
+            continue
+        installed.append(rule["key"])
         if db.scalar(select(Rule).where(Rule.built_in == rule["key"])) is None:
             db.add(
                 Rule(
@@ -92,7 +99,7 @@ def install_defaults(db: Session) -> None:
                     built_in=rule["key"],
                 )
             )
-    db.commit()
+    settings_service.save(db, {"installed_rules": installed})
 
 
 def install_source_rules(db: Session, preset: str, source_id: int) -> None:

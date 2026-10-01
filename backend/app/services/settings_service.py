@@ -34,6 +34,8 @@ DEFAULTS: dict[str, Any] = {
     "retention_days": 90,
     "archive_days": 30,
     "raw_days": 7,
+    #: Keys of the built-in rules already handed out once. One the operator deleted stays deleted.
+    "installed_rules": [],
 }
 
 #: What the frontend may read and the operator may change through PUT /api/settings.

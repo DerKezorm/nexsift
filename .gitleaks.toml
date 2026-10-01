@@ -23,4 +23,7 @@ regexes = [
   # The characters source tokens are drawn from (backend/app/services/sources.py), without the ones that look
   # alike. A list of letters, not a key.
   '''^ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789$''',
+  # The authentication secret of the worked example in RFC 8291, section 5 (backend/tests/test_webpush.py checks
+  # the encryption against it). Printed in the standard, not a secret.
+  '''^BTBZMqHH6r4Tts7J_aSIgg$''',
 ]

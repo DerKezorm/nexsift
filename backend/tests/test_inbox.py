@@ -14,15 +14,40 @@ def _hook(client: TestClient, source: dict):
     return lambda **body: client.post(path, json=body)
 
 
-def test_same_message_bundles_into_one_thread(client: TestClient, operator: dict) -> None:
+def test_same_warning_bundles_into_one_thread(client: TestClient, operator: dict) -> None:
     send = _hook(client, add_source(client, "webhook"))
-    send(title="Disk sda at 91 %")
-    send(title="Disk sda at 92 %")
-    send(title="Something else")
+    send(title="Disk sda at 91 %", priority="warning")
+    send(title="Disk sda at 92 %", priority="warning")
+    send(title="Something else", priority="warning")
     threads = inbox(client)
     assert len(threads) == 2
     bundled = next(thread for thread in threads if thread["event_count"] == 2)
     assert bundled["title"] == "Disk sda at 92 %"
+
+
+def test_a_sources_routine_bundles_into_one_line_whatever_the_titles(client: TestClient, operator: dict) -> None:
+    """No knowledge of the sender needed: its info messages share one line, problems keep their own."""
+    send = _hook(client, add_source(client, "webhook"))
+    send(title="Download started", body="Film A")
+    send(title="Upgraded", body="Film B")
+    send(title="Title added", body="Film C")
+    send(title="Download failed", priority="critical")
+    threads = inbox(client)
+    assert len(threads) == 2
+    routine = next(thread for thread in threads if thread["event_count"] == 3)
+    assert routine["routine"] is True
+    assert routine["preview"] == "Title added: Film C"
+    problem = next(thread for thread in threads if thread["priority"] == "crit")
+    assert problem["routine"] is False
+    assert problem["title"] == "Download failed"
+
+
+def test_a_single_routine_message_is_shown_as_itself(client: TestClient, operator: dict) -> None:
+    send = _hook(client, add_source(client, "webhook"))
+    send(title="Download started", body="Film A")
+    (thread,) = inbox(client)
+    assert thread["routine"] is False
+    assert thread["preview"] == "Film A"
 
 
 def test_bundle_window_ends(client: TestClient, operator: dict) -> None:

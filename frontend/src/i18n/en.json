@@ -148,6 +148,7 @@
     "openLink": "Open",
     "pushed": "Phone",
     "resolved": "Resolved",
+    "routineTitle": "{{count}} routine messages",
     "search": "Search",
     "setUpPhone": "No target for the phone yet? This way.",
     "shortcutsHint": "Keyboard shortcuts",
@@ -315,7 +316,7 @@
       "throttleHelp": "When a source sends more than this many messages per minute, nexsift only counts the rest. Protects against endless loops.",
       "title": "Defaults",
       "window": "Bundle window (minutes)",
-      "windowHelp": "The same message within this time lands in one line. An open critical problem stays one line until it is resolved."
+      "windowHelp": "What arrives within this time shares a line: all info messages of a source together as routine, warnings and critical ones per subject. An open critical problem stays one line until it is resolved."
     },
     "down": "Move down",
     "drop": "Drop",
@@ -331,7 +332,7 @@
       "edit": "Edit rule",
       "field": "Field",
       "groupKey": "Bundle by",
-      "groupKeyHelp": "Messages with the same key land in one line. Values from the message in curly braces, like vm-{vmid}. Empty: nexsift bundles messages that read the same on its own.",
+      "groupKeyHelp": "Messages with the same key share a line. Values from the message in curly braces, like vm-{vmid}. Leave empty: nexsift puts a source's info messages together, and warnings with the same title.",
       "keep": "From the sender",
       "name": "Name",
       "nameHelp": "What the rule is for, in your words. The name shows on every message it hits.",

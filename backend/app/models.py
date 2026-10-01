@@ -48,6 +48,10 @@ class Base(DeclarativeBase):
 
 INFO, WARN, CRIT = "info", "warn", "crit"
 PRIORITIES = (INFO, WARN, CRIT)
+#: The group key of the line that collects a source's routine: every info message nothing more specific claims.
+#: Works for any sender without knowing it; warnings and critical ones stay apart, one line per subject.
+ROUTINE_KEY = "__routine__"
+
 RANK = {INFO: 0, WARN: 1, CRIT: 2}
 
 UNREAD, READ, ARCHIVED = "unread", "read", "archived"

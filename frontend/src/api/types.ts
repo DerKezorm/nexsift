@@ -77,6 +77,8 @@ export interface ThreadSummary {
   resolved_by: string
   throttled_count: number
   pushed: boolean
+  /** A source's routine: different info messages in one line, titled by their count. */
+  routine: boolean
   preview: string
   links: Link[]
 }

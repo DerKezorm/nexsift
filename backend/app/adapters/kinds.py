@@ -224,9 +224,7 @@ def mail(incoming: Incoming, payload: Payload) -> list[Incoming]:
 
 
 def syslog(incoming: Incoming, payload: Payload) -> list[Incoming]:
-    app = str(payload.get("app", "") or "")
-    if app:
-        incoming.group_key = f"{app}:{shape(incoming.title)}"
+    """Nothing to add: routine lines join the source's routine, the rest groups by its shape like any sender."""
     return [incoming]
 
 

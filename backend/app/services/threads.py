@@ -9,7 +9,7 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import Select
 
-from ..models import ARCHIVED, CRIT, READ, UNREAD, Delivery, Event, Source, Target, Thread, utcnow
+from ..models import ARCHIVED, CRIT, READ, ROUTINE_KEY, UNREAD, Delivery, Event, Source, Target, Thread, utcnow
 
 VIEWS = ("inbox", "unread", "crit", "archived")
 PAGE = 100
@@ -77,7 +77,16 @@ def _pushed(db: Session, ids: list[int]) -> set[int]:
     )
 
 
+def _preview(latest: Event | None, routine: bool) -> str:
+    if latest is None:
+        return ""
+    if routine and latest.body:
+        return f"{latest.title}: {latest.body}"[:200]
+    return (latest.body or latest.title)[:200]
+
+
 def summary(thread: Thread, latest: Event | None, pushed: bool) -> dict[str, Any]:
+    routine = thread.group_key == ROUTINE_KEY and thread.event_count > 1
     return {
         "id": thread.id,
         "source_id": thread.source_id,
@@ -91,7 +100,9 @@ def summary(thread: Thread, latest: Event | None, pushed: bool) -> dict[str, Any
         "resolved_by": thread.resolved_by,
         "throttled_count": thread.throttled_count,
         "pushed": pushed,
-        "preview": (latest.body or latest.title)[:200] if latest else "",
+        # A routine line holds different things; its preview names the latest one by its title.
+        "routine": routine,
+        "preview": _preview(latest, routine),
         "links": latest.links if latest else [],
     }
 

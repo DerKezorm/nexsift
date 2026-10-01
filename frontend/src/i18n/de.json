@@ -148,6 +148,7 @@
     "openLink": "Öffnen",
     "pushed": "Handy",
     "resolved": "Erledigt",
+    "routineTitle": "{{count}} Routinemeldungen",
     "search": "Suchen",
     "setUpPhone": "Noch kein Ziel fürs Handy eingerichtet? Hier entlang.",
     "shortcutsHint": "Tastenkürzel",
@@ -315,7 +316,7 @@
       "throttleHelp": "Schickt eine Quelle mehr als so viele Meldungen pro Minute, zählt nexsift den Rest nur noch. Schützt vor Endlosschleifen.",
       "title": "Standard",
       "window": "Bündelfenster (Minuten)",
-      "windowHelp": "Gleiche Meldungen innerhalb dieser Zeit landen in einer Zeile. Ein offenes kritisches Problem bleibt eine Zeile, bis es erledigt ist."
+      "windowHelp": "Was innerhalb dieser Zeit kommt, landet in einer Zeile: alle Info-Meldungen einer Quelle zusammen als Routine, Warnungen und Kritisches je Thema. Ein offenes kritisches Problem bleibt eine Zeile, bis es erledigt ist."
     },
     "down": "Nach unten",
     "drop": "Verwerfen",
@@ -331,7 +332,7 @@
       "edit": "Regel bearbeiten",
       "field": "Feld",
       "groupKey": "Bündeln nach",
-      "groupKeyHelp": "Meldungen mit gleichem Schlüssel landen in einer Zeile. Werte aus der Meldung in geschweiften Klammern, etwa vm-{vmid}. Leer lassen: nexsift bündelt gleich lautende Meldungen von selbst.",
+      "groupKeyHelp": "Meldungen mit gleichem Schlüssel landen in einer Zeile. Werte aus der Meldung in geschweiften Klammern, etwa vm-{vmid}. Leer lassen: nexsift legt die Info-Meldungen einer Quelle zusammen und Warnungen mit gleichem Titel.",
       "keep": "Vom Absender",
       "name": "Name",
       "nameHelp": "Wofür die Regel da ist, in deinen Worten. Der Name erscheint bei jeder Meldung, die sie trifft.",

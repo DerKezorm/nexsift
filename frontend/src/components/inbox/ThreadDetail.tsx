@@ -6,6 +6,7 @@ import type { Source, ThreadDetail as Detail } from '../../api/types'
 import { isMuted } from '../../lib/data'
 import { PRIORITY_CHIP, PRIORITY_DOT } from '../../lib/priority'
 import { ruleName } from '../../lib/ruleNames'
+import { threadTitle } from '../../lib/threadTitle'
 import { clock, duration, relative } from '../../lib/time'
 import { Help } from '../Help'
 import { SourceMark } from '../SourceMark'
@@ -63,7 +64,7 @@ export function ThreadDetail({
         <div className="flex items-start gap-3">
           <SourceMark kind={source?.kind} protocol={source?.protocol} className="h-10 w-10 text-xs" />
           <div className="min-w-0 flex-1">
-            <h2 className="text-lg leading-snug font-semibold break-words text-mist-100">{thread.title}</h2>
+            <h2 className="text-lg leading-snug font-semibold break-words text-mist-100">{threadTitle(thread, t)}</h2>
             <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-mist-500">
               <span className="font-medium text-mist-300">{source?.name}</span>
               <span aria-hidden="true">·</span>

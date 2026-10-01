@@ -30,7 +30,7 @@ from sqlalchemy.orm import Session
 
 from ..adapters.base import Incoming
 from ..adapters.kinds import refine, shape
-from ..models import ARCHIVED, CRIT, RANK, UNREAD, Event, Source, Thread, utcnow
+from ..models import ARCHIVED, CRIT, INFO, RANK, ROUTINE_KEY, UNREAD, Event, Source, Thread, utcnow
 from . import bus, push, rules, settings_service
 
 logger = logging.getLogger("nexsift.ingest")
@@ -131,11 +131,14 @@ def _store(db: Session, source: Source, item: Incoming) -> int | None:
     if actions.get("drop"):
         return None
     priority = actions.get("priority") or item.priority
-    group_key = (
-        rules.fill(actions["group_key"], item.fields)
-        if actions.get("group_key")
-        else item.group_key or shape(item.title)
-    )
+    if actions.get("group_key"):
+        group_key = rules.fill(actions["group_key"], item.fields)
+    elif item.group_key:
+        group_key = item.group_key
+    elif priority == INFO and not actions.get("title_template"):
+        group_key = ROUTINE_KEY
+    else:
+        group_key = shape(item.title)
     resolves = rules.fill(actions["resolves"], item.fields) if actions.get("resolves") else item.resolves
     window = timedelta(minutes=int(settings_service.get(db, "bundle_minutes")))
     now = utcnow()

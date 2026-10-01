@@ -1,9 +1,10 @@
 """Sign-in through an OpenID Connect provider, its configuration, and the authentik button.
 
-nexsift has one account. The provider brings it in when its identity has been linked before (the ``subject``),
-or when the provider vouches for the operator's address (``email_verified``) and nothing is linked yet; that
-first sign-in links it. Anybody else the provider knows is refused: the provider does not decide who owns the
-inbox, the operator does, by the address under Settings.
+nexsift has one account. The provider brings it in only when its identity was linked before (the ``subject``), and
+linking happens in one place: signed in, under Settings, Sign-in, "Link now". Anybody else the provider knows is
+refused: the provider does not decide who owns the inbox, the operator does. (Until 0.3.0 a verified address that
+matched the account linked on the first sign-in; nexsift itself has authentik vouch for every address, so whoever
+could change theirs first would have been linked. Dropped on 01.10.2026.)
 
 The return leg is a browser redirect: every outcome ends on a page with a code in the address, never in JSON.
 The password sign-in stays as the way back in, unless the operator turns it off.
@@ -15,7 +16,7 @@ import logging
 from typing import Any
 
 from fastapi import APIRouter, Request, Response
-from fastapi.responses import RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import update
 
@@ -23,7 +24,7 @@ from .. import crypto
 from ..deps import CurrentAccount, DbSession, client_ip
 from ..meldungen import fehler
 from ..models import Account
-from ..security import brake, start_session
+from ..security import SESSION_COOKIE, brake, session_account, start_session
 from ..services import accounts, authentik, oidc, settings_service
 from .auth import secure_cookie, set_session_cookie
 
@@ -32,6 +33,8 @@ logger = logging.getLogger("nexsift.oidc")
 
 LOGIN_PAGE = "/login"
 HOME = "/"
+#: Where a link attempt comes back to, with ``linked=1`` or ``error=<code>``.
+LINK_PAGE = "/settings?tab=signin"
 DEFAULT_PROVIDER_NAME = "OpenID Connect"
 FOREIGN_TEXT_MAX = 200
 
@@ -142,6 +145,43 @@ async def start(request: Request, db: DbSession) -> RedirectResponse:
     return response
 
 
+@router.post("/link", summary="Start linking the provider identity to the signed-in operator")
+async def link_start(account: CurrentAccount, request: Request, db: DbSession) -> JSONResponse:
+    """Answers with the provider's address; the page sends the browser there. The attempt cookie carries the
+    account, and the return only links when the same account is still signed in."""
+    if not _configured(db):
+        raise fehler("oidc_not_configured", "Set up a sign-in provider first.", 409)
+    try:
+        description = await oidc.discovery(str(settings_service.get(db, "oidc_issuer")))
+    except oidc.OidcError as error:
+        raise fehler(error.code, "The provider could not be reached.", 502) from error
+    attempt = oidc.new_attempt()
+    client_id = str(settings_service.get(db, "oidc_client_id"))
+    url = oidc.authorization_url(description, client_id, _redirect_uri(db, request), attempt)
+    response = JSONResponse({"url": url})
+    response.set_cookie(
+        oidc.COOKIE_NAME,
+        oidc.pack_attempt(attempt, account.id),
+        max_age=oidc.ATTEMPT_MINUTES * 60,
+        path=oidc.COOKIE_PATH,
+        httponly=True,
+        samesite="lax",
+        secure=secure_cookie(request),
+    )
+    return response
+
+
+@router.delete("/link", status_code=204, summary="Undo the link to the provider identity")
+def link_remove(account: CurrentAccount, db: DbSession) -> None:
+    if not settings_service.get(db, "password_login"):
+        raise fehler(
+            "password_needed", "Allow signing in with a password first, or nobody could sign in any more.", 409
+        )
+    account.oidc_subject = ""
+    db.commit()
+    logger.info("OIDC link removed")
+
+
 @router.get("/callback", summary="The return from the provider (no sign-in needed)")
 async def callback(
     request: Request,
@@ -152,10 +192,11 @@ async def callback(
     error_description: str | None = None,
 ) -> RedirectResponse:
     attempt = oidc.read_attempt(request.cookies.get(oidc.COOKIE_NAME))
+    linking = attempt is not None and attempt.get("link") is not None
 
     def refuse(code_out: str, reason: str, *, real: bool = True) -> RedirectResponse:
         (logger.warning if real else logger.debug)("OIDC callback refused (%s): code=%s", reason, code_out)
-        return _to_login(code_out)
+        return _to_settings(code_out) if linking else _to_login(code_out)
 
     if not _configured(db):
         return refuse("oidc_not_configured", "OIDC is not set up", real=False)
@@ -187,6 +228,19 @@ async def callback(
         brake.failed(key)
         return refuse(failure.code, f"the run at the provider failed: {failure.code}")
     brake.succeeded(key)
+
+    if linking:
+        current = session_account(db, request.cookies.get(SESSION_COOKIE))
+        if current is None or attempt is None or current.id != attempt.get("link"):
+            return refuse("oidc_link_session", "the link was started by a session that is gone")
+        if not identity.subject.strip():
+            return refuse("oidc_token_invalid", "no subject in the id token")
+        current.oidc_subject = identity.subject
+        db.commit()
+        logger.info("Operator linked to the OIDC identity")
+        done = RedirectResponse(f"{LINK_PAGE}&linked=1", status_code=303)
+        done.delete_cookie(oidc.COOKIE_NAME, path=oidc.COOKIE_PATH)
+        return done
 
     account = _resolve(db, identity)
     if isinstance(account, str):
@@ -249,6 +303,12 @@ def _config_view(db: DbSession, request: Request) -> dict[str, Any]:
     }
 
 
+def _to_settings(code: str) -> RedirectResponse:
+    response = RedirectResponse(f"{LINK_PAGE}&error={code}", status_code=303)
+    response.delete_cookie(oidc.COOKIE_NAME, path=oidc.COOKIE_PATH)
+    return response
+
+
 def _to_login(code: str) -> RedirectResponse:
     response = RedirectResponse(f"{LOGIN_PAGE}?error={code}", status_code=303)
     response.delete_cookie(oidc.COOKIE_NAME, path=oidc.COOKIE_PATH)
@@ -256,19 +316,12 @@ def _to_login(code: str) -> RedirectResponse:
 
 
 def _resolve(db: DbSession, identity: oidc.Identity) -> Account | str:
-    """The operator for this identity, or the code of the refusal."""
+    """The operator for this identity, or the code of the refusal. Only a linked identity gets in."""
     if not identity.subject.strip():
         return "oidc_token_invalid"
     account = accounts.operator(db)
     if account is None:
         return "oidc_no_account"
-    if account.oidc_subject:
-        return account if account.oidc_subject == identity.subject else "oidc_no_account"
-    if not identity.email or not identity.email_verified:
-        return "oidc_email_unverified"
-    if not account.email or identity.email.lower() != account.email.lower():
-        return "oidc_no_account"
-    account.oidc_subject = identity.subject
-    db.commit()
-    logger.info("Operator linked to the OIDC identity by verified address")
-    return account
+    if not account.oidc_subject:
+        return "oidc_not_linked"
+    return account if account.oidc_subject == identity.subject else "oidc_no_account"

@@ -84,9 +84,13 @@ def write_settings(payload: SettingsIn, account: CurrentAccount, db: DbSession) 
                 raise fehler(
                     "sender_host_invalid", "Use a host name or an IP address, like 192.168.1.10.", 422, field=key
                 ) from error
-        if key == "password_login" and value is False and not settings_service.get(db, "oidc_issuer"):
+        linked = settings_service.get(db, "oidc_issuer") and account.oidc_subject
+        if key == "password_login" and value is False and not linked:
             raise fehler(
-                "password_needed", "Set up a sign-in provider before turning the password off.", 409, field=key
+                "password_needed",
+                "Set up a sign-in provider and link it before turning the password off.",
+                409,
+                field=key,
             )
         clean[key] = value
     settings_service.save(db, clean)

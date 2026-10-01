@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
 
 import { api, errorMessage } from '../api/client'
-import type { Account, Settings } from '../api/types'
+import type { Settings } from '../api/types'
 import { useAuth } from '../auth'
 import { useNotice } from '../components/Notice'
 import { Symbol } from '../components/Symbol'
@@ -11,6 +11,7 @@ import { TabRow } from '../components/TabRow'
 import { Banner, Button, Field, PageHeader, Section, Switch } from '../components/ui'
 import { useLoad } from '../lib/useLoad'
 import { Languages } from './settings/Languages'
+import { ProviderLink } from './settings/ProviderLink'
 
 interface OidcConfig {
   configured: boolean
@@ -31,6 +32,8 @@ export function SettingsPage() {
   const { t } = useTranslation()
   const settings = useLoad(() => api.get<Settings>('/api/settings'), [])
   const oidc = useLoad(() => api.get<OidcConfig>('/api/oidc/config'), [])
+  // The password may only go once the provider is linked: otherwise nobody could sign in any more.
+  const { account } = useAuth()
   // The tab is in the address (`?tab=addresses`), so other pages can link straight to it.
   const [params, setParams] = useSearchParams()
   const wanted = params.get('tab')
@@ -46,7 +49,8 @@ export function SettingsPage() {
           <div className="flex flex-col gap-6">
             <Authentik config={oidc.data} onDone={() => void oidc.reload()} />
             <OtherProvider config={oidc.data} onChange={() => void oidc.reload()} />
-            {settings.data && <SignIn part="password" settings={settings.data} configured={!!oidc.data?.configured} onSaved={settings.set} />}
+            {oidc.data?.configured && <ProviderLink provider={oidc.data.provider_name || 'OpenID Connect'} passwordLogin={settings.data?.password_login ?? true} />}
+            {settings.data && <SignIn part="password" settings={settings.data} configured={!!oidc.data?.configured && !!account?.oidc_linked} onSaved={settings.set} />}
           </div>
         )}
         {tab === 'addresses' && settings.data && <SignIn part="addresses" settings={settings.data} configured={!!oidc.data?.configured} onSaved={settings.set} />}
@@ -60,22 +64,12 @@ export function SettingsPage() {
 function AccountSection() {
   const { t } = useTranslation()
   const notify = useNotice()
-  const { account, setAccount } = useAuth()
-  const [email, setEmail] = useState(account?.email ?? '')
+  const { account } = useAuth()
   const [current, setCurrent] = useState('')
   const [next, setNext] = useState('')
   const [repeat, setRepeat] = useState('')
   const [error, setError] = useState<string | null>(null)
   const mismatch = repeat.length > 0 && repeat !== next
-
-  async function saveEmail() {
-    try {
-      setAccount(await api.put<Account>('/api/auth/account', { email }))
-      notify({ text: t('common.saved') })
-    } catch (caught) {
-      notify({ text: errorMessage(caught) })
-    }
-  }
 
   async function changePassword() {
     setError(null)
@@ -92,16 +86,8 @@ function AccountSection() {
 
   return (
     <Section title={t('settings.account.title')} intro={t('settings.account.intro', { name: account?.name })} help={t('settings.account.help')}>
-      <div className="flex items-end gap-2">
-        <div className="flex-1">
-          <Field label={t('settings.account.email')} type="email" value={email} onChange={(event) => setEmail(event.target.value)} hint={account?.oidc_linked ? t('settings.account.linked') : t('settings.account.emailHint')} help={t('settings.account.emailHelp')} />
-        </div>
-        <Button variant="ghost" onClick={() => void saveEmail()} disabled={email === (account?.email ?? '')} className="mb-6">
-          {t('common.save')}
-        </Button>
-      </div>
       <form
-        className="flex flex-col gap-3 border-t border-ink-700 pt-4"
+        className="flex flex-col gap-3"
         onSubmit={(event) => {
           event.preventDefault()
           void changePassword()

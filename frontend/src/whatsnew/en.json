@@ -44,6 +44,25 @@
         "If the browser refuses the sign-up, its own reason is shown.",
         "Help texts at the edge of the page are no longer cut off."
       ]
+    },
+    "0.4.0": {
+      "lead": "Signing in through authentik is now bound to your account there, and you make the connection yourself.",
+      "sections": [
+        {
+          "title": "Link with authentik",
+          "body": "Under Sign-in there is \"Your account at authentik\". One click on \"Link with authentik now\", sign in there once, done. From then on nexsift lets exactly this authentik account in and no other. The link is removed in the same place.",
+          "where": "Settings › Sign-in › Your account at authentik"
+        },
+        {
+          "title": "No more matching by email address",
+          "body": "Until now the same email address counted as proof on the first sign-in. Since authentik reports every address as verified for nexsift, that was too weak. If you are linked already, nothing changes; otherwise link once. The address field under Account is gone for that reason.",
+          "where": "Settings › Sign-in"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "Signing in with a password can only be switched off once authentik is linked, and the link only removed while the password counts again. That way you cannot lock yourself out."
+      ]
     }
   }
 }

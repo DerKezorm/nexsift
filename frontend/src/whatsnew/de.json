@@ -44,6 +44,25 @@
         "Lehnt der Browser die Anmeldung ab, steht seine eigene Begründung da.",
         "Hilfetexte am Rand der Seite werden nicht mehr abgeschnitten."
       ]
+    },
+    "0.4.0": {
+      "lead": "Die Anmeldung über authentik ist jetzt fest an dein Konto dort gebunden, und du stellst die Verbindung selbst her.",
+      "sections": [
+        {
+          "title": "Mit authentik verknüpfen",
+          "body": "Unter Anmeldung steht „Dein Konto bei authentik“. Ein Klick auf „Jetzt mit authentik verknüpfen“, einmal dort anmelden, fertig. Ab dann lässt nexsift genau dieses authentik-Konto hinein und kein anderes. Lösen geht an derselben Stelle.",
+          "where": "Einstellungen › Anmeldung › Dein Konto bei authentik"
+        },
+        {
+          "title": "Keine Zuordnung mehr über die E-Mail-Adresse",
+          "body": "Bisher galt beim ersten Anmelden die gleiche E-Mail-Adresse als Beweis. Weil authentik für nexsift jede Adresse als bestätigt meldet, war das zu schwach. Wer schon verknüpft ist, merkt nichts; sonst einmal verknüpfen. Das Adressfeld unter Konto ist deshalb weg.",
+          "where": "Einstellungen › Anmeldung"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Die Anmeldung mit Passwort lässt sich erst ausschalten, wenn authentik verknüpft ist, und die Verknüpfung erst lösen, wenn das Passwort wieder gilt. So sperrst du dich nicht aus."
+      ]
     }
   }
 }

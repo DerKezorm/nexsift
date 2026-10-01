@@ -51,7 +51,8 @@ def test_password_cannot_be_switched_off_without_a_provider(client: TestClient, 
     assert response.json()["detail"]["code"] == "password_needed"
 
 
-def test_changing_the_address_drops_the_provider_link(client: TestClient, operator: dict) -> None:
+def test_changing_the_address_keeps_the_provider_link(client: TestClient, operator: dict) -> None:
+    """The address no longer says who may sign in through the provider; only the link does (01.10.2026)."""
     from app.db import SessionLocal
     from app.models import Account
 
@@ -61,7 +62,7 @@ def test_changing_the_address_drops_the_provider_link(client: TestClient, operat
         db.commit()
     response = client.put("/api/auth/account", json={"email": "new@example.com"}, headers=UI)
     assert response.status_code == 200
-    assert response.json()["oidc_linked"] is False
+    assert response.json()["oidc_linked"] is True
 
 
 def test_a_fresh_account_has_seen_this_version(client: TestClient, operator: dict) -> None:

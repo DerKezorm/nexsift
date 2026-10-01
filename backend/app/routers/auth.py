@@ -159,15 +159,13 @@ def change_password(payload: PasswordChangeIn, request: Request, account: Curren
     end_all_sessions(db, account.id, except_token=request.cookies.get(SESSION_COOKIE))
 
 
-@router.put("/auth/account", summary="Change the address OIDC sign-in is matched by")
+@router.put("/auth/account", summary="Change the account address")
 def change_account(payload: AccountIn, account: CurrentAccount, db: DbSession) -> dict[str, Any]:
     try:
         email = accounts.normalize_email(payload.email)
     except AccountError as error:
         raise _raise(error) from error
     if email != account.email:
-        # A new address means a new person may sign in through the provider; the old link must not survive it.
-        account.oidc_subject = ""
         account.email = email
         db.commit()
     return account_view(account)

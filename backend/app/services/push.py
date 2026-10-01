@@ -31,7 +31,7 @@ from sqlalchemy.orm import Session
 
 from .. import crypto
 from ..db import SessionLocal
-from ..models import CRIT, RANK, WARN, Delivery, Event, Source, Target, Thread, utcnow
+from ..models import CRIT, INFO, RANK, WARN, Delivery, Event, Source, Target, Thread, utcnow
 from . import bus, settings_service
 from . import sources as sources_service
 
@@ -88,11 +88,21 @@ def _link(event: Event | None) -> str:
 
 
 def _enqueue(
-    db: Session, thread: Thread | None, kind: str, title: str, body: str, priority: str, link: str = ""
+    db: Session,
+    thread: Thread | None,
+    kind: str,
+    title: str,
+    body: str,
+    priority: str,
+    link: str = "",
+    *,
+    send_as: str | None = None,
 ) -> int:
+    """``priority`` decides which targets get it; ``send_as`` how loud it arrives there (default: the same).
+    Quiet hours hold back everything below critical, and all-clears too: good news does not wake anybody."""
     count = 0
     for target in _targets(db, priority):
-        if priority != CRIT and _in_quiet_hours(target):
+        if (priority != CRIT or kind == "allclear") and _in_quiet_hours(target):
             continue
         db.add(
             Delivery(
@@ -101,7 +111,7 @@ def _enqueue(
                 kind=kind,
                 title=title[:300],
                 body=body[:2000],
-                priority=priority,
+                priority=send_as or priority,
                 link=link,
             )
         )
@@ -176,9 +186,28 @@ def on_resolved(db: Session, thread: Thread) -> None:
         return
     source = db.get(Source, thread.source_id)
     name = source.name if source else "nexsift"
-    _enqueue(db, thread, "allclear", f"{name}: {thread.resolved_by or 'resolved'}", "", CRIT)
+    # Same targets as the alarm, but not as loud: found with a real ntfy and Gotify on 01.10.2026, where the
+    # all-clear arrived with the alarm's top priority.
+    took = _took((thread.resolved_at or utcnow()) - thread.first_at)
+    _enqueue(
+        db,
+        thread,
+        "allclear",
+        f"{name}: {thread.resolved_by or 'resolved'}",
+        f"Resolved after {took}",
+        thread.priority,
+        send_as=INFO,
+    )
     thread.window_until = None
     thread.since_push = 0
+
+
+def _took(span: timedelta) -> str:
+    minutes = max(1, round(span.total_seconds() / 60))
+    if minutes < 120:
+        return f"{minutes} min"
+    hours = minutes / 60
+    return f"{hours:.0f} h" if hours < 48 else f"{hours / 24:.0f} days"
 
 
 def due_windows(db: Session) -> int:
@@ -241,7 +270,7 @@ NTFY_PRIORITY = {CRIT: "5", WARN: "4"}
 GOTIFY_PRIORITY = {CRIT: 8, WARN: 5}
 
 
-async def send(target: Target, title: str, body: str, priority: str, link: str = "") -> None:
+async def send(target: Target, title: str, body: str, priority: str, link: str = "", kind: str = "") -> None:
     """One message to one target. Raises ``PushError`` with a short, readable reason."""
     config = target_config(target)
     url = str(config.get("url", "")).strip()
@@ -252,6 +281,8 @@ async def send(target: Target, title: str, body: str, priority: str, link: str =
                 headers = {"Title": _header(title), "Priority": NTFY_PRIORITY.get(priority, "3"), "Tags": "nexsift"}
                 if priority == CRIT:
                     headers["Tags"] = "rotating_light,nexsift"
+                elif kind == "allclear":
+                    headers["Tags"] = "white_check_mark,nexsift"
                 if link:
                     headers["Click"] = link
                 if token:
@@ -328,7 +359,7 @@ async def deliver_due() -> int:
             if delivery is None or target is None:
                 continue
             try:
-                await send(target, delivery.title, delivery.body, delivery.priority, delivery.link)
+                await send(target, delivery.title, delivery.body, delivery.priority, delivery.link, delivery.kind)
             except PushError as error:
                 delivery.attempts += 1
                 delivery.last_error = str(error)[:300]

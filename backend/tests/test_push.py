@@ -86,6 +86,11 @@ def test_all_clear_follows_the_alarm(client: TestClient, operator: dict) -> None
     send(**KUMA_UP)
     _run()
     assert [entry["headers"]["title"] for entry in SENT] == ["Server: cloud is down", "Server: cloud is up again"]
+    # The all-clear reaches the same phone, but quietly, and says how long it took.
+    assert SENT[0]["headers"]["priority"] == "5"
+    assert SENT[1]["headers"]["priority"] == "3"
+    assert "white_check_mark" in SENT[1]["headers"]["tags"]
+    assert SENT[1]["body"].startswith("Resolved after ")
 
 
 def test_muted_source_does_not_ring(client: TestClient, operator: dict) -> None:
@@ -188,3 +193,19 @@ def test_target_validation(client: TestClient, operator: dict) -> None:
         headers=UI,
     )
     assert quiet.json()["detail"]["code"] == "invalid_quiet_hours"
+
+
+def test_all_clear_waits_out_quiet_hours(client: TestClient, operator: dict) -> None:
+    from datetime import datetime
+
+    from tests.test_senders import KUMA_DOWN, KUMA_UP
+
+    now = datetime.now().astimezone()
+    start, end = (now - timedelta(hours=1)).strftime("%H:%M"), (now + timedelta(hours=1)).strftime("%H:%M")
+    _phone(client, quiet_from=start, quiet_to=end)
+    send = _hook(client, "uptimekuma")
+    send(**KUMA_DOWN)
+    _run()
+    send(**KUMA_UP)
+    _run()
+    assert [entry["headers"]["title"] for entry in SENT] == ["Server: cloud is down"]

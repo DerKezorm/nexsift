@@ -5,6 +5,7 @@ import { AppShell } from './components/AppShell'
 import { Spinner } from './components/ui'
 import { InboxPage } from './pages/InboxPage'
 import { RulesPage } from './pages/RulesPage'
+import { AboutPage } from './pages/AboutPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { SourcesPage } from './pages/SourcesPage'
 import { LoginScreen, SetupScreen, UnreachableScreen } from './pages/auth/AuthScreens'
@@ -28,6 +29,7 @@ export default function App() {
         <Route path="sources" element={<SourcesPage />} />
         <Route path="rules" element={<RulesPage />} />
         <Route path="settings" element={<SettingsPage />} />
+        <Route path="about" element={<AboutPage />} />
         <Route path="*" element={<InboxPage />} />
       </Route>
     </Routes>

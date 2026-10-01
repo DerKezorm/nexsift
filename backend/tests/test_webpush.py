@@ -1,6 +1,7 @@
 """Web Push: encryption as RFC 8291 has it, the VAPID signature, signing a device up, sending, and a device that left."""
 
 import asyncio
+import hashlib
 import json
 
 import http_ece
@@ -89,6 +90,8 @@ def test_a_device_signs_up_and_shows_only_its_push_service(client: TestClient, o
     response = _device(client)
     assert response.status_code == 201, response.text
     assert response.json()["url"] == "push.example.net"
+    # The browser recognizes itself by this fingerprint; the address itself never goes back.
+    assert response.json()["device"] == hashlib.sha256(ENDPOINT.encode()).hexdigest()[:16]
     assert response.json()["has_token"] is False
 
 
@@ -168,3 +171,13 @@ def test_switching_a_device_off_and_on_keeps_its_sign_up(client: TestClient, ope
         config = push.target_config(db.query(Target).one())
     assert config["url"] == ENDPOINT
     assert config["p256dh"] == RFC_UA_PUBLIC and config["auth"] == RFC_AUTH
+
+
+def test_several_devices_are_several_targets_and_the_same_one_twice_is_one(client: TestClient, operator: dict) -> None:
+    phone = _device(client, name="Phone").json()
+    laptop = _device(client, name="Laptop", url=ENDPOINT + "-laptop").json()
+    again = _device(client, name="Phone, again").json()
+    assert phone["id"] != laptop["id"]
+    assert again["id"] == phone["id"] and again["name"] == "Phone, again"
+    with SessionLocal() as db:
+        assert db.query(Target).count() == 2

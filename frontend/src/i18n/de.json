@@ -1,4 +1,16 @@
 {
+  "about": {
+    "historyLead": "Was mit jeder Version dazukam, so wie es nach dem Update angezeigt wurde.",
+    "historyTitle": "Alle Versionen",
+    "license": "Lizenz: AGPL-3.0. Der Quellcode liegt auf GitHub.",
+    "read": "Lesen",
+    "releases": "Versionen",
+    "reset": "Ohne eingerichteten Anbieter auf dem Server ausführen, dann ein neues Passwort setzen:",
+    "resetTitle": "Passwort vergessen?",
+    "tagline": "Eine Inbox für alles, was dein Homelab zu sagen hat.",
+    "title": "Über nexsift",
+    "whatsNew": "Was ist neu in {{version}}"
+  },
   "common": {
     "back": "Zurück",
     "cancel": "Abbrechen",
@@ -455,7 +467,7 @@
       "url": "Adresse von authentik",
       "urlHelp": "So, wie nexsift authentik erreicht, etwa https://auth.example.com. Ohne /application am Ende."
     },
-    "lead": "Anmeldung, Adresse, Aufbewahrung und Sprachen.",
+    "lead": "Konto, Anmeldung, Adressen, Aufbewahrung und Sprachen.",
     "other": {
       "active": "Eingerichtet: {{name}}.",
       "clientId": "Client-ID",
@@ -487,18 +499,27 @@
     },
     "signin": {
       "help": "Die öffentliche Adresse ist die Rückkehradresse beim Anmeldeanbieter. Die Adresse für Absender steht in den Einrichtungshinweisen der Quellen.",
-      "lead": "Adresse nach außen und Anmeldung mit Passwort.",
+      "lead": "Wie du nexsift im Browser erreichst, und wie die Geräte im Heimnetz es erreichen.",
       "password": "Anmeldung mit Passwort erlauben",
       "passwordHelp": "Aus: nur noch über den Anbieter. Für den Notfall setzt ein Befehl im Container das Passwort zurück und schaltet die Anmeldung mit Passwort wieder ein.",
       "passwordHint": "Aus: nur noch über den Anbieter.",
+      "passwordLead": "Ob neben dem Anbieter auch Name und Passwort gelten.",
       "passwordNeedsProvider": "Erst einen Anbieter einrichten, dann lässt sich das ausschalten.",
+      "passwordTitle": "Anmeldung mit Passwort",
       "publicUrl": "Öffentliche Adresse",
       "publicUrlHelp": "Hinter einem Reverse Proxy die Adresse, die du im Browser tippst. Leer: nexsift nimmt die Adresse der Anfrage.",
       "publicUrlHint": "Etwa https://nexsift.example.com",
       "senderHost": "Adresse für Absender im Heimnetz",
       "senderHostHelp": "Über diese Adresse erreichen Router, NAS, Proxmox und Co. nexsift. Sie steht in allen Einrichtungshinweisen. Nötig, sobald nexsift hinter einem Reverse Proxy steht: Syslog, E-Mail und die Gotify- und ntfy-Schnittstelle gehen nicht über den Proxy. Leer: nexsift nimmt die öffentliche Adresse.",
       "senderHostHint": "Etwa 192.168.1.10 oder nas.fritz.box, ohne Port.",
-      "title": "Anmeldung und Adresse"
+      "title": "Adressen"
+    },
+    "tab": {
+      "account": "Konto",
+      "addresses": "Adressen",
+      "languages": "Sprachen",
+      "retention": "Aufbewahrung",
+      "signin": "Anmeldung"
     },
     "title": "Einstellungen"
   },
@@ -808,7 +829,7 @@
       "ntfy": "Die ntfy-App auf dem Handy, mit ntfy.sh oder einem eigenen ntfy-Server. In der App ein Thema abonnieren und hier dessen volle Adresse eintragen.",
       "telegram": "Ein Telegram-Bot schreibt dir. Bot bei @BotFather anlegen, Token hier eintragen, dem Bot einmal schreiben, dann die Chat-ID.",
       "webhook": "Irgendein Dienst, der JSON annimmt: nexsift schickt title, message, priority und link per POST.",
-      "webpush": "Benachrichtigungen direkt auf dieses Gerät, ohne zusätzliche App. Am Handy nexsift über https öffnen und als App auf den Startbildschirm legen, dann hier anmelden. Jedes Gerät meldet sich einmal selbst an."
+      "webpush": "Benachrichtigungen direkt auf dieses Gerät, ohne zusätzliche App. Jedes Gerät meldet sich selbst an: am Handy nexsift über https öffnen, als App auf den Startbildschirm legen und dort ein Ziel anlegen. Am PC genauso. Abmelden geht von jedem Gerät aus."
     },
     "intro": "Wohin nexsift Wichtiges schickt. Alles andere bleibt leise im Posteingang.",
     "kind": {
@@ -829,7 +850,7 @@
     "nameHelp": "Frei wählbar, etwa „Handy“ oder „Familiengruppe“.",
     "namePlaceholder": "Handy",
     "new": "Neues Ziel",
-    "none": "Noch geht nichts aufs Handy. Leg ein Ziel an, am einfachsten mit der ntfy-App.",
+    "none": "Noch geht nichts aufs Handy. Leg ein Ziel an, am einfachsten „Dieses Gerät“ direkt auf dem Handy.",
     "noneTitle": "Noch kein Ziel",
     "optional": "optional",
     "quiet": "Ruhe {{from}} bis {{to}}",
@@ -876,20 +897,23 @@
       "again": "Neu anmelden",
       "allow": "Erlauben",
       "browserSaid": "Der Browser hat die Anmeldung abgelehnt: {{message}}",
+      "confirmSignOff": "Wirklich abmelden?",
       "denied": "Benachrichtigungen sind für nexsift gesperrt. Erlaube sie in den Website- oder App-Einstellungen des Browsers und versuch es noch einmal.",
       "incomplete": "Der Browser hat die Anmeldung nicht vollständig übergeben. Versuch es noch einmal.",
       "iphone": "Auf dem iPhone geht das nur aus der App heraus: in Safari unten auf Teilen tippen, „Zum Home-Bildschirm“, dann nexsift über das neue Symbol öffnen und hier weitermachen.",
       "needsHttps": "Benachrichtigungen erlaubt der Browser nur über https. Öffne nexsift über deine https-Adresse und melde das Gerät dort an.",
       "openSecure": "In {{url}} öffnen",
-      "ready": "Tippe auf den Knopf und erlaube die Benachrichtigungen, wenn der Browser fragt.",
-      "signUp": "Dieses Gerät anmelden",
+      "ready": "Zum Schluss: auf den Knopf tippen und die Benachrichtigungen erlauben, wenn der Browser fragt. Danach kommt sofort eine Testbenachrichtigung.",
+      "signOff": "Gerät abmelden",
+      "signUp": "Dieses Gerät anmelden und speichern",
       "signedUp": "Angemeldet über {{host}}.",
-      "switch": "Web Push erlauben",
-      "switchHelp": "Web Push geht über die Push-Dienste von Google, Apple und Mozilla. Aus: an angemeldete Geräte geht nichts mehr, die Anmeldungen bleiben aber erhalten.",
-      "switchHint": "Benachrichtigungen an Browser und installierte App.",
+      "switch": "Web Push an alle Geräte",
+      "switchHelp": "Web Push geht über die Push-Dienste von Google, Apple und Mozilla. Ausgeschaltet geht an kein Gerät mehr etwas, die Anmeldungen bleiben aber erhalten. Ein einzelnes Gerät schaltest du am Schalter in seiner Zeile ab oder meldest es dort ab.",
+      "switchHint": "Aus: pausiert die Benachrichtigungen an alle angemeldeten Geräte.",
       "testSent": "Angemeldet. Eine Testbenachrichtigung ist unterwegs.",
+      "thisDevice": "dieses Gerät",
       "unsupported": "Dieser Browser kann keine Benachrichtigungen empfangen. Nimm Chrome, Edge, Firefox oder auf dem iPhone die App vom Home-Bildschirm.",
-      "wayOut": "Benachrichtigungen laufen über den Dienst des Browserherstellers (Google, Apple oder Mozilla). Der Inhalt ist verschlüsselt, die sehen nur, dass etwas kommt. Dafür muss nexsift diese Dienste erreichen dürfen."
+      "wayOut": "Mit der Anmeldung erlaubst du nexsift, Benachrichtigungen über den Dienst des Browserherstellers zu schicken (Google, Apple oder Mozilla). Der Inhalt ist verschlüsselt, die sehen nur, dass etwas kommt."
     }
   },
   "theme": {
@@ -918,5 +942,9 @@
       "title": "Testmeldung schicken"
     },
     "title": "Willkommen bei nexsift"
+  },
+  "whatsNew": {
+    "gotIt": "Verstanden",
+    "title": "Neu in nexsift {{version}}"
   }
 }

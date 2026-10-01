@@ -1,0 +1,49 @@
+{
+  "entries": {
+    "0.2.0": {
+      "lead": "Benachrichtigungen kommen jetzt auch ohne zusätzliche App aufs Handy: nexsift lässt sich als App installieren und schickt direkt an das Gerät.",
+      "sections": [
+        {
+          "title": "Dieses Gerät als Ziel",
+          "body": "Öffne nexsift über https auf dem Handy, lege es als App auf den Startbildschirm und melde dort das Gerät an. Jedes Gerät meldet sich einmal selbst an und hat dann eigene Mindeststufe und Ruhezeit. Ein Tipp auf die Benachrichtigung öffnet die passende Zeile.",
+          "where": "Regeln › Weiterleitung aufs Handy › + Ziel › Dieses Gerät"
+        },
+        {
+          "title": "Verschlüsselt bis aufs Gerät",
+          "body": "Jede Nachricht wird für das einzelne Gerät verschlüsselt. Der Push-Dienst von Google, Apple oder Mozilla sieht nur, dass etwas kommt.",
+          "where": "Regeln › Weiterleitung aufs Handy"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Meldet sich ein Gerät ab oder wird die App gelöscht, schaltet sich sein Ziel selbst ab und sagt warum."
+      ]
+    },
+    "0.3.0": {
+      "lead": "Aufgeräumt: Einstellungen in Reitern, eine eigene Seite „Über nexsift“, und ab jetzt dieses Fenster nach jedem Update.",
+      "sections": [
+        {
+          "title": "Einstellungen in Reitern",
+          "body": "Konto, Anmeldung, Adressen, Aufbewahrung und Sprachen haben je einen eigenen Reiter, statt alles auf einer langen Seite.",
+          "where": "Einstellungen"
+        },
+        {
+          "title": "Über nexsift",
+          "body": "Version, Lizenz, Links zum Quellcode und alle bisherigen „Was ist neu“-Texte stehen auf einer eigenen Seite. Dort lässt sich dieses Fenster auch später noch einmal öffnen.",
+          "where": "Fußzeile › Über nexsift"
+        },
+        {
+          "title": "Mehrere Geräte, und abmelden",
+          "body": "Jedes Gerät, das du anmeldest, ist ein eigenes Ziel. In der Liste steht an deinem aktuellen Gerät „dieses Gerät“. Abmelden geht von jedem Gerät aus, etwa ein verlorenes Handy vom PC. Meldet sich dasselbe Gerät zweimal an, bleibt es ein Ziel.",
+          "where": "Regeln › Weiterleitung aufs Handy › Gerät antippen › Gerät abmelden"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Ein Gerät anmelden ist jetzt ein einziger Schritt, der gleich speichert.",
+        "Lehnt der Browser die Anmeldung ab, steht seine eigene Begründung da.",
+        "Hilfetexte am Rand der Seite werden nicht mehr abgeschnitten."
+      ]
+    }
+  }
+}

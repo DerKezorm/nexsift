@@ -59,21 +59,13 @@ export function WebPushSignup({ done, onSignedUp }: { done: Subscription | null;
     return <Banner tone="bad">{t('targets.webpush.unsupported')}</Banner>
   }
 
-  async function allow() {
-    setError(null)
-    try {
-      await api.put('/api/settings', { values: { webpush_enabled: true } })
-      await key.reload()
-    } catch (caught) {
-      setError(errorMessage(caught))
-    }
-  }
-
   async function signUp() {
     if (!key.data) return
     setBusy(true)
     setError(null)
     try {
+      // Signing a device up is the operator's yes to the way out as well; the note above the button said so.
+      if (!key.data.enabled) await api.put('/api/settings', { values: { webpush_enabled: true } })
       const permission = await Notification.requestPermission()
       if (permission !== 'granted') {
         setError(t('targets.webpush.denied'))
@@ -99,16 +91,7 @@ export function WebPushSignup({ done, onSignedUp }: { done: Subscription | null;
 
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-ink-700 bg-ink-900 p-3.5 text-sm text-mist-300">
-      {!key.data.enabled ? (
-        <>
-          <p>{t('targets.webpush.wayOut')}</p>
-          <div>
-            <Button size="sm" onClick={() => void allow()}>
-              {t('targets.webpush.allow')}
-            </Button>
-          </div>
-        </>
-      ) : done ? (
+      {done ? (
         <p className="flex items-center gap-2 text-ok-500">
           <Symbol name="check" className="h-4 w-4" />
           {t('targets.webpush.signedUp', { host: new URL(done.url).hostname })}
@@ -116,6 +99,7 @@ export function WebPushSignup({ done, onSignedUp }: { done: Subscription | null;
       ) : (
         <>
           <p>{t('targets.webpush.ready')}</p>
+          {!key.data.enabled && <p className="text-xs text-mist-500">{t('targets.webpush.wayOut')}</p>}
           <div>
             <Button size="sm" loading={busy} onClick={() => void signUp()}>
               <Symbol name="phone" className="h-3.5 w-3.5" />

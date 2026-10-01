@@ -155,6 +155,8 @@ export interface Target {
   id: number
   kind: TargetKind
   name: string
+  /** Web Push only: a fingerprint of the device's push address, to recognize this browser. */
+  device?: string
   url: string
   chat_id: string
   has_token: boolean

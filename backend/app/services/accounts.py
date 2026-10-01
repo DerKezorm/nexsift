@@ -11,6 +11,7 @@ from functools import lru_cache
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from .. import __version__
 from ..models import Account, utcnow
 from ..security import LOCK_MINUTES, MAX_FAILURES, hash_password, verify_password
 
@@ -44,7 +45,13 @@ def create_operator(db: Session, name: str, password: str, email: str = "") -> A
     cleaned = name.strip().lower()
     if not NAME_PATTERN.match(cleaned):
         raise AccountError("invalid_name", "Use 2 to 64 letters, digits, dots, dashes or underscores.", 422)
-    account = Account(name=cleaned, password_hash=hash_password(password), email=normalize_email(email))
+    # A fresh install has nothing "new" to show: the "What's new" window starts with the next update.
+    account = Account(
+        name=cleaned,
+        password_hash=hash_password(password),
+        email=normalize_email(email),
+        prefs={"seen_version": __version__},
+    )
     db.add(account)
     db.commit()
     logger.info("Operator account created name=%s", account.name)

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 from typing import Any
@@ -51,14 +52,18 @@ class TargetIn(BaseModel):
 def _view(target: Target) -> dict[str, Any]:
     config = push.target_config(target)
     url = str(config.get("url", ""))
+    device = ""
     if target.kind == "webpush":
-        # A device's address at its push service is long and says nothing; its host says which service it is.
+        # A device's address at its push service is long and says nothing; its host says which service it is. A
+        # short fingerprint of the address lets a browser tell "this is me" without the address leaving the server.
+        device = hashlib.sha256(url.encode("utf-8")).hexdigest()[:16]
         url = urlsplit(url).hostname or ""
     return {
         "id": target.id,
         "kind": target.kind,
         "name": target.name,
         "url": url,
+        "device": device,
         "chat_id": config.get("chat_id", ""),
         "has_token": bool(config.get("token")),
         "min_priority": target.min_priority,
@@ -125,6 +130,14 @@ def listing(account: CurrentAccount, db: DbSession) -> list[dict[str, Any]]:
 
 @router.post("", status_code=201, summary="New target")
 def create(payload: TargetIn, account: CurrentAccount, db: DbSession) -> dict[str, Any]:
+    if payload.kind == "webpush":
+        # The same browser signing up again (a second tap, or after a reinstall) is the same device: it takes over
+        # its old target instead of ringing twice for every message.
+        for existing in db.scalars(select(Target).where(Target.kind == "webpush")):
+            if push.target_config(existing).get("url") == payload.url.strip():
+                _apply(existing, payload)
+                db.commit()
+                return _view(existing)
     target = Target(kind=payload.kind, name=payload.name)
     _apply(target, payload)
     db.add(target)

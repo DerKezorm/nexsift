@@ -1,13 +1,14 @@
 import { useEffect, useState, type ChangeEvent } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useSearchParams } from 'react-router-dom'
 
 import { api, errorMessage } from '../api/client'
-import type { About, Account, Settings } from '../api/types'
+import type { Account, Settings } from '../api/types'
 import { useAuth } from '../auth'
-import { Explainer } from '../components/Help'
 import { useNotice } from '../components/Notice'
 import { Symbol } from '../components/Symbol'
-import { Banner, Button, Field, PageHeader, Section, Spinner, Switch } from '../components/ui'
+import { TabRow } from '../components/TabRow'
+import { Banner, Button, Field, PageHeader, Section, Switch } from '../components/ui'
 import { useLoad } from '../lib/useLoad'
 import { Languages } from './settings/Languages'
 
@@ -19,29 +20,40 @@ interface OidcConfig {
   redirect_uri: string
 }
 
+const TABS = ['account', 'signin', 'addresses', 'retention', 'languages'] as const
+type Tab = (typeof TABS)[number]
+
+function isTab(value: string | null): value is Tab {
+  return (TABS as readonly string[]).includes(value ?? '')
+}
+
 export function SettingsPage() {
   const { t } = useTranslation()
   const settings = useLoad(() => api.get<Settings>('/api/settings'), [])
   const oidc = useLoad(() => api.get<OidcConfig>('/api/oidc/config'), [])
+  // The tab is in the address (`?tab=addresses`), so other pages can link straight to it.
+  const [params, setParams] = useSearchParams()
+  const wanted = params.get('tab')
+  const tab: Tab = isTab(wanted) ? wanted : 'account'
+  const tabs = TABS.map((value) => ({ value, label: t(`settings.tab.${value}`) }))
   return (
-    <>
+    <div className="flex flex-col gap-6">
       <PageHeader title={t('settings.title')} lead={t('settings.lead')} />
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="flex flex-col gap-6">
-          <AccountSection />
-          <Authentik config={oidc.data} onDone={() => void oidc.reload()} />
-          <OtherProvider config={oidc.data} onChange={() => void oidc.reload()} />
-        </div>
-        <div className="flex flex-col gap-6">
-          {settings.data && <SignIn settings={settings.data} configured={!!oidc.data?.configured} onSaved={settings.set} />}
-          {settings.data && <Retention settings={settings.data} onSaved={settings.set} />}
-          <AboutSection />
-        </div>
-        <div className="lg:col-span-2">
-          <Languages />
-        </div>
+      <TabRow tabs={tabs} active={tab} onChange={(value) => setParams(value === 'account' ? {} : { tab: value }, { replace: true })} label={t('settings.title')} />
+      <div className="max-w-3xl">
+        {tab === 'account' && <AccountSection />}
+        {tab === 'signin' && (
+          <div className="flex flex-col gap-6">
+            <Authentik config={oidc.data} onDone={() => void oidc.reload()} />
+            <OtherProvider config={oidc.data} onChange={() => void oidc.reload()} />
+            {settings.data && <SignIn part="password" settings={settings.data} configured={!!oidc.data?.configured} onSaved={settings.set} />}
+          </div>
+        )}
+        {tab === 'addresses' && settings.data && <SignIn part="addresses" settings={settings.data} configured={!!oidc.data?.configured} onSaved={settings.set} />}
+        {tab === 'retention' && settings.data && <Retention settings={settings.data} onSaved={settings.set} />}
+        {tab === 'languages' && <Languages />}
       </div>
-    </>
+    </div>
   )
 }
 
@@ -275,7 +287,8 @@ function OtherProvider({ config, onChange }: { config?: OidcConfig; onChange: ()
   )
 }
 
-function SignIn({ settings, configured, onSaved }: { settings: Settings; configured: boolean; onSaved: (settings: Settings) => void }) {
+/** Two tabs share the saving: the addresses, and the switch for signing in with a password. */
+function SignIn({ part, settings, configured, onSaved }: { part: 'addresses' | 'password'; settings: Settings; configured: boolean; onSaved: (settings: Settings) => void }) {
   const { t } = useTranslation()
   const notify = useNotice()
   const [publicUrl, setPublicUrl] = useState(settings.public_url)
@@ -296,6 +309,22 @@ function SignIn({ settings, configured, onSaved }: { settings: Settings; configu
     }
   }
 
+  if (part === 'password') {
+    return (
+      <Section title={t('settings.signin.passwordTitle')} intro={t('settings.signin.passwordLead')}>
+        <Switch
+          label={t('settings.signin.password')}
+          hint={configured ? t('settings.signin.passwordHint') : t('settings.signin.passwordNeedsProvider')}
+          checked={settings.password_login}
+          onChange={(value) => void save({ password_login: value })}
+          disabled={!configured && settings.password_login}
+          help={t('settings.signin.passwordHelp')}
+        />
+        {error && <Banner tone="bad">{error}</Banner>}
+      </Section>
+    )
+  }
+
   return (
     <Section title={t('settings.signin.title')} intro={t('settings.signin.lead')} help={t('settings.signin.help')}>
       <div className="flex items-end gap-2">
@@ -314,14 +343,6 @@ function SignIn({ settings, configured, onSaved }: { settings: Settings; configu
           {t('common.save')}
         </Button>
       </div>
-      <Switch
-        label={t('settings.signin.password')}
-        hint={configured ? t('settings.signin.passwordHint') : t('settings.signin.passwordNeedsProvider')}
-        checked={settings.password_login}
-        onChange={(value) => void save({ password_login: value })}
-        disabled={!configured && settings.password_login}
-        help={t('settings.signin.passwordHelp')}
-      />
       {error && <Banner tone="bad">{error}</Banner>}
     </Section>
   )
@@ -367,24 +388,3 @@ function Retention({ settings, onSaved }: { settings: Settings; onSaved: (settin
   )
 }
 
-function AboutSection() {
-  const { t } = useTranslation()
-  const about = useLoad(() => api.get<About>('/api/about'), [])
-  return (
-    <Section title={t('settings.about.title')} intro={t('settings.about.lead')}>
-      {!about.data ? (
-        <Spinner />
-      ) : (
-        <>
-          <p className="text-sm text-mist-300">
-            nexsift <span className="font-mono tabular-nums">{about.data.version}</span>
-          </p>
-          <Explainer>
-            {t('settings.about.reset')}
-            <code className="mt-1 block font-mono text-xs break-all text-mist-200">docker exec -it nexsift python -m app.reset_password</code>
-          </Explainer>
-        </>
-      )}
-    </Section>
-  )
-}

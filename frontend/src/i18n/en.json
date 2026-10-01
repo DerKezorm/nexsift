@@ -1,4 +1,16 @@
 {
+  "about": {
+    "historyLead": "What came with each version, as it was shown after the update.",
+    "historyTitle": "All versions",
+    "license": "License: AGPL-3.0. The source is on GitHub.",
+    "read": "Read",
+    "releases": "Releases",
+    "reset": "Without a provider set up, run this on the server, then set a new password:",
+    "resetTitle": "Forgot the password?",
+    "tagline": "One inbox for everything your homelab has to say.",
+    "title": "About nexsift",
+    "whatsNew": "What's new in {{version}}"
+  },
   "common": {
     "back": "Back",
     "cancel": "Cancel",
@@ -455,7 +467,7 @@
       "url": "Address of authentik",
       "urlHelp": "As nexsift reaches authentik, like https://auth.example.com. Without /application at the end."
     },
-    "lead": "Sign-in, address, retention and languages.",
+    "lead": "Account, sign-in, addresses, retention and languages.",
     "other": {
       "active": "Set up: {{name}}.",
       "clientId": "Client ID",
@@ -487,18 +499,27 @@
     },
     "signin": {
       "help": "The public address is where the sign-in provider sends you back to. The address for senders goes into the setup hints of the sources.",
-      "lead": "Address to the outside and sign-in with a password.",
+      "lead": "How you reach nexsift in the browser, and how the devices at home reach it.",
       "password": "Allow sign-in with a password",
       "passwordHelp": "Off: only through the provider. For emergencies a command in the container resets the password and switches the password sign-in back on.",
       "passwordHint": "Off: only through the provider.",
+      "passwordLead": "Whether name and password count next to the provider.",
       "passwordNeedsProvider": "Set up a provider first; then this can be switched off.",
+      "passwordTitle": "Sign-in with a password",
       "publicUrl": "Public address",
       "publicUrlHelp": "Behind a reverse proxy, the address you type into the browser. Empty: nexsift takes the address of the request.",
       "publicUrlHint": "Like https://nexsift.example.com",
       "senderHost": "Address for senders at home",
       "senderHostHelp": "The address routers, the NAS, Proxmox and the like reach nexsift by. It goes into every setup hint. Needed once nexsift sits behind a reverse proxy: syslog, email and the Gotify and ntfy doors do not go through the proxy. Empty: nexsift takes the public address.",
       "senderHostHint": "Like 192.168.1.10 or nas.home.arpa, without a port.",
-      "title": "Sign-in and address"
+      "title": "Addresses"
+    },
+    "tab": {
+      "account": "Account",
+      "addresses": "Addresses",
+      "languages": "Languages",
+      "retention": "Retention",
+      "signin": "Sign-in"
     },
     "title": "Settings"
   },
@@ -808,7 +829,7 @@
       "ntfy": "The ntfy app on the phone, with ntfy.sh or your own ntfy server. Subscribe to a topic in the app and enter its full address here.",
       "telegram": "A Telegram bot writes to you. Create the bot with @BotFather, enter the token here, write to the bot once, then the chat ID.",
       "webhook": "Any service that takes JSON: nexsift POSTs title, message, priority and link.",
-      "webpush": "Notifications straight to this device, no extra app. On the phone, open nexsift over https and add it to the home screen as an app, then sign it up here. Each device signs itself up once."
+      "webpush": "Notifications straight to this device, no extra app. Each device signs itself up: on the phone, open nexsift over https, add it to the home screen as an app and add a target there. The same on the computer. Any device can sign any device off."
     },
     "intro": "Where nexsift sends what matters. Everything else stays quietly in the inbox.",
     "kind": {
@@ -829,7 +850,7 @@
     "nameHelp": "Free to choose, like \"Phone\" or \"Family group\".",
     "namePlaceholder": "Phone",
     "new": "New target",
-    "none": "Nothing goes to the phone yet. Add a target; the ntfy app is the easiest.",
+    "none": "Nothing goes to the phone yet. Add a target, easiest is 'This device' right on the phone.",
     "noneTitle": "No target yet",
     "optional": "optional",
     "quiet": "quiet {{from}} to {{to}}",
@@ -876,20 +897,23 @@
       "again": "Sign up again",
       "allow": "Allow",
       "browserSaid": "The browser refused the sign-up: {{message}}",
+      "confirmSignOff": "Really sign off?",
       "denied": "Notifications are blocked for nexsift. Allow them in the browser's site or app settings and try again.",
       "incomplete": "The browser did not hand over the whole sign-up. Try again.",
       "iphone": "On the iPhone this only works from the app: tap Share at the bottom in Safari, \"Add to Home Screen\", then open nexsift from the new icon and carry on here.",
       "needsHttps": "Browsers only allow notifications over https. Open nexsift at your https address and sign the device up there.",
       "openSecure": "Open {{url}}",
-      "ready": "Tap the button and allow notifications when the browser asks.",
-      "signUp": "Sign this device up",
+      "ready": "Last step: tap the button and allow notifications when the browser asks. A test notification follows right away.",
+      "signOff": "Sign device off",
+      "signUp": "Sign this device up and save",
       "signedUp": "Signed up through {{host}}.",
-      "switch": "Allow Web Push",
-      "switchHelp": "Web Push goes through the push services of Google, Apple and Mozilla. Off: nothing goes to signed up devices any more, but their sign-ups stay.",
-      "switchHint": "Notifications to browsers and the installed app.",
+      "switch": "Web Push to all devices",
+      "switchHelp": "Web Push goes through the push services of Google, Apple and Mozilla. Switched off, nothing goes to any device, but the sign-ups stay. A single device is switched off with the switch in its row, or signed off there.",
+      "switchHint": "Off: pauses notifications to all signed up devices.",
       "testSent": "Signed up. A test notification is on its way.",
+      "thisDevice": "this device",
       "unsupported": "This browser cannot receive notifications. Use Chrome, Edge, Firefox, or on the iPhone the app from the home screen.",
-      "wayOut": "Notifications go through the browser maker's service (Google, Apple or Mozilla). The content is encrypted; they only see that something arrives. For that, nexsift has to be allowed to reach these services."
+      "wayOut": "By signing up you allow nexsift to send notifications through the browser maker's service (Google, Apple or Mozilla). The content is encrypted; they only see that something arrives."
     }
   },
   "theme": {
@@ -918,5 +942,9 @@
       "title": "Send a test message"
     },
     "title": "Welcome to nexsift"
+  },
+  "whatsNew": {
+    "gotIt": "Got it",
+    "title": "New in nexsift {{version}}"
   }
 }

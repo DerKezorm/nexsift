@@ -8,6 +8,7 @@ import { LanguageSwitcher } from './LanguageSwitcher'
 import { Logo } from './Logo'
 import { Symbol, type SymbolName } from './Symbol'
 import { ThemeSwitcher } from './ThemeSwitcher'
+import { WhatsNewAfterUpdate } from './WhatsNewAfterUpdate'
 
 type NavItem = { to: string; label: string; symbol: SymbolName; end: boolean; right?: boolean }
 
@@ -109,10 +110,14 @@ export function AppShell() {
           <footer className="relative z-10 border-t border-ink-700/60">
             <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-4 gap-y-2 px-4 py-5 text-xs text-mist-600 sm:px-6">
               <span>nexsift</span>
+              <NavLink to="/about" className="hover:text-mist-300">
+                {t('about.title')}
+              </NavLink>
             </div>
           </footer>
         </>
       )}
+      <WhatsNewAfterUpdate />
     </div>
   )
 }

@@ -62,3 +62,10 @@ def test_changing_the_address_drops_the_provider_link(client: TestClient, operat
     response = client.put("/api/auth/account", json={"email": "new@example.com"}, headers=UI)
     assert response.status_code == 200
     assert response.json()["oidc_linked"] is False
+
+
+def test_a_fresh_account_has_seen_this_version(client: TestClient, operator: dict) -> None:
+    """Nothing is "new" on a fresh install: the "What's new" window starts with the next update."""
+    from app import __version__
+
+    assert client.get("/api/auth/me").json()["prefs"]["seen_version"] == __version__

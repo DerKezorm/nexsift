@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { api, errorMessage } from '../../api/client'
 import type { Priority, Settings, Target, TargetKind } from '../../api/types'
 import { useTargets } from '../../lib/data'
 import { deviceName } from '../../lib/device'
+import { forgetThisDevice, thisDevice } from '../../lib/thisDevice'
 import { PRIORITY_CHIP } from '../../lib/priority'
 import { relative } from '../../lib/time'
 import { useLoad } from '../../lib/useLoad'
@@ -32,6 +33,7 @@ interface Draft {
   quiet_to: string
   enabled: boolean
   has_token?: boolean
+  device?: string
 }
 
 const EMPTY: Draft = { kind: 'webpush', name: deviceName(), url: '', token: '', chat_id: '', p256dh: '', auth: '', min_priority: 'crit', quiet_from: '', quiet_to: '', enabled: true }
@@ -44,6 +46,11 @@ export function Targets() {
   const [editing, setEditing] = useState<Draft | null>(null)
   const [testing, setTesting] = useState<number | null>(null)
   const settings = useLoad(() => api.get<Settings>('/api/settings'), [editing])
+  const [own, setOwn] = useState<string | null>(null)
+
+  useEffect(() => {
+    void thisDevice().then(setOwn)
+  }, [editing])
 
   async function test(target: Target) {
     setTesting(target.id)
@@ -98,6 +105,7 @@ export function Targets() {
               <p className="flex items-center gap-2 text-sm font-medium text-mist-100">
                 {target.name}
                 <Badge>{t(`targets.kind.${target.kind}`)}</Badge>
+                {target.device && target.device === own && <Badge tone="accent">{t('targets.webpush.thisDevice')}</Badge>}
               </p>
               <p className="truncate font-mono text-xs text-mist-500">{target.url || (target.chat_id && `chat ${target.chat_id}`)}</p>
               <p className="mt-1 flex flex-wrap gap-1.5 text-xs text-mist-500">
@@ -123,7 +131,8 @@ export function Targets() {
           </li>
         ))}
       </ul>
-      {settings.data && (
+      {/* Only once a device is signed up: then it pauses Web Push for all of them. */}
+      {settings.data && targets.data?.some((target) => target.kind === 'webpush') && (
         <div className="mt-2 border-t border-ink-700 pt-3">
           <Switch
             label={t('targets.webpush.switch')}
@@ -137,6 +146,7 @@ export function Targets() {
       {editing && (
         <TargetEditor
           draft={editing}
+          own={own}
           onClose={() => setEditing(null)}
           onSaved={() => {
             setEditing(null)
@@ -148,7 +158,7 @@ export function Targets() {
   )
 }
 
-function TargetEditor({ draft: initial, onClose, onSaved }: { draft: Draft; onClose: () => void; onSaved: () => void }) {
+function TargetEditor({ draft: initial, own, onClose, onSaved }: { draft: Draft; own: string | null; onClose: () => void; onSaved: () => void }) {
   const { t } = useTranslation()
   const [draft, setDraft] = useState<Draft>(initial)
   const [error, setError] = useState<string | null>(null)
@@ -158,11 +168,12 @@ function TargetEditor({ draft: initial, onClose, onSaved }: { draft: Draft; onCl
   const notify = useNotice()
   const set = (patch: Partial<Draft>) => setDraft({ ...draft, ...patch })
 
-  async function save() {
+  async function save(extra: Partial<Draft> = {}) {
+    const current = { ...draft, ...extra }
     // The time fields show 23:00 and 07:00 until touched; those are what counts then.
-    const body = { ...draft, quiet_from: quiet ? draft.quiet_from || '23:00' : '', quiet_to: quiet ? draft.quiet_to || '07:00' : '' }
+    const body = { ...current, quiet_from: quiet ? draft.quiet_from || '23:00' : '', quiet_to: quiet ? draft.quiet_to || '07:00' : '' }
     try {
-      if (draft.id) await api.put(`/api/targets/${draft.id}`, body)
+      if (current.id) await api.put(`/api/targets/${current.id}`, body)
       else {
         const saved = await api.post<Target>('/api/targets', body)
         // A device just signed up gets its first notification right away: proof that the way works.
@@ -181,6 +192,8 @@ function TargetEditor({ draft: initial, onClose, onSaved }: { draft: Draft; onCl
     if (!draft.id) return
     try {
       await api.delete(`/api/targets/${draft.id}`)
+      // Signing off the device in hand: take the sign-up back in the browser too, so it stops asking.
+      if (draft.device && draft.device === own) await forgetThisDevice()
       onSaved()
     } catch (caught) {
       setError(errorMessage(caught))
@@ -188,6 +201,8 @@ function TargetEditor({ draft: initial, onClose, onSaved }: { draft: Draft; onCl
   }
 
   const webpush = draft.kind === 'webpush'
+  // A new device, or one signing up again: the sign-up button is the way to save.
+  const signingUp = webpush && (!draft.id || signedUp !== null)
   const needsUrl = draft.kind !== 'telegram' && !webpush
   const needsToken = draft.kind === 'gotify' || draft.kind === 'telegram' || draft.kind === 'ntfy'
   const tokenOptional = draft.kind === 'ntfy'
@@ -204,23 +219,14 @@ function TargetEditor({ draft: initial, onClose, onSaved }: { draft: Draft; onCl
         </SelectField>
         <Explainer>{t(`targets.how.${draft.kind}`)}</Explainer>
         <Field label={t('targets.name')} value={draft.name} onChange={(event) => set({ name: event.target.value })} placeholder={t('targets.namePlaceholder')} help={t('targets.nameHelp')} />
-        {webpush &&
-          (draft.id && !signedUp ? (
-            <div className="flex flex-wrap items-center gap-3 rounded-xl border border-ink-700 bg-ink-900 p-3.5 text-sm text-mist-300">
-              <span className="flex-1">{t('targets.webpush.signedUp', { host: draft.url })}</span>
-              <Button variant="ghost" size="sm" onClick={() => setSignedUp({ url: '', p256dh: '', auth: '' })}>
-                {t('targets.webpush.again')}
-              </Button>
-            </div>
-          ) : (
-            <WebPushSignup
-              done={signedUp?.url ? signedUp : null}
-              onSignedUp={(subscription) => {
-                setSignedUp(subscription)
-                set(subscription)
-              }}
-            />
-          ))}
+        {webpush && !signingUp && (
+          <div className="flex flex-wrap items-center gap-3 rounded-xl border border-ink-700 bg-ink-900 p-3.5 text-sm text-mist-300">
+            <span className="flex-1">{t('targets.webpush.signedUp', { host: draft.url })}</span>
+            <Button variant="ghost" size="sm" onClick={() => setSignedUp({ url: '', p256dh: '', auth: '' })}>
+              {t('targets.webpush.again')}
+            </Button>
+          </div>
+        )}
         {needsUrl && (
           <Field label={t(`targets.url.${draft.kind}`)} value={draft.url} onChange={(event) => set({ url: event.target.value })} placeholder={t(`targets.urlExample.${draft.kind}`)} help={t(`targets.urlHelp.${draft.kind}`)} />
         )}
@@ -252,17 +258,28 @@ function TargetEditor({ draft: initial, onClose, onSaved }: { draft: Draft; onCl
             </div>
           )}
         </div>
+        {/* Last, after name, level and quiet hours: signing up is the one step that also saves. */}
+        {signingUp && (
+          <WebPushSignup
+            done={signedUp?.url ? signedUp : null}
+            onSignedUp={(subscription) => {
+              setSignedUp(subscription)
+              set(subscription)
+              void save(subscription)
+            }}
+          />
+        )}
         {error && <Banner tone="bad">{error}</Banner>}
         <div className="flex flex-wrap items-center justify-between gap-2">
           {draft.id ? (
             confirmDelete ? (
               <Button variant="danger" size="sm" onClick={() => void remove()}>
-                {t('targets.confirmDelete')}
+                {webpush ? t('targets.webpush.confirmSignOff') : t('targets.confirmDelete')}
               </Button>
             ) : (
               <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(true)}>
                 <Symbol name="trash" className="h-3.5 w-3.5" />
-                {t('targets.delete')}
+                {webpush ? t('targets.webpush.signOff') : t('targets.delete')}
               </Button>
             )
           ) : (
@@ -272,9 +289,11 @@ function TargetEditor({ draft: initial, onClose, onSaved }: { draft: Draft; onCl
             <Button variant="ghost" onClick={onClose}>
               {t('common.cancel')}
             </Button>
-            <Button onClick={() => void save()} disabled={!draft.name.trim() || (webpush && !draft.id && !signedUp?.url)}>
-              {t('common.save')}
-            </Button>
+            {!signingUp && (
+              <Button onClick={() => void save()} disabled={!draft.name.trim()}>
+                {t('common.save')}
+              </Button>
+            )}
           </div>
         </div>
       </div>

@@ -1,0 +1,49 @@
+{
+  "entries": {
+    "0.2.0": {
+      "lead": "Notifications now reach the phone without an extra app: nexsift installs as an app and sends straight to the device.",
+      "sections": [
+        {
+          "title": "This device as a target",
+          "body": "Open nexsift over https on the phone, add it to the home screen as an app and sign the device up there. Each device signs itself up once and then has its own minimum level and quiet hours. A tap on a notification opens the line.",
+          "where": "Rules › Forwarding to the phone › + Target › This device"
+        },
+        {
+          "title": "Encrypted all the way to the device",
+          "body": "Every message is encrypted for the single device. The push service of Google, Apple or Mozilla only sees that something arrives.",
+          "where": "Rules › Forwarding to the phone"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "If a device signs off or the app is removed, its target switches itself off and says why."
+      ]
+    },
+    "0.3.0": {
+      "lead": "Tidied up: settings in tabs, a page of its own for \"About nexsift\", and from now on this window after every update.",
+      "sections": [
+        {
+          "title": "Settings in tabs",
+          "body": "Account, sign-in, addresses, retention and languages each have a tab of their own instead of one long page.",
+          "where": "Settings"
+        },
+        {
+          "title": "About nexsift",
+          "body": "Version, license, links to the source and every \"What's new\" so far are on a page of their own. This window can be opened again from there.",
+          "where": "Footer › About nexsift"
+        },
+        {
+          "title": "Several devices, and signing off",
+          "body": "Every device you sign up is a target of its own. In the list, the device in your hand says \"this device\". Any device can sign any device off, a lost phone from the computer for instance. The same device signing up twice stays one target.",
+          "where": "Rules › Forwarding to the phone › tap the device › Sign device off"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "Signing a device up is now one step that saves right away.",
+        "If the browser refuses the sign-up, its own reason is shown.",
+        "Help texts at the edge of the page are no longer cut off."
+      ]
+    }
+  }
+}

@@ -161,3 +161,13 @@ def test_a_stranger_gets_its_source_with_its_own_topic(
     assert ntfy_client.post("/homeassistant", content=b"hello").status_code == 200
     bad = client.post("/api/sources", json={"preset": "email", "key": "Not Valid!"}, headers=UI)
     assert bad.json()["detail"]["code"] == "key_invalid"
+
+
+def test_gotify_tokens_look_like_gotify_tokens(client: TestClient, operator: dict) -> None:
+    """shoutrrr (Watchtower and others) checks the shape before sending: 15 characters, starting with A."""
+    source = add_source(client, "gotify")
+    token = source["connection"]["token"]
+    assert len(token) == 15 and token.startswith("A")
+    renewed = client.post(f"/api/sources/{source['id']}/token", headers=UI).json()["connection"]["token"]
+    assert len(renewed) == 15 and renewed.startswith("A") and renewed != token
+    assert len(add_source(client, "webhook")["connection"]["token"]) == 24

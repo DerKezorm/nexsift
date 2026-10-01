@@ -201,3 +201,28 @@ def test_a_single_event_keeps_its_own_title(client: TestClient, operator: dict) 
     assert inbox(client)[0]["title"] == "New document: Invoice"
     client.post(path, json={"title": "New document: Letter"})
     assert inbox(client)[0]["title"] == "Paperless: 2 new documents"
+
+
+def test_the_source_counter_survives_messages_at_the_same_instant(client: TestClient, operator: dict) -> None:
+    import threading
+
+    from app.adapters.base import Incoming
+    from app.db import SessionLocal
+    from app.models import Source
+    from app.services import ingest
+
+    source_id = add_source(client, "webhook")["id"]
+    ready = threading.Barrier(6)
+
+    def send(number: int) -> None:
+        with SessionLocal() as db:
+            source = db.get(Source, source_id)  # loaded before the lock, like the doors do
+            ready.wait()
+            ingest.accept(db, source, Incoming(title=f"message {chr(97 + number)}"), {})
+
+    workers = [threading.Thread(target=send, args=(number,)) for number in range(6)]
+    for worker in workers:
+        worker.start()
+    for worker in workers:
+        worker.join()
+    assert client.get(f"/api/sources/{source_id}").json()["count_total"] == 6

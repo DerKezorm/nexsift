@@ -78,6 +78,9 @@ def accept(db: Session, source: Source, incoming: Incoming, payload: dict, *, te
 
 def _accept(db: Session, source: Source, incoming: Incoming, payload: dict, *, test: bool) -> list[int]:
     changed: list[int] = []
+    # Read again inside the lock: the caller loaded the source before waiting for it, and two messages that
+    # arrived together would otherwise both count from the same stale number (seen with syslog, 01.10.2026).
+    db.refresh(source)
     events = [incoming.clean()] if test else refine(source.kind, incoming, payload)
     now = utcnow()
     if not test:

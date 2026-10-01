@@ -33,6 +33,15 @@ def _token(length: int = 24) -> str:
     return "".join(secrets.choice(TOKEN_ALPHABET) for _ in range(length))
 
 
+def _token_for(protocol: str) -> str:
+    """A token in the shape the sender expects. Gotify app tokens are 15 characters starting with "A", and
+    shoutrrr (inside Watchtower and many others) refuses anything else before it sends: "invalid gotify token".
+    Found with a real Watchtower on 01.10.2026. 14 random characters are still about 81 bits."""
+    if protocol == "gotify":
+        return "A" + _token(14)
+    return _token()
+
+
 def hash_token(token: str) -> str:
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
@@ -52,7 +61,7 @@ def create(db: Session, preset: str, name: str, hostname: str = "", key: str = "
     source = Source(name=name, kind=info["kind"], protocol=info["protocol"])
     protocol = info["protocol"]
     if protocol in ("gotify", "webhook", "discord"):
-        token = _token()
+        token = _token_for(protocol)
         source.token_hash = hash_token(token)
         source.token_enc = crypto.encrypt_secret(token)
     if protocol == "discord":
@@ -90,7 +99,7 @@ def create(db: Session, preset: str, name: str, hostname: str = "", key: str = "
 def renew_token(db: Session, source: Source) -> None:
     if source.protocol not in ("gotify", "webhook", "discord"):
         raise SourceError("no_token", "This source has no token.")
-    token = _token()
+    token = _token_for(source.protocol)
     source.token_hash = hash_token(token)
     source.token_enc = crypto.encrypt_secret(token)
     db.commit()

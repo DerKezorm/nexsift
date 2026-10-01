@@ -32,12 +32,12 @@ from sqlalchemy.orm import Session
 from .. import crypto
 from ..db import SessionLocal
 from ..models import CRIT, INFO, RANK, WARN, Delivery, Event, Source, Target, Thread, utcnow
-from . import bus, settings_service
+from . import bus, settings_service, webpush
 from . import sources as sources_service
 
 logger = logging.getLogger("nexsift.push")
 
-TARGET_KINDS = ("ntfy", "gotify", "telegram", "webhook", "apprise")
+TARGET_KINDS = ("ntfy", "gotify", "telegram", "webhook", "apprise", "webpush")
 #: Pauses between attempts; after the last one the delivery counts as failed and shows on the target.
 RETRY_SECONDS = (30, 120, 600, 1800, 3600)
 TIMEOUT = httpx.Timeout(10.0, connect=5.0)
@@ -270,9 +270,14 @@ NTFY_PRIORITY = {CRIT: "5", WARN: "4"}
 GOTIFY_PRIORITY = {CRIT: 8, WARN: 5}
 
 
-async def send(target: Target, title: str, body: str, priority: str, link: str = "", kind: str = "") -> None:
+async def send(
+    target: Target, title: str, body: str, priority: str, link: str = "", kind: str = "", thread_id: int | None = None
+) -> None:
     """One message to one target. Raises ``PushError`` with a short, readable reason."""
     config = target_config(target)
+    if target.kind == "webpush":
+        await _send_webpush(config, title, body, priority, kind, thread_id)
+        return
     url = str(config.get("url", "")).strip()
     token = str(config.get("token", "")).strip()
     async with _client() as client:
@@ -338,6 +343,47 @@ class PushError(Exception):
     pass
 
 
+class PushGone(PushError):
+    """The device is no longer signed up (uninstalled, permission taken back); trying again will not help."""
+
+
+#: How loud the push service should treat a message (RFC 8030); "high" may wake a sleeping phone.
+URGENCY = {CRIT: "high", WARN: "normal"}
+
+
+async def _send_webpush(
+    config: dict[str, Any], title: str, body: str, priority: str, kind: str, thread_id: int | None
+) -> None:
+    with SessionLocal() as db:
+        if not settings_service.get(db, "webpush_enabled"):
+            raise PushError("web push is switched off under Rules, Forwarding to the phone")
+        key = webpush.server_key(db)
+        subject = webpush.subject(db)
+    endpoint = str(config.get("url", ""))
+    url = f"/?thread={thread_id}" if thread_id else "/"
+    tag = f"thread-{thread_id}" if thread_id else ""
+    data = webpush.payload(title, body or ("Resolved" if kind == "allclear" else ""), priority, url, tag)
+    content = webpush.encrypt(data, str(config.get("p256dh", "")), str(config.get("auth", "")))
+    headers = {
+        "Authorization": webpush.vapid_header(key, endpoint, subject),
+        "Content-Encoding": "aes128gcm",
+        "Content-Type": "application/octet-stream",
+        "TTL": str(webpush.TTL_SECONDS),
+        "Urgency": URGENCY.get(priority, "low") if kind != "allclear" else "low",
+    }
+    async with _client() as client:
+        try:
+            response = await client.post(endpoint, content=content, headers=headers)
+        except httpx.TimeoutException as error:
+            raise PushError("no answer within 10 seconds") from error
+        except httpx.HTTPError as error:
+            raise PushError(f"not reachable ({type(error).__name__})") from error
+    if response.status_code in (404, 410):
+        raise PushGone("this device is no longer signed up; sign it up again")
+    if response.status_code >= 400:
+        raise PushError(f"the push service answered HTTP {response.status_code}")
+
+
 async def deliver_due() -> int:
     """Sends everything that is due. Each delivery is its own short transaction."""
     now = utcnow()
@@ -359,7 +405,23 @@ async def deliver_due() -> int:
             if delivery is None or target is None:
                 continue
             try:
-                await send(target, delivery.title, delivery.body, delivery.priority, delivery.link, delivery.kind)
+                await send(
+                    target,
+                    delivery.title,
+                    delivery.body,
+                    delivery.priority,
+                    delivery.link,
+                    delivery.kind,
+                    delivery.thread_id,
+                )
+            except PushGone as error:
+                # Nothing to try again: the device left. The target goes off and says why.
+                delivery.attempts += 1
+                delivery.status = "failed"
+                delivery.last_error = str(error)[:300]
+                target.last_error = str(error)[:200]
+                target.enabled = False
+                logger.warning("Push to %s: %s", target.name, error)
             except PushError as error:
                 delivery.attempts += 1
                 delivery.last_error = str(error)[:300]

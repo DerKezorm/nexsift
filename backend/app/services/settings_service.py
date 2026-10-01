@@ -35,6 +35,10 @@ DEFAULTS: dict[str, Any] = {
     "throttle_per_minute": 30,
     #: Storm guard: from this many first pushes within this many minutes, only one summary.
     "storm_enabled": True,
+    #: Web Push goes out through the push services of Google, Apple and Mozilla; off until the operator says so.
+    "webpush_enabled": False,
+    #: nexsift's own Web Push key pair, encrypted. Made on first use.
+    "webpush_key_enc": "",
     "storm_count": 5,
     "storm_minutes": 2,
     "retention_days": 90,
@@ -53,6 +57,7 @@ PUBLIC_KEYS = (
     "bundle_minutes",
     "throttle_per_minute",
     "storm_enabled",
+    "webpush_enabled",
     "storm_count",
     "storm_minutes",
     "retention_days",

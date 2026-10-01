@@ -10,3 +10,5 @@ httpx==0.28.1
 pyjwt==2.15.0
 # The SMTP entrance for senders that only speak email (UPS, NAS, router).
 aiosmtpd==1.4.6
+# Web Push: encrypts each message for the device (RFC 8291); only needs cryptography.
+http-ece==1.2.1

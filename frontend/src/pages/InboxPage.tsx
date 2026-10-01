@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 
 import { api, errorMessage } from '../api/client'
 import type { Source, ThreadDetail as Detail, ThreadSummary, View } from '../api/types'
@@ -58,6 +58,16 @@ export function InboxPage() {
   const searchBox = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLUListElement>(null)
   const version = useLiveVersion(['thread', 'threads', 'source'])
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  // A tap on a push notification opens /?thread=<id>: show that line, then tidy the address.
+  useEffect(() => {
+    const wanted = Number(searchParams.get('thread'))
+    if (!wanted) return
+    setSelectedId(wanted)
+    setDetailOpen(true)
+    setSearchParams({}, { replace: true })
+  }, [searchParams, setSearchParams])
 
   const sourceById = useMemo(() => new Map((sources.data ?? []).map((source) => [source.id, source])), [sources.data])
 

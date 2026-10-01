@@ -49,7 +49,11 @@ ntfy server, a Discord webhook, a mail server, a syslog server, or a plain webho
 - **All-clears close problems** instead of opening new lines: Uptime Kuma's "up", a successful Proxmox backup
   after a failed one, or anything a rule says.
 - **Push to the phone** through ntfy, Gotify, Telegram, Apprise or a webhook, each with a minimum level (critical
-  by default) and quiet hours. The first critical message of a subject goes out at once; more of the same are
+  by default) and quiet hours.
+- **Or straight to the device, no extra app (Web Push):** open nexsift over https, add it to the home screen, tap
+  "Sign this device up". Works with Chrome, Edge and Firefox, and on the iPhone from the home screen app (iOS 16.4
+  or later). Messages are encrypted for the device; they travel through the browser maker's push service, so this
+  way out has its own switch, off by default. The first critical message of a subject goes out at once; more of the same are
   counted and summed up once at the end of the window. The all-clear follows quietly.
 - **Storm guard:** when many things fail at once, such as a power cut, the phone gets one summary instead of
   twenty pushes. A source that floods (more than 30 messages a minute by default) is counted, not stored.

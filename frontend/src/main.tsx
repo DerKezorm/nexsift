@@ -29,5 +29,11 @@ function startFailed(): void {
   }
 }
 
+// The service worker only shows push notifications; it caches nothing, so an update is never held back by it.
+// Browsers allow it on https and on localhost only.
+if ('serviceWorker' in navigator && window.isSecureContext) {
+  navigator.serviceWorker.register('/sw.js').catch(() => undefined)
+}
+
 // Texts first, then the UI. Otherwise the raw key list would show briefly.
 startI18n().then(startApp, startFailed)

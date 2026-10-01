@@ -69,6 +69,7 @@
     "unknown_preset": "Unbekannte Art von Quelle.",
     "unknown_setting": "Unbekannte Einstellung.",
     "url_invalid": "Die Adresse muss mit http:// oder https:// beginnen.",
+    "webpush_invalid": "Die Anmeldung des Browsers ist unvollständig. Melde das Gerät noch einmal an.",
     "wrong_credentials": "Name oder Passwort stimmt nicht.",
     "wrong_password": "Das aktuelle Passwort stimmt nicht."
   },
@@ -806,7 +807,8 @@
       "gotify": "Ein echter Gotify-Server mit der Gotify-App auf dem Handy. Dort eine Anwendung anlegen und ihren Token hier eintragen.",
       "ntfy": "Die ntfy-App auf dem Handy, mit ntfy.sh oder einem eigenen ntfy-Server. In der App ein Thema abonnieren und hier dessen volle Adresse eintragen.",
       "telegram": "Ein Telegram-Bot schreibt dir. Bot bei @BotFather anlegen, Token hier eintragen, dem Bot einmal schreiben, dann die Chat-ID.",
-      "webhook": "Irgendein Dienst, der JSON annimmt: nexsift schickt title, message, priority und link per POST."
+      "webhook": "Irgendein Dienst, der JSON annimmt: nexsift schickt title, message, priority und link per POST.",
+      "webpush": "Benachrichtigungen direkt auf dieses Gerät, ohne zusätzliche App. Am Handy nexsift über https öffnen und als App auf den Startbildschirm legen, dann hier anmelden. Jedes Gerät meldet sich einmal selbst an."
     },
     "intro": "Wohin nexsift Wichtiges schickt. Alles andere bleibt leise im Posteingang.",
     "kind": {
@@ -814,7 +816,8 @@
       "gotify": "Gotify",
       "ntfy": "ntfy",
       "telegram": "Telegram",
-      "webhook": "Webhook"
+      "webhook": "Webhook",
+      "webpush": "Dieses Gerät (Browser oder App)"
     },
     "kindHelp": "Welcher Dienst die Pushes zustellt. Wer schon die ntfy- oder Gotify-App hat, nimmt die.",
     "kindLabel": "Art",
@@ -868,6 +871,25 @@
       "gotify": "Die Adresse deines Gotify-Servers, ohne /message.",
       "ntfy": "Server und Thema zusammen, genau wie in der App abonniert. Ein langes, zufälliges Thema schützt vor Mitlesern.",
       "webhook": "Hierhin schickt nexsift das JSON."
+    },
+    "webpush": {
+      "again": "Neu anmelden",
+      "allow": "Erlauben",
+      "browserSaid": "Der Browser hat die Anmeldung abgelehnt: {{message}}",
+      "denied": "Benachrichtigungen sind für nexsift gesperrt. Erlaube sie in den Website- oder App-Einstellungen des Browsers und versuch es noch einmal.",
+      "incomplete": "Der Browser hat die Anmeldung nicht vollständig übergeben. Versuch es noch einmal.",
+      "iphone": "Auf dem iPhone geht das nur aus der App heraus: in Safari unten auf Teilen tippen, „Zum Home-Bildschirm“, dann nexsift über das neue Symbol öffnen und hier weitermachen.",
+      "needsHttps": "Benachrichtigungen erlaubt der Browser nur über https. Öffne nexsift über deine https-Adresse und melde das Gerät dort an.",
+      "openSecure": "In {{url}} öffnen",
+      "ready": "Tippe auf den Knopf und erlaube die Benachrichtigungen, wenn der Browser fragt.",
+      "signUp": "Dieses Gerät anmelden",
+      "signedUp": "Angemeldet über {{host}}.",
+      "switch": "Web Push erlauben",
+      "switchHelp": "Web Push geht über die Push-Dienste von Google, Apple und Mozilla. Aus: an angemeldete Geräte geht nichts mehr, die Anmeldungen bleiben aber erhalten.",
+      "switchHint": "Benachrichtigungen an Browser und installierte App.",
+      "testSent": "Angemeldet. Eine Testbenachrichtigung ist unterwegs.",
+      "unsupported": "Dieser Browser kann keine Benachrichtigungen empfangen. Nimm Chrome, Edge, Firefox oder auf dem iPhone die App vom Home-Bildschirm.",
+      "wayOut": "Benachrichtigungen laufen über den Dienst des Browserherstellers (Google, Apple oder Mozilla). Der Inhalt ist verschlüsselt, die sehen nur, dass etwas kommt. Dafür muss nexsift diese Dienste erreichen dürfen."
     }
   },
   "theme": {

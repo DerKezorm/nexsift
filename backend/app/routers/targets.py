@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import re
 from typing import Any
+from urllib.parse import urlsplit
 
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
@@ -14,7 +15,7 @@ from .. import crypto
 from ..deps import CurrentAccount, DbSession
 from ..meldungen import fehler
 from ..models import CRIT, PRIORITIES, Target
-from ..services import push
+from ..services import push, webpush
 
 router = APIRouter(prefix="/api/targets", tags=["targets"])
 
@@ -26,6 +27,9 @@ FIELDS: dict[str, dict[str, tuple[str, ...]]] = {
     "telegram": {"required": ("token", "chat_id"), "secret": ("token",)},
     "apprise": {"required": ("url",), "secret": ()},
     "webhook": {"required": ("url",), "secret": ()},
+    # The address at the push service and the two keys of the device, from the browser's sign-up.
+    # The address counts as secret too: the interface only ever sees its host, so what it sends back is kept.
+    "webpush": {"required": ("url", "p256dh", "auth"), "secret": ("url", "p256dh", "auth")},
 }
 
 
@@ -35,6 +39,9 @@ class TargetIn(BaseModel):
     url: str = Field(default="", max_length=500)
     token: str = Field(default="", max_length=500)
     chat_id: str = Field(default="", max_length=64)
+    #: Web Push only: the device's keys from its sign-up.
+    p256dh: str = Field(default="", max_length=200)
+    auth: str = Field(default="", max_length=100)
     min_priority: str = CRIT
     quiet_from: str = Field(default="", max_length=5)
     quiet_to: str = Field(default="", max_length=5)
@@ -43,11 +50,15 @@ class TargetIn(BaseModel):
 
 def _view(target: Target) -> dict[str, Any]:
     config = push.target_config(target)
+    url = str(config.get("url", ""))
+    if target.kind == "webpush":
+        # A device's address at its push service is long and says nothing; its host says which service it is.
+        url = urlsplit(url).hostname or ""
     return {
         "id": target.id,
         "kind": target.kind,
         "name": target.name,
-        "url": config.get("url", ""),
+        "url": url,
         "chat_id": config.get("chat_id", ""),
         "has_token": bool(config.get("token")),
         "min_priority": target.min_priority,
@@ -69,13 +80,26 @@ def _apply(target: Target, payload: TargetIn) -> None:
     ):
         raise fehler("invalid_quiet_hours", "Quiet hours need a start and an end, like 23:00 and 07:00.", 422)
     config = push.target_config(target) if target.kind == payload.kind else {}
-    values = {"url": payload.url.strip(), "token": payload.token.strip(), "chat_id": payload.chat_id.strip()}
+    values = {
+        "url": payload.url.strip(),
+        "token": payload.token.strip(),
+        "chat_id": payload.chat_id.strip(),
+        "p256dh": payload.p256dh.strip(),
+        "auth": payload.auth.strip(),
+    }
+    if payload.kind == "webpush" and not values["url"].lower().startswith("https://"):
+        # Only a fresh sign-up brings a whole address; the host shown in the list is no address.
+        values["url"] = ""
     for key, value in values.items():
         if value or key not in FIELDS[payload.kind]["secret"]:
             config[key] = value
     for key in FIELDS[payload.kind]["required"]:
         if not config.get(key):
             raise fehler("target_field_missing", f"The field {key} is required for this target.", 422, field=key)
+    if payload.kind == "webpush" and not webpush.valid_subscription(
+        str(config.get("url", "")), str(config.get("p256dh", "")), str(config.get("auth", ""))
+    ):
+        raise fehler("webpush_invalid", "The browser's sign-up is incomplete. Sign this device up again.", 422)
     if config.get("url") and not str(config["url"]).lower().startswith(("http://", "https://")):
         raise fehler("url_invalid", "The address must start with http:// or https://.", 422, field="url")
     target.kind = payload.kind
@@ -137,3 +161,10 @@ async def test(target_id: int, account: CurrentAccount, db: DbSession) -> dict[s
 def delete(target_id: int, account: CurrentAccount, db: DbSession) -> None:
     db.delete(_get(db, target_id))
     db.commit()
+
+
+@router.get("/webpush/key", summary="What a browser needs to sign up for Web Push, and whether it is switched on")
+def webpush_key(account: CurrentAccount, db: DbSession) -> dict[str, Any]:
+    from ..services import settings_service
+
+    return {"enabled": bool(settings_service.get(db, "webpush_enabled")), "key": webpush.public_key(db)}

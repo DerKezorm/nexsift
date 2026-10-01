@@ -2,17 +2,20 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { api, errorMessage } from '../../api/client'
-import type { Priority, Target, TargetKind } from '../../api/types'
+import type { Priority, Settings, Target, TargetKind } from '../../api/types'
 import { useTargets } from '../../lib/data'
+import { deviceName } from '../../lib/device'
 import { PRIORITY_CHIP } from '../../lib/priority'
 import { relative } from '../../lib/time'
+import { useLoad } from '../../lib/useLoad'
 import { Dialog } from '../Dialog'
 import { Explainer } from '../Help'
 import { useNotice } from '../Notice'
 import { Symbol } from '../Symbol'
 import { Badge, Banner, Button, Field, Section, SelectField, Switch } from '../ui'
+import { WebPushSignup, type Subscription } from './WebPushSignup'
 
-const KINDS: TargetKind[] = ['ntfy', 'gotify', 'telegram', 'apprise', 'webhook']
+const KINDS: TargetKind[] = ['webpush', 'ntfy', 'gotify', 'telegram', 'apprise', 'webhook']
 const PRIORITIES: Priority[] = ['info', 'warn', 'crit']
 
 interface Draft {
@@ -22,6 +25,8 @@ interface Draft {
   url: string
   token: string
   chat_id: string
+  p256dh: string
+  auth: string
   min_priority: Priority
   quiet_from: string
   quiet_to: string
@@ -29,7 +34,7 @@ interface Draft {
   has_token?: boolean
 }
 
-const EMPTY: Draft = { kind: 'ntfy', name: '', url: '', token: '', chat_id: '', min_priority: 'crit', quiet_from: '', quiet_to: '', enabled: true }
+const EMPTY: Draft = { kind: 'webpush', name: deviceName(), url: '', token: '', chat_id: '', p256dh: '', auth: '', min_priority: 'crit', quiet_from: '', quiet_to: '', enabled: true }
 
 /** Where important things go. Each target has a test button, because a push that never arrives is noticed too late. */
 export function Targets() {
@@ -38,6 +43,7 @@ export function Targets() {
   const targets = useTargets()
   const [editing, setEditing] = useState<Draft | null>(null)
   const [testing, setTesting] = useState<number | null>(null)
+  const settings = useLoad(() => api.get<Settings>('/api/settings'), [editing])
 
   async function test(target: Target) {
     setTesting(target.id)
@@ -49,6 +55,14 @@ export function Targets() {
       notify({ text: errorMessage(caught) })
     } finally {
       setTesting(null)
+    }
+  }
+
+  async function switchWebpush(enabled: boolean) {
+    try {
+      settings.set(await api.put<Settings>('/api/settings', { values: { webpush_enabled: enabled } }))
+    } catch (caught) {
+      notify({ text: errorMessage(caught) })
     }
   }
 
@@ -80,7 +94,7 @@ export function Targets() {
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent-500/10 text-accent-400">
               <Symbol name="phone" />
             </span>
-            <button type="button" className="min-w-0 flex-1 text-left" onClick={() => setEditing({ ...target, token: '' })} title={t('targets.editHint')}>
+            <button type="button" className="min-w-0 flex-1 text-left" onClick={() => setEditing({ ...target, token: '', p256dh: '', auth: '' })} title={t('targets.editHint')}>
               <p className="flex items-center gap-2 text-sm font-medium text-mist-100">
                 {target.name}
                 <Badge>{t(`targets.kind.${target.kind}`)}</Badge>
@@ -109,6 +123,17 @@ export function Targets() {
           </li>
         ))}
       </ul>
+      {settings.data && (
+        <div className="mt-2 border-t border-ink-700 pt-3">
+          <Switch
+            label={t('targets.webpush.switch')}
+            hint={t('targets.webpush.switchHint')}
+            checked={settings.data.webpush_enabled}
+            onChange={(value) => void switchWebpush(value)}
+            help={t('targets.webpush.switchHelp')}
+          />
+        </div>
+      )}
       {editing && (
         <TargetEditor
           draft={editing}
@@ -129,6 +154,8 @@ function TargetEditor({ draft: initial, onClose, onSaved }: { draft: Draft; onCl
   const [error, setError] = useState<string | null>(null)
   const [quiet, setQuiet] = useState(!!initial.quiet_from)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [signedUp, setSignedUp] = useState<Subscription | null>(null)
+  const notify = useNotice()
   const set = (patch: Partial<Draft>) => setDraft({ ...draft, ...patch })
 
   async function save() {
@@ -136,7 +163,14 @@ function TargetEditor({ draft: initial, onClose, onSaved }: { draft: Draft; onCl
     const body = { ...draft, quiet_from: quiet ? draft.quiet_from || '23:00' : '', quiet_to: quiet ? draft.quiet_to || '07:00' : '' }
     try {
       if (draft.id) await api.put(`/api/targets/${draft.id}`, body)
-      else await api.post('/api/targets', body)
+      else {
+        const saved = await api.post<Target>('/api/targets', body)
+        // A device just signed up gets its first notification right away: proof that the way works.
+        if (saved.kind === 'webpush') {
+          const result = await api.post<{ ok: boolean; error?: string }>(`/api/targets/${saved.id}/test`)
+          notify({ text: result.ok ? t('targets.webpush.testSent') : t('targets.testFailed', { error: result.error }) })
+        }
+      }
       onSaved()
     } catch (caught) {
       setError(errorMessage(caught))
@@ -153,7 +187,8 @@ function TargetEditor({ draft: initial, onClose, onSaved }: { draft: Draft; onCl
     }
   }
 
-  const needsUrl = draft.kind !== 'telegram'
+  const webpush = draft.kind === 'webpush'
+  const needsUrl = draft.kind !== 'telegram' && !webpush
   const needsToken = draft.kind === 'gotify' || draft.kind === 'telegram' || draft.kind === 'ntfy'
   const tokenOptional = draft.kind === 'ntfy'
 
@@ -169,6 +204,23 @@ function TargetEditor({ draft: initial, onClose, onSaved }: { draft: Draft; onCl
         </SelectField>
         <Explainer>{t(`targets.how.${draft.kind}`)}</Explainer>
         <Field label={t('targets.name')} value={draft.name} onChange={(event) => set({ name: event.target.value })} placeholder={t('targets.namePlaceholder')} help={t('targets.nameHelp')} />
+        {webpush &&
+          (draft.id && !signedUp ? (
+            <div className="flex flex-wrap items-center gap-3 rounded-xl border border-ink-700 bg-ink-900 p-3.5 text-sm text-mist-300">
+              <span className="flex-1">{t('targets.webpush.signedUp', { host: draft.url })}</span>
+              <Button variant="ghost" size="sm" onClick={() => setSignedUp({ url: '', p256dh: '', auth: '' })}>
+                {t('targets.webpush.again')}
+              </Button>
+            </div>
+          ) : (
+            <WebPushSignup
+              done={signedUp?.url ? signedUp : null}
+              onSignedUp={(subscription) => {
+                setSignedUp(subscription)
+                set(subscription)
+              }}
+            />
+          ))}
         {needsUrl && (
           <Field label={t(`targets.url.${draft.kind}`)} value={draft.url} onChange={(event) => set({ url: event.target.value })} placeholder={t(`targets.urlExample.${draft.kind}`)} help={t(`targets.urlHelp.${draft.kind}`)} />
         )}
@@ -220,7 +272,7 @@ function TargetEditor({ draft: initial, onClose, onSaved }: { draft: Draft; onCl
             <Button variant="ghost" onClick={onClose}>
               {t('common.cancel')}
             </Button>
-            <Button onClick={() => void save()} disabled={!draft.name.trim()}>
+            <Button onClick={() => void save()} disabled={!draft.name.trim() || (webpush && !draft.id && !signedUp?.url)}>
               {t('common.save')}
             </Button>
           </div>

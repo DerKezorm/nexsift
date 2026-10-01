@@ -69,6 +69,7 @@
     "unknown_preset": "Unknown kind of source.",
     "unknown_setting": "Unknown setting.",
     "url_invalid": "The address must start with http:// or https://.",
+    "webpush_invalid": "The browser's sign-up is incomplete. Sign the device up again.",
     "wrong_credentials": "Name or password is wrong.",
     "wrong_password": "The current password is wrong."
   },
@@ -806,7 +807,8 @@
       "gotify": "A real Gotify server with the Gotify app on the phone. Create an application there and enter its token here.",
       "ntfy": "The ntfy app on the phone, with ntfy.sh or your own ntfy server. Subscribe to a topic in the app and enter its full address here.",
       "telegram": "A Telegram bot writes to you. Create the bot with @BotFather, enter the token here, write to the bot once, then the chat ID.",
-      "webhook": "Any service that takes JSON: nexsift POSTs title, message, priority and link."
+      "webhook": "Any service that takes JSON: nexsift POSTs title, message, priority and link.",
+      "webpush": "Notifications straight to this device, no extra app. On the phone, open nexsift over https and add it to the home screen as an app, then sign it up here. Each device signs itself up once."
     },
     "intro": "Where nexsift sends what matters. Everything else stays quietly in the inbox.",
     "kind": {
@@ -814,7 +816,8 @@
       "gotify": "Gotify",
       "ntfy": "ntfy",
       "telegram": "Telegram",
-      "webhook": "Webhook"
+      "webhook": "Webhook",
+      "webpush": "This device (browser or app)"
     },
     "kindHelp": "Which service delivers the pushes. If you already have the ntfy or Gotify app, take that.",
     "kindLabel": "Kind",
@@ -868,6 +871,25 @@
       "gotify": "The address of your Gotify server, without /message.",
       "ntfy": "Server and topic together, exactly as subscribed in the app. A long, random topic keeps others from reading along.",
       "webhook": "nexsift sends the JSON here."
+    },
+    "webpush": {
+      "again": "Sign up again",
+      "allow": "Allow",
+      "browserSaid": "The browser refused the sign-up: {{message}}",
+      "denied": "Notifications are blocked for nexsift. Allow them in the browser's site or app settings and try again.",
+      "incomplete": "The browser did not hand over the whole sign-up. Try again.",
+      "iphone": "On the iPhone this only works from the app: tap Share at the bottom in Safari, \"Add to Home Screen\", then open nexsift from the new icon and carry on here.",
+      "needsHttps": "Browsers only allow notifications over https. Open nexsift at your https address and sign the device up there.",
+      "openSecure": "Open {{url}}",
+      "ready": "Tap the button and allow notifications when the browser asks.",
+      "signUp": "Sign this device up",
+      "signedUp": "Signed up through {{host}}.",
+      "switch": "Allow Web Push",
+      "switchHelp": "Web Push goes through the push services of Google, Apple and Mozilla. Off: nothing goes to signed up devices any more, but their sign-ups stay.",
+      "switchHint": "Notifications to browsers and the installed app.",
+      "testSent": "Signed up. A test notification is on its way.",
+      "unsupported": "This browser cannot receive notifications. Use Chrome, Edge, Firefox, or on the iPhone the app from the home screen.",
+      "wayOut": "Notifications go through the browser maker's service (Google, Apple or Mozilla). The content is encrypted; they only see that something arrives. For that, nexsift has to be allowed to reach these services."
     }
   },
   "theme": {

@@ -149,7 +149,7 @@ export interface Rule {
   built_in: string
 }
 
-export type TargetKind = 'ntfy' | 'gotify' | 'telegram' | 'apprise' | 'webhook'
+export type TargetKind = 'webpush' | 'ntfy' | 'gotify' | 'telegram' | 'apprise' | 'webhook'
 
 export interface Target {
   id: number
@@ -170,6 +170,7 @@ export interface Settings {
   password_login: boolean
   public_url: string
   sender_host: string
+  webpush_enabled: boolean
   push_mode: PushMode
   bundle_minutes: number
   throttle_per_minute: number

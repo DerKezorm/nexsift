@@ -175,6 +175,27 @@ def ntfy_health() -> dict[str, bool]:
     return {"healthy": True}
 
 
+@ntfy.get("/v1/stats")
+def ntfy_stats() -> dict[str, int]:
+    """A real ntfy answers {"messages": n, "messages_rate": r}; nexsift keeps its own counts elsewhere."""
+    return {"messages": 0, "messages_rate": 0}
+
+
+@ntfy.get("/{topic}/auth")
+async def ntfy_auth(topic: str) -> Response:
+    """ "May I subscribe?" Home Assistant asks this before every subscription. Known topics: yes, like ntfy says
+    it ({"success": true}); unknown ones: ntfy's own refusal."""
+    names = [name.strip() for name in topic.split(",") if name.strip()]
+
+    def known() -> bool:
+        with SessionLocal() as db:
+            return bool(names) and all(sources_service.by_key(db, f"ntfy:{name}") is not None for name in names)
+
+    if not await run_in_threadpool(known):
+        return _ntfy_error(403, 40301, "forbidden")
+    return JSONResponse({"success": True})
+
+
 @ntfy.get("/v1/account")
 def ntfy_account() -> dict[str, Any]:
     """What a real ntfy server answers an anonymous visitor, field for field. Home Assistant's ntfy integration

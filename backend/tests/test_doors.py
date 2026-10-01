@@ -195,6 +195,10 @@ def test_ntfy_subscription_opens_for_known_topics_only(
     from starlette.websockets import WebSocketDisconnect
 
     topic = add_source(client, "homeassistant", "HA")["connection"]["topic"]
+    # First Home Assistant asks whether it may subscribe, then it opens the socket.
+    assert ntfy_client.get(f"/{topic}/auth").json() == {"success": True}
+    assert ntfy_client.get("/not-set-up/auth").status_code == 403
+    assert ntfy_client.get("/v1/stats").json() == {"messages": 0, "messages_rate": 0}
     with ntfy_client.websocket_connect(f"/{topic}/ws") as socket:
         opened = socket.receive_json()
         assert opened["event"] == "open" and opened["topic"] == topic

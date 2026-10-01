@@ -65,16 +65,33 @@ DEFAULT_RULES: list[dict[str, Any]] = [
     {
         "key": "keywords-critical",
         "name": "Words for failures make it critical",
-        "conditions": [{"field": "any", "op": "word", "value": "FAIL|FAILED|FAILURE|CRITICAL|ERROR|FATAL|PANIC"}],
+        "conditions": [
+            {
+                "field": "any",
+                "op": "word",
+                "value": "FAIL|FAILED|FAILURE|CRITICAL|ERROR|FATAL|PANIC|FEHLGESCHLAGEN|KRITISCH|AUSGEFALLEN",
+            }
+        ],
         "actions": {"priority": CRIT},
     },
     {
         "key": "keywords-warning",
         "name": "Words for trouble make it a warning",
-        "conditions": [{"field": "any", "op": "word", "value": "WARN|WARNING|DEGRADED|RUNNING OUT"}],
+        "conditions": [
+            {"field": "any", "op": "word", "value": "WARN|WARNING|DEGRADED|RUNNING OUT|WARNUNG|BEEINTRÄCHTIGT"}
+        ],
         "actions": {"priority": WARN},
     },
 ]
+
+#: What a built-in rule's conditions looked like in earlier versions. A rule still exactly like that was never
+#: touched by the operator and gets the current words; one the operator changed is left alone.
+#: German words came on 01.10.2026. "Fehler" is not among them: "0 Fehler" and "ohne Fehler" in a backup
+#: report would make good news critical.
+PREVIOUS_CONDITIONS: dict[str, list[list[dict[str, str]]]] = {
+    "keywords-critical": [[{"field": "any", "op": "word", "value": "FAIL|FAILED|FAILURE|CRITICAL|ERROR|FATAL|PANIC"}]],
+    "keywords-warning": [[{"field": "any", "op": "word", "value": "WARN|WARNING|DEGRADED|RUNNING OUT"}]],
+}
 
 #: Positions: source rules first, general ones after, so a sender-specific rule beats a keyword rule.
 SOURCE_RULE_POSITION = 100
@@ -86,6 +103,9 @@ def install_defaults(db: Session) -> None:
     deleted would otherwise be back after the next update."""
     installed = list(settings_service.get(db, "installed_rules") or [])
     for index, rule in enumerate(DEFAULT_RULES):
+        existing = db.scalar(select(Rule).where(Rule.built_in == rule["key"]))
+        if existing is not None and existing.conditions in PREVIOUS_CONDITIONS.get(rule["key"], []):
+            existing.conditions = rule["conditions"]
         if rule["key"] in installed:
             continue
         installed.append(rule["key"])

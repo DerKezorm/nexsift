@@ -264,3 +264,30 @@ def test_a_deleted_built_in_rule_stays_deleted_after_a_restart(client: TestClien
         presets.install_defaults(db)
     assert all(rule["built_in"] != "keywords-critical" for rule in client.get("/api/rules").json())
     assert any(rule["built_in"] == "keywords-warning" for rule in client.get("/api/rules").json())
+
+
+def test_german_failure_words_make_it_critical_but_not_fehler(client: TestClient, operator: dict) -> None:
+    send = _hook(client, add_source(client, "webhook"))
+    send(title="Sicherung fehlgeschlagen")
+    send(title="Datensicherung abgeschlossen", message="0 Fehler")
+    priorities = {thread["title"]: thread["priority"] for thread in inbox(client)}
+    assert priorities["Sicherung fehlgeschlagen"] == "crit"
+    assert priorities["Datensicherung abgeschlossen"] == "info"
+
+
+def test_untouched_built_in_rules_get_the_new_words_edited_ones_keep_theirs(client: TestClient, operator: dict) -> None:
+    from app.models import Rule
+    from app.services import presets
+
+    with SessionLocal() as db:
+        critical = db.query(Rule).filter(Rule.built_in == "keywords-critical").one()
+        critical.conditions = presets.PREVIOUS_CONDITIONS["keywords-critical"][0]
+        warning = db.query(Rule).filter(Rule.built_in == "keywords-warning").one()
+        warning.conditions = [{"field": "any", "op": "word", "value": "WARN|MINE"}]
+        db.commit()
+        presets.install_defaults(db)
+    with SessionLocal() as db:
+        critical = db.query(Rule).filter(Rule.built_in == "keywords-critical").one()
+        warning = db.query(Rule).filter(Rule.built_in == "keywords-warning").one()
+        assert "FEHLGESCHLAGEN" in critical.conditions[0]["value"]
+        assert warning.conditions[0]["value"] == "WARN|MINE"

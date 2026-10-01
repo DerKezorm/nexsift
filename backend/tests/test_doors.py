@@ -185,3 +185,18 @@ def test_ntfy_door_errors_look_like_ntfy_errors(ntfy_client: TestClient) -> None
     response = ntfy_client.get("/v1/version")
     assert response.status_code == 404
     assert response.json() == {"code": 40401, "http": 404, "error": "page not found"}
+
+
+def test_ntfy_subscription_opens_for_known_topics_only(
+    client: TestClient, ntfy_client: TestClient, operator: dict
+) -> None:
+    """Home Assistant subscribes to every topic it sends to; a known topic gets an open, quiet subscription."""
+    import pytest
+    from starlette.websockets import WebSocketDisconnect
+
+    topic = add_source(client, "homeassistant", "HA")["connection"]["topic"]
+    with ntfy_client.websocket_connect(f"/{topic}/ws") as socket:
+        opened = socket.receive_json()
+        assert opened["event"] == "open" and opened["topic"] == topic
+    with pytest.raises(WebSocketDisconnect), ntfy_client.websocket_connect("/not-set-up/ws") as socket:
+        socket.receive_json()

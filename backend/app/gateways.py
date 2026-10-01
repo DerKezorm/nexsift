@@ -16,10 +16,12 @@ them.
 
 from __future__ import annotations
 
+import asyncio
+import secrets
 import time
 from typing import Any
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse, Response
 from starlette.concurrency import run_in_threadpool
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -225,3 +227,40 @@ async def ntfy_topic(topic: str, request: Request) -> Response:
 @ntfy.get("/{topic}/trigger")
 async def ntfy_get(topic: str, request: Request) -> Response:
     return await _ntfy_publish(request, topic)
+
+
+#: How often an open subscription gets a sign of life; a real ntfy sends one every 45 seconds.
+NTFY_KEEPALIVE_SECONDS = 45
+
+
+@ntfy.websocket("/{topic}/ws")
+async def ntfy_subscribe(topic: str, websocket: WebSocket) -> None:
+    """A subscription that stays open and stays quiet.
+
+    nexsift receives, it does not hand messages out again. But Home Assistant subscribes to every ntfy topic it
+    sends to, and without an answer here it marks the topic unavailable and logs an error on every retry
+    (measured with Home Assistant 2026.9 on 01.10.2026). So the door accepts the subscription for topics it
+    knows, says "open" like ntfy does, and sends keepalives until the other side leaves."""
+    names = [name.strip() for name in topic.split(",") if name.strip()]
+
+    def known() -> bool:
+        with SessionLocal() as db:
+            return bool(names) and all(sources_service.by_key(db, f"ntfy:{name}") is not None for name in names)
+
+    if not await run_in_threadpool(known):
+        await websocket.close(code=1008)
+        return
+    await websocket.accept()
+
+    def event(kind: str) -> dict[str, Any]:
+        return {"id": secrets.token_hex(6), "time": int(time.time()), "event": kind, "topic": topic}
+
+    try:
+        await websocket.send_json(event("open"))
+        while True:
+            try:
+                await asyncio.wait_for(websocket.receive_text(), timeout=NTFY_KEEPALIVE_SECONDS)
+            except TimeoutError:
+                await websocket.send_json(event("keepalive"))
+    except (WebSocketDisconnect, RuntimeError):
+        return

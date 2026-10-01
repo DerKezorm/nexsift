@@ -137,6 +137,9 @@ WT_FOUND = re.compile(r"Found new (?P<image>\S+?)(?::\S+)? image \(", re.IGNOREC
 WT_REPORT = re.compile(
     r"^\s*-\s*(?P<name>[^\s(]+)\s*\((?P<image>[^)]+)\):\s*\S+\s+updated to\s+\S+", re.IGNORECASE | re.MULTILINE
 )
+WT_CREATED = re.compile(r"^Creating /(\S+)", re.MULTILINE)
+# The first lines of a Watchtower start: "Watchtower 1.7.1", "Using notifications: gotify", "Scheduling first run".
+WT_STARTED = re.compile(r"^Watchtower v?\d+\.\d+", re.MULTILINE)
 # "0 Failed" in the session report is the good news, not a failure.
 WT_FAILED = re.compile(r"(level=error|(?<!0 )\bfailed\b|could not|unable to)", re.IGNORECASE)
 
@@ -147,9 +150,14 @@ def watchtower(incoming: Incoming, payload: Payload) -> list[Incoming]:
     host_match = re.search(r"Watchtower updates on (\S+)", text)
     if host_match:
         host = host_match.group(1)
-    names = [m.group("name") for m in WT_REPORT.finditer(text)] or [
-        m.group("image").rsplit("/", 1)[-1] for m in WT_FOUND.finditer(text)
-    ]
+    # Container names, as the operator knows them, without the leading slash Docker puts there. The session
+    # report names containers; the log lines name images, but "Creating /name" follows every real update.
+    # Only without those (monitor-only) the image has to do.
+    names = (
+        [m.group("name").lstrip("/") for m in WT_REPORT.finditer(text)]
+        or [m.group(1) for m in WT_CREATED.finditer(text)]
+        or [m.group("image").rsplit("/", 1)[-1] for m in WT_FOUND.finditer(text)]
+    )
     failures = [line.strip() for line in text.splitlines() if WT_FAILED.search(line)]
     events: list[Incoming] = []
     for name in dict.fromkeys(names):
@@ -174,7 +182,18 @@ def watchtower(incoming: Incoming, payload: Payload) -> list[Incoming]:
             )
         )
     if not events:
-        # A startup notice ("Watchtower 1.7.1 … Scheduling first run") or a format we do not know.
+        # The startup notice comes under the same title as updates ("Watchtower updates on <host>") although it
+        # holds none; named for what it is, found with a real Watchtower on 01.10.2026.
+        if WT_STARTED.search(incoming.body):
+            return [
+                Incoming(
+                    title="Watchtower started" + (f" on {host}" if host else ""),
+                    body=incoming.body,
+                    priority=INFO,
+                    raw=incoming.raw,
+                    group_key="started",
+                )
+            ]
         if "watchtower" in text.lower():
             return [
                 Incoming(title=incoming.title, body=incoming.body, priority=INFO, raw=incoming.raw, group_key="notices")
@@ -222,8 +241,65 @@ def paperless(incoming: Incoming, payload: Payload) -> list[Incoming]:
     return [incoming]
 
 
+# --- Uptime Kuma through its Discord notification ------------------------------------------------------------ #
+#
+# Kuma's Discord message: username "Uptime Kuma", one embed titled "❌ Your service <name> went down. ❌" or
+# "✅ Your service <name> is up! ✅", with fields "Service Name", "Service URL", "Error" or "Ping". Recorded from
+# a real Uptime Kuma 1.23 on 01.10.2026.
+
+KUMA_DISCORD_TITLE = re.compile(r"Your service (?P<name>.+?) (?P<state>went down|is up)", re.IGNORECASE)
+
+
+def kuma_discord(incoming: Incoming, payload: Payload) -> list[Incoming] | None:
+    embeds = payload.get("embeds") if isinstance(payload.get("embeds"), list) else []
+    if "kuma" not in str(payload.get("username", "")).lower() or not embeds or not isinstance(embeds[0], dict):
+        return None
+    match = KUMA_DISCORD_TITLE.search(str(embeds[0].get("title", "")))
+    if not match:
+        return None
+    fields = {
+        str(item.get("name")): str(item.get("value", ""))
+        for item in embeds[0].get("fields") or []
+        if isinstance(item, dict)
+    }
+    name = fields.get("Service Name") or match.group("name")
+    key = f"monitor-{name}"
+    links = [{"label": "", "url": fields["Service URL"]}] if fields.get("Service URL", "").startswith("http") else []
+    if match.group("state").lower() == "went down":
+        detail = fields.get("Error", "")
+        return [
+            Incoming(
+                title=f"{name} is down",
+                body=detail,
+                priority=CRIT,
+                links=links,
+                raw=incoming.raw,
+                fields={"monitor": name},
+                group_key=key,
+            )
+        ]
+    detail = f"Ping {fields['Ping']}" if fields.get("Ping") else ""
+    return [
+        Incoming(
+            title=f"{name} is up again",
+            body=detail,
+            priority=INFO,
+            links=links,
+            raw=incoming.raw,
+            fields={"monitor": name},
+            resolves=key,
+            group_key=key,
+        )
+    ]
+
+
 def generic(incoming: Incoming, payload: Payload) -> list[Incoming]:
-    return [incoming]
+    """A source of the general kind still recognizes formats nexsift knows by their shape: Uptime Kuma pointed at
+    a plain webhook or a Discord door pairs its outages and recoveries all the same."""
+    if isinstance(payload.get("heartbeat"), dict) and isinstance(payload.get("monitor"), dict):
+        return uptimekuma(incoming, payload)
+    understood = kuma_discord(incoming, payload)
+    return understood if understood is not None else [incoming]
 
 
 REFINERS: dict[str, Refiner] = {

@@ -22,18 +22,31 @@ KUMA_UP = {
     "msg": "[cloud] [✅ Up] 200 - OK",
 }
 
+# Recorded from a real Watchtower 1.7.1 sending through shoutrrr's Gotify service, 01.10.2026.
 WATCHTOWER_LOG = {
-    "title": "Watchtower updates on docker-01",
-    "message": (
-        "Found new jellyfin/jellyfin:latest image (sha256:3f2a9c1d)\n"
-        "Found new ghcr.io/immich-app/immich-server:release image (sha256:77ab12)\n"
-        "Stopping /jellyfin (4c1d2e) with SIGTERM\nCreating /jellyfin\nRemoving image 3f2a9c1d"
-    ),
+    "message": "Found new busybox:latest image (fd7dc98638c8)\nStopping /nsx-test-target (bc10b34da82b) with SIGTERM\nCreating /nsx-test-target\n",
+    "title": "Watchtower updates on docker01",
     "priority": 0,
 }
 WATCHTOWER_REPORT = {
-    "title": "Watchtower updates on docker-01",
-    "message": "3 Scanned, 2 Updated, 0 Failed\n- redis (redis:7): 1a2b3c updated to 4d5e6f\n- grafana (grafana/grafana:latest): 9a8b updated to 7c6d",
+    "message": "1 Scanned, 1 Updated, 0 Failed\n- /nsx-test-target (busybox:latest): 9e2bbca07938 updated to fd7dc98638c8",
+    "title": "Watchtower updates on docker01",
+    "priority": 0,
+}
+WATCHTOWER_STARTED = {
+    "message": "Watchtower 1.7.1\nUsing notifications: gotify\nOnly checking containers using enable label\nRunning a one time update.\n",
+    "title": "Watchtower updates on docker01",
+    "priority": 0,
+}
+# Two containers in one run, in the same line shapes as the recording.
+WATCHTOWER_LOG_TWO = {
+    "message": (
+        "Found new jellyfin/jellyfin:latest image (3f2a9c1d77ab)\n"
+        "Found new ghcr.io/immich-app/immich-server:release image (77ab12cd34ef)\n"
+        "Stopping /jellyfin (4c1d2e5f6a7b) with SIGTERM\nCreating /jellyfin\n"
+        "Stopping /immich_server (9a8b7c6d5e4f) with SIGTERM\nCreating /immich_server\n"
+    ),
+    "title": "Watchtower updates on docker01",
     "priority": 0,
 }
 
@@ -65,15 +78,25 @@ def test_unknown_format_arrives_anyway_and_says_so() -> None:
     assert event.title == "something new"
 
 
-def test_watchtower_log_lines_become_one_event_per_container() -> None:
-    events = _refine("watchtower", doors.gotify(json.dumps(WATCHTOWER_LOG).encode(), {}, "application/json"))
-    assert [event.title for event in events] == ["Updated jellyfin", "Updated immich-server"]
+def _watchtower(sample: dict) -> list:
+    return _refine("watchtower", doors.gotify(json.dumps(sample).encode(), {}, "application/json"))
+
+
+def test_watchtower_log_lines_name_the_containers() -> None:
+    assert [event.title for event in _watchtower(WATCHTOWER_LOG)] == ["Updated nsx-test-target"]
+    events = _watchtower(WATCHTOWER_LOG_TWO)
+    assert [event.title for event in events] == ["Updated jellyfin", "Updated immich_server"]
     assert all(event.group_key == "updates" for event in events)
 
 
-def test_watchtower_session_report_is_understood_too() -> None:
-    events = _refine("watchtower", doors.gotify(json.dumps(WATCHTOWER_REPORT).encode(), {}, "application/json"))
-    assert [event.title for event in events] == ["Updated redis", "Updated grafana"]
+def test_watchtower_session_report_names_the_container_too() -> None:
+    assert [event.title for event in _watchtower(WATCHTOWER_REPORT)] == ["Updated nsx-test-target"]
+
+
+def test_watchtower_start_is_called_a_start() -> None:
+    [event] = _watchtower(WATCHTOWER_STARTED)
+    assert event.title == "Watchtower started on docker01"
+    assert event.recognized is True
 
 
 def test_proxmox_severity_and_grouping() -> None:
@@ -125,10 +148,10 @@ def test_watchtower_bundles_and_never_pushes(client: TestClient, gotify_client: 
     source = add_source(client, "watchtower")
     token = source["connection"]["token"]
     assert source["connection"]["shoutrrr"].startswith("gotify://testserver:8491/")
-    gotify_client.post(f"/message?token={token}", json=WATCHTOWER_LOG)
+    gotify_client.post(f"/message?token={token}", json=WATCHTOWER_LOG_TWO)
     gotify_client.post(f"/message?token={token}", json=WATCHTOWER_REPORT)
     [thread] = inbox(client)
-    assert thread["title"] == "Watchtower: 4 containers updated"
+    assert thread["title"] == "Watchtower: 3 containers updated"
     detail = client.get(f"/api/threads/{thread['id']}").json()
     assert "Watchtower: bundle updates, never push them" in detail["rule_names"]
     assert detail["push_mode"] == "never"
@@ -222,3 +245,69 @@ def test_a_good_proxmox_backup_closes_the_failed_one(client: TestClient, operato
     # A good backup without an open problem is just an info line.
     client.post(path, json={**good, "host": "pve02", "title": "vzdump backup status (pve02): backup successful"})
     assert any(t["title"].endswith("(pve02): backup successful") and t["resolved_at"] is None for t in inbox(client))
+
+
+# Recorded from a real Uptime Kuma 1.23.17 with its Discord notification, 01.10.2026.
+KUMA_DISCORD_DOWN = {
+    "username": "Uptime Kuma",
+    "embeds": [
+        {
+            "title": "❌ Your service testweb went down. ❌",
+            "color": 16711680,
+            "timestamp": "2026-10-01 05:25:57.339",
+            "fields": [
+                {"name": "Service Name", "value": "testweb"},
+                {"name": "Service URL", "value": "http://192.0.2.54:3399/"},
+                {"name": "Time (UTC)", "value": "2026-10-01 05:25:57"},
+                {"name": "Error", "value": "connect ECONNREFUSED 192.0.2.54:3399"},
+            ],
+        }
+    ],
+}
+KUMA_DISCORD_UP = {
+    "username": "Uptime Kuma",
+    "embeds": [
+        {
+            "title": "✅ Your service testweb is up! ✅",
+            "color": 65280,
+            "timestamp": "2026-10-01 05:26:37.375",
+            "fields": [
+                {"name": "Service Name", "value": "testweb"},
+                {"name": "Service URL", "value": "http://192.0.2.54:3399/"},
+                {"name": "Time (UTC)", "value": "2026-10-01 05:26:37"},
+                {"name": "Ping", "value": "3 ms"},
+            ],
+        }
+    ],
+}
+
+
+def test_kuma_through_discord_pairs_down_and_up(client: TestClient, operator: dict) -> None:
+    source = add_source(client, "discord", "Kuma via Discord")
+    path = source["connection"]["url"].split("testserver:8490", 1)[1]
+    client.post(path, json=KUMA_DISCORD_DOWN)
+    [problem] = inbox(client, "crit")
+    assert problem["title"] == "testweb is down"
+    client.post(path, json=KUMA_DISCORD_UP)
+    [thread] = inbox(client)
+    assert thread["resolved_at"] is not None and thread["resolved_by"] == "testweb is up again"
+    assert inbox(client, "crit") == []
+
+
+def test_kuma_webhook_format_is_recognized_on_a_plain_webhook_source(client: TestClient, operator: dict) -> None:
+    source = add_source(client, "webhook", "Kuma via plain webhook")
+    path = "/api/v1/hook/" + source["connection"]["token"]
+    client.post(path, json=KUMA_DOWN)
+    client.post(path, json=KUMA_UP)
+    [thread] = inbox(client)
+    assert thread["title"] == "cloud is down" and thread["resolved_at"] is not None
+
+
+def test_other_discord_messages_stay_as_they_are(client: TestClient, operator: dict) -> None:
+    source = add_source(client, "discord", "Radarr")
+    path = source["connection"]["url"].split("testserver:8490", 1)[1]
+    client.post(
+        path,
+        json={"username": "Radarr", "embeds": [{"title": "Movie Downloaded", "description": "The Quiet Hour (2023)"}]},
+    )
+    assert inbox(client)[0]["title"] == "Movie Downloaded"

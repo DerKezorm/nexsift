@@ -86,6 +86,13 @@ export function setupLines(preset: string, connection: Connection): SetupLine[] 
     case 'discord':
       return [{ label: 'webhookUrl', value: c.url ?? '', hint: 'discordUrl' }]
     case 'synology':
+      // DSM 7.2's own webhook (Notification, Webhooks, provider Custom). Not the mail: the mail sender in DSM is
+      // one global setting, and pointing it at nexsift would take away the operator's working mail.
+      return [
+        { label: 'url', value: c.url ?? '' },
+        { label: 'method', value: 'POST' },
+        { label: 'contentType', value: 'application/json', hint: 'synologyBody' },
+      ]
     case 'ups':
     case 'email':
       return [

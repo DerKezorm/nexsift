@@ -550,6 +550,7 @@
     "field": {
       "body": "Inhalt (Body)",
       "compose": "Oder in docker-compose.yml",
+      "contentType": "Content-Type",
       "env": "Umgebungsvariable",
       "method": "Methode",
       "recipient": "Empfänger",
@@ -579,6 +580,7 @@
       "proxmoxNoHeader": "Einen Header braucht es nicht. Die leere Header-Zeile in Proxmox mit dem Papierkorb löschen, sonst lässt sich nicht speichern. Secrets bleiben leer.",
       "recipient": "Der Name vor dem @ ordnet die Mail dieser Quelle zu. Die Domain ist egal.",
       "sender": "Beliebig, viele Geräte wollen hier nur irgendeine Adresse.",
+      "synologyBody": "Den Parameter „text“ im Body so lassen, wie er ist.",
       "syslogHostname": "Diesen Namen muss das Gerät in seinen Syslog-Zeilen tragen.",
       "watchtowerEnv": "Danach den Watchtower-Container neu starten. Die Adresse enthält den Token, also nicht weitergeben."
     },
@@ -662,12 +664,14 @@
         }
       },
       "synology": {
-        "name": "Synology (E-Mail)",
-        "short": "Warnungen des DSM, über die E-Mail-Benachrichtigung.",
+        "name": "Synology (Webhook)",
+        "short": "Warnungen des DSM über den eingebauten Webhook. Der Mailversand der NAS bleibt, wie er ist.",
         "steps": {
-          "s1": "Im DSM: Systemsteuerung, Benachrichtigung, E-Mail, „E-Mail-Benachrichtigungen aktivieren“.",
-          "s2": "Dienstanbieter „Benutzerdefinierter SMTP-Server“, Server, Port und Empfänger von hier, ohne SSL/TLS und ohne Authentifizierung.",
-          "s3": "„Test-E-Mail senden“."
+          "s1": "Im DSM: Systemsteuerung, Benachrichtigung, Reiter „Webhooks“, Hinzufügen.",
+          "s2": "Anbieter „Benutzerdefiniert“, Regel „All“. Was wichtig ist, sortiert nexsift selbst.",
+          "s3": "Anbietername frei, etwa nexsift. Betreff frei. Webhook-URL von hier. Den Haken bei „Benachrichtigungen auf Englisch senden“ setzen: nexsift erkennt Probleme an englischen Wörtern wie failed oder degraded.",
+          "s4": "Weiter: HTTP-Methode POST, Content-Type application/json. Den Parameter „text“ im Body so lassen, dort setzt DSM die Meldung ein.",
+          "s5": "„Testnachricht senden“, dann Übernehmen."
         }
       },
       "syslog": {

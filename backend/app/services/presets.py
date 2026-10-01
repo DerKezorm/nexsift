@@ -19,7 +19,7 @@ PRESETS: dict[str, dict[str, str]] = {
     "proxmox": {"kind": "proxmox", "protocol": "webhook", "name": "Proxmox VE"},
     "uptimekuma": {"kind": "uptimekuma", "protocol": "webhook", "name": "Uptime Kuma"},
     "homeassistant": {"kind": "homeassistant", "protocol": "ntfy", "name": "Home Assistant"},
-    "synology": {"kind": "synology", "protocol": "smtp", "name": "Synology"},
+    "synology": {"kind": "synology", "protocol": "webhook", "name": "Synology"},
     "paperless": {"kind": "paperless", "protocol": "webhook", "name": "Paperless-ngx"},
     "ups": {"kind": "ups", "protocol": "smtp", "name": "UPS"},
     "syslog": {"kind": "syslog", "protocol": "syslog", "name": "Router"},

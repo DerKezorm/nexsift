@@ -550,6 +550,7 @@
     "field": {
       "body": "Body",
       "compose": "Or in docker-compose.yml",
+      "contentType": "Content-Type",
       "env": "Environment variable",
       "method": "Method",
       "recipient": "Recipient",
@@ -579,6 +580,7 @@
       "proxmoxNoHeader": "No header is needed. Delete the empty header row in Proxmox with the bin icon, otherwise it will not save. Leave secrets empty.",
       "recipient": "The name before the @ ties the mail to this source. The domain does not matter.",
       "sender": "Anything; many devices just want some address here.",
+      "synologyBody": "Leave the parameter \"text\" in the body as it is.",
       "syslogHostname": "The device must carry this name in its syslog lines.",
       "watchtowerEnv": "Then restart the Watchtower container. The address holds the token, so do not pass it on."
     },
@@ -662,12 +664,14 @@
         }
       },
       "synology": {
-        "name": "Synology (email)",
-        "short": "DSM warnings, through the email notification.",
+        "name": "Synology (webhook)",
+        "short": "DSM warnings through its built-in webhook. The NAS mail settings stay as they are.",
         "steps": {
-          "s1": "In DSM: Control Panel, Notification, Email, \"Enable email notifications\".",
-          "s2": "Service provider \"Custom SMTP server\", server, port and recipient from here, no SSL/TLS and no authentication.",
-          "s3": "\"Send a test email\"."
+          "s1": "In DSM: Control Panel, Notification, tab \"Webhooks\", Add.",
+          "s2": "Provider \"Custom\", rule \"All\". nexsift sorts out what matters itself.",
+          "s3": "Any provider name, like nexsift. Any subject. Webhook URL from here. Tick \"Send notifications in English\": nexsift recognizes problems by English words like failed or degraded.",
+          "s4": "Next: HTTP method POST, Content-Type application/json. Leave the parameter \"text\" in the body as it is; DSM puts the message there.",
+          "s5": "\"Send test message\", then Apply."
         }
       },
       "syslog": {

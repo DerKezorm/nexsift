@@ -153,6 +153,12 @@ def webhook(body: bytes, content_type: str) -> tuple[Incoming, Payload]:
     text. The field names of the usual suspects (text, body, content, severity, level, status) work too, so a
     sender with fixed JSON can often be pointed here unchanged."""
     data = _as_json(body)
+    if not isinstance(data, dict) and "x-www-form-urlencoded" in content_type.lower():
+        # DSM's custom webhook sends a form unless JSON is chosen: text=<message>. Read as the same fields.
+        from urllib.parse import parse_qsl
+
+        form = dict(parse_qsl(_text(body), keep_blank_values=True))
+        data = form or None
     if not isinstance(data, dict):
         text = _text(body).strip()
         first = text.split("\n", 1)[0]

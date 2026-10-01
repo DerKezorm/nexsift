@@ -20,7 +20,7 @@ def _envelope() -> SimpleNamespace:
 
 
 def test_mail_to_a_known_recipient_arrives(client: TestClient, operator: dict) -> None:
-    source = add_source(client, "synology", "Synology")
+    source = add_source(client, "email", "Synology")
     assert source["connection"]["recipient"] == "synology@nexsift.local"
     assert source["connection"]["port"] == 25
     handler, session, envelope = MailHandler(), SimpleNamespace(peer=("192.0.2.9", 1)), _envelope()

@@ -311,3 +311,22 @@ def test_other_discord_messages_stay_as_they_are(client: TestClient, operator: d
         json={"username": "Radarr", "embeds": [{"title": "Movie Downloaded", "description": "The Quiet Hour (2023)"}]},
     )
     assert inbox(client)[0]["title"] == "Movie Downloaded"
+
+
+def test_synology_webhook_as_json_and_as_form(client: TestClient, operator: dict) -> None:
+    """DSM 7.2, Notification, Webhooks, provider Custom: the message goes into the field "text"; JSON when
+    Content-Type is set to application/json, a form otherwise. The subject prefix is taken out of the title."""
+    source = add_source(client, "synology", "nas01")
+    assert "/api/v1/hook/" in source["connection"]["url"]
+    path = "/api/v1/hook/" + source["connection"]["token"]
+    client.post(path, json={"text": "[nas01] The system has detected that Volume 1 is degraded."})
+    client.post(
+        path,
+        content=b"text=%5Bnas01%5D+Scheduled+S.M.A.R.T.+test+on+Drive+3+failed.",
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+    )
+    titles = {thread["title"]: thread["priority"] for thread in inbox(client)}
+    assert titles == {
+        "The system has detected that Volume 1 is degraded.": "warn",
+        "Scheduled S.M.A.R.T. test on Drive 3 failed.": "crit",
+    }

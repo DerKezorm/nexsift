@@ -171,3 +171,11 @@ def test_gotify_tokens_look_like_gotify_tokens(client: TestClient, operator: dic
     renewed = client.post(f"/api/sources/{source['id']}/token", headers=UI).json()["connection"]["token"]
     assert len(renewed) == 15 and renewed.startswith("A") and renewed != token
     assert len(add_source(client, "webhook")["connection"]["token"]) == 24
+
+
+def test_ntfy_account_answers_like_a_real_ntfy_server(ntfy_client: TestClient) -> None:
+    """Home Assistant's ntfy integration refuses a server whose account answer lacks limits and stats."""
+    account = ntfy_client.get("/v1/account").json()
+    assert account["role"] == "anonymous"
+    assert {"messages", "messages_remaining", "attachment_total_size_remaining"} <= set(account["stats"])
+    assert {"basis", "messages", "attachment_bandwidth"} <= set(account["limits"])

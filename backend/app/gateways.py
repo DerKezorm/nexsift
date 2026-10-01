@@ -161,8 +161,38 @@ def ntfy_health() -> dict[str, bool]:
 
 
 @ntfy.get("/v1/account")
-def ntfy_account() -> dict[str, str]:
-    return {"username": "*", "role": "anonymous"}
+def ntfy_account() -> dict[str, Any]:
+    """What a real ntfy server answers an anonymous visitor, field for field. Home Assistant's ntfy integration
+    reads this when it is set up and refuses the server when "limits" or "stats" are missing (measured with
+    Home Assistant 2026.9 on 01.10.2026). nexsift has no such limits; the numbers are generous placeholders."""
+    return {
+        "username": "*",
+        "role": "anonymous",
+        "limits": {
+            "basis": "ip",
+            "messages": 100000,
+            "messages_expiry_duration": 43200,
+            "emails": 0,
+            "calls": 0,
+            "reservations": 0,
+            "attachment_total_size": 0,
+            "attachment_file_size": 0,
+            "attachment_expiry_duration": 0,
+            "attachment_bandwidth": 0,
+        },
+        "stats": {
+            "messages": 0,
+            "messages_remaining": 100000,
+            "emails": 0,
+            "emails_remaining": 0,
+            "calls": 0,
+            "calls_remaining": 0,
+            "reservations": 0,
+            "reservations_remaining": 0,
+            "attachment_total_size": 0,
+            "attachment_total_size_remaining": 0,
+        },
+    }
 
 
 @ntfy.post("/")

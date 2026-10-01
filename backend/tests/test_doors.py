@@ -179,3 +179,9 @@ def test_ntfy_account_answers_like_a_real_ntfy_server(ntfy_client: TestClient) -
     assert account["role"] == "anonymous"
     assert {"messages", "messages_remaining", "attachment_total_size_remaining"} <= set(account["stats"])
     assert {"basis", "messages", "attachment_bandwidth"} <= set(account["limits"])
+
+
+def test_ntfy_door_errors_look_like_ntfy_errors(ntfy_client: TestClient) -> None:
+    response = ntfy_client.get("/v1/version")
+    assert response.status_code == 404
+    assert response.json() == {"code": 40401, "http": 404, "error": "page not found"}

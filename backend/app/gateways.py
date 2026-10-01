@@ -22,6 +22,7 @@ from typing import Any
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, Response
 from starlette.concurrency import run_in_threadpool
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from . import __version__
 from .adapters import doors
@@ -112,6 +113,18 @@ ntfy.add_middleware(RequestContextMiddleware)
 
 def _ntfy_error(status: int, code: int, error: str) -> JSONResponse:
     return JSONResponse({"code": code, "http": status, "error": error}, status_code=status)
+
+
+@ntfy.exception_handler(StarletteHTTPException)
+async def _ntfy_http_error(_request: Request, exc: StarletteHTTPException) -> JSONResponse:
+    """Errors in ntfy's own shape. Clients like Home Assistant's ask for paths nexsift does not have
+    (/v1/version, which a real ntfy also answers with 404) and handle ntfy's answer, but crash on FastAPI's
+    {"detail": …} (measured with Home Assistant 2026.9 on 01.10.2026)."""
+    if exc.status_code == 404:
+        return _ntfy_error(404, 40401, "page not found")
+    if exc.status_code == 405:
+        return _ntfy_error(405, 40501, "method not allowed")
+    return _ntfy_error(exc.status_code, exc.status_code * 100, str(exc.detail).lower())
 
 
 async def _ntfy_publish(request: Request, topic: str | None) -> Response:

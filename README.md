@@ -1,11 +1,26 @@
 # nexsift
 
-One inbox for everything your homelab has to say. Proxmox, the NAS, Uptime Kuma, Watchtower, the router and
-every script report to nexsift instead of to your phone. nexsift sorts what arrives, bundles the noise into
-single lines and sends only what matters to the phone: a failed backup at once, a container update never.
+**The filter for your homelab's notifications.** Every service wants to tell you something: Proxmox about its
+backups, Watchtower about every container update, Uptime Kuma about every hiccup, the NAS about its disks. Sooner or
+later the phone buzzes so often that you stop looking. That is *notification fatigue*, and it is how the one alert
+that matters gets missed.
 
-Senders need no plugin and no change. nexsift answers like the services they already know: a Gotify server, an
-ntfy server, a Discord webhook, a mail server, a syslog server, or a plain webhook.
+nexsift collects the alerts of all your services in one inbox, sorts them, bundles the noise and passes on only
+what matters: to your phone, or wherever you want it.
+
+**It is not another push server.** ntfy and Gotify deliver every message they are given. nexsift sits in front of
+them: your services report to nexsift, and nexsift decides what is worth a push. That push then goes out through
+the ntfy, Gotify, Telegram or Apprise you already use, or straight to the phone as a Web Push notification without
+any extra app.
+
+| Without nexsift | With nexsift |
+|---|---|
+| 30 container updates, 30 pushes | one line "Watchtower: 30 containers updated", no push |
+| a failed backup, somewhere in the noise | a red line on top, one push at once, an all-clear when it works again |
+| every service with its own push setup | every service reports to nexsift, the phone is set up once |
+
+Senders need no plugin and no change. To make that possible, nexsift answers like the services they already know:
+a Gotify server, an ntfy server, a Discord webhook, a mail server, a syslog server, or a plain webhook.
 
 ## Screenshots
 
@@ -51,9 +66,10 @@ ntfy server, a Discord webhook, a mail server, a syslog server, or a plain webho
 - **Push to the phone** through ntfy, Gotify, Telegram, Apprise or a webhook, each with a minimum level (critical
   by default) and quiet hours.
 - **Or straight to the device, no extra app (Web Push):** open nexsift over https, add it to the home screen, tap
-  "Sign this device up". Works with Chrome, Edge and Firefox, and on the iPhone from the home screen app (iOS 16.4
-  or later). Messages are encrypted for the device; they travel through the browser maker's push service, so this
-  way out has its own switch, off by default. The first critical message of a subject goes out at once; more of the same are
+  "Sign this device up and save". Works with Chrome, Edge and Firefox, and on the iPhone from the home screen app
+  (iOS 16.4 or later). Every device signs itself up and is a target of its own; any device can sign any device
+  off. Messages are encrypted for the device; they travel through the browser maker's push service, so this way
+  out is only used once you sign a device up, and can be paused for all of them. The first critical message of a subject goes out at once; more of the same are
   counted and summed up once at the end of the window. The all-clear follows quietly.
 - **Storm guard:** when many things fail at once, such as a power cut, the phone gets one summary instead of
   twenty pushes. A source that floods (more than 30 messages a minute by default) is counted, not stored.
@@ -61,6 +77,9 @@ ntfy server, a Discord webhook, a mail server, a syslog server, or a plain webho
   bundling key, bundle title, all-clear, push behaviour, or drop. All matching rules apply, top to bottom.
 - **A live inbox** with search, unread, archive and keyboard shortcuts (`?` shows them).
 - **One operator account** with a password, optionally OpenID Connect; for authentik there is a one-button setup.
+  The account at the provider is linked once, signed in, under Settings, Sign-in; from then on exactly that one
+  gets in, and the password can be switched off.
+- **What's new** after every update, once, with where to find each change; all of them on the About page.
 - **Housekeeping:** archived lines go after 30 days, all others after 90, what senders sent verbatim after 7. All
   three are settings.
 - German and English. Another language can be uploaded as one JSON file under Settings; for now it is kept in
@@ -149,6 +168,7 @@ Forgot the password? In the container: `python -m app.reset_password`.
 ## Security in short
 
 - Passwords are hashed with Argon2id. Ten failed sign-ins in a row lock the account for fifteen minutes.
+- Through OpenID Connect only the identity linked while signed in gets in; a matching email address is not enough.
 - Every source has its own token or topic, long enough not to be guessed. Tokens are stored as hashes for the
   check and encrypted for showing the setup again. An unknown token or topic is refused, never created.
 - Every changing request of the interface needs the header `X-Requested-By: nexsift`.

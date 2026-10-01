@@ -37,7 +37,7 @@ from .services import sources as sources_service
 # --- Gotify ------------------------------------------------------------------------------------------------- #
 
 gotify = FastAPI(title="nexsift gotify door", docs_url=None, redoc_url=None, openapi_url=None)
-gotify.add_middleware(RequestContextMiddleware)
+gotify.add_middleware(RequestContextMiddleware, door="gotify")
 
 
 def _gotify_error(status: int, description: str) -> JSONResponse:
@@ -110,7 +110,7 @@ def gotify_user() -> Response:
 # --- ntfy --------------------------------------------------------------------------------------------------- #
 
 ntfy = FastAPI(title="nexsift ntfy door", docs_url=None, redoc_url=None, openapi_url=None)
-ntfy.add_middleware(RequestContextMiddleware)
+ntfy.add_middleware(RequestContextMiddleware, door="ntfy")
 
 
 def _ntfy_error(status: int, code: int, error: str) -> JSONResponse:

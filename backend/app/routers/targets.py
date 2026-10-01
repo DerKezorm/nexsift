@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import re
 from typing import Any
 from urllib.parse import urlsplit
@@ -17,6 +18,8 @@ from ..deps import CurrentAccount, DbSession
 from ..meldungen import fehler
 from ..models import CRIT, PRIORITIES, Target
 from ..services import push, webpush
+
+logger = logging.getLogger("nexsift.targets")
 
 router = APIRouter(prefix="/api/targets", tags=["targets"])
 
@@ -137,11 +140,14 @@ def create(payload: TargetIn, account: CurrentAccount, db: DbSession) -> dict[st
             if push.target_config(existing).get("url") == payload.url.strip():
                 _apply(existing, payload)
                 db.commit()
+                logger.info("Target signed up again id=%s name=%s kind=%s", existing.id, existing.name, existing.kind)
                 return _view(existing)
     target = Target(kind=payload.kind, name=payload.name)
     _apply(target, payload)
     db.add(target)
     db.commit()
+    # Name and kind only: address, token and keys of a target never go into the log.
+    logger.info("Target created id=%s name=%s kind=%s", target.id, target.name, target.kind)
     return _view(target)
 
 
@@ -150,6 +156,7 @@ def update(target_id: int, payload: TargetIn, account: CurrentAccount, db: DbSes
     target = _get(db, target_id)
     _apply(target, payload)
     db.commit()
+    logger.info("Target changed id=%s name=%s kind=%s", target.id, target.name, target.kind)
     return _view(target)
 
 
@@ -163,6 +170,7 @@ async def test(target_id: int, account: CurrentAccount, db: DbSession) -> dict[s
     except push.PushError as error:
         target.last_error = str(error)[:300]
         db.commit()
+        logger.info("Test push to %s failed: %s", target.name, error)
         return {"ok": False, "error": str(error)}
     target.last_ok_at = utcnow()
     target.last_error = ""
@@ -172,8 +180,11 @@ async def test(target_id: int, account: CurrentAccount, db: DbSession) -> dict[s
 
 @router.delete("/{target_id}", status_code=204, summary="Delete a target")
 def delete(target_id: int, account: CurrentAccount, db: DbSession) -> None:
-    db.delete(_get(db, target_id))
+    target = _get(db, target_id)
+    name = target.name
+    db.delete(target)
     db.commit()
+    logger.info("Target deleted id=%s name=%s", target_id, name)
 
 
 @router.get("/webpush/key", summary="What a browser needs to sign up for Web Push, and whether it is switched on")

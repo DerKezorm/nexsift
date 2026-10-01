@@ -23,7 +23,18 @@ from sqlalchemy import delete  # noqa: E402
 from app.db import SessionLocal, init_db  # noqa: E402
 from app.gateways import gotify, ntfy  # noqa: E402
 from app.main import app  # noqa: E402
-from app.models import Account, AuthSession, Delivery, Event, Rule, Setting, Source, Target, Thread  # noqa: E402
+from app.models import (  # noqa: E402
+    Account,
+    ApiKey,
+    AuthSession,
+    Delivery,
+    Event,
+    Rule,
+    Setting,
+    Source,
+    Target,
+    Thread,
+)
 from app.security import brake  # noqa: E402
 from app.services import ingest, push, strangers  # noqa: E402
 
@@ -35,7 +46,7 @@ PASSWORD = "correct-horse-battery"
 def clean_db() -> Iterator[None]:
     init_db()
     with SessionLocal() as db:
-        for model in (Delivery, Event, Thread, Rule, Target, Source, AuthSession, Account, Setting):
+        for model in (Delivery, Event, Thread, Rule, Target, Source, AuthSession, Account, Setting, ApiKey):
             db.execute(delete(model))
         db.commit()
     brake._fails.clear()

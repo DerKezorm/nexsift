@@ -182,6 +182,86 @@ export interface Settings {
   retention_days: number
   archive_days: number
   raw_days: number
+  backup_schedule: BackupSchedule
+  backup_keep: number
+  api_keys_allowed: boolean
+}
+
+export type BackupSchedule = 'off' | 'daily' | 'weekly' | 'monthly'
+export type BackupKind = 'manual' | 'auto' | 'update'
+
+export interface Backup {
+  name: string
+  size: number
+  created: string
+  kind: BackupKind
+  note: string
+  version: string
+  compatible: boolean
+  reason: 'ok' | 'backup_newer' | 'unknown_version'
+}
+
+export interface BackupList {
+  entries: Backup[]
+  folder: string
+  schedule: BackupSchedule
+  keep: number
+}
+
+export interface BackupCounts {
+  sources: number
+  rules: number
+  targets: number
+  threads: number
+  events: number
+}
+
+export interface BackupBrief {
+  version: string
+  created: string
+  kind: BackupKind
+  note: string
+  counts: BackupCounts
+  key_in_archive: boolean
+  key_from_env: boolean
+  compatible: boolean
+  reason: Backup['reason']
+}
+
+export type LogMode = 'quiet' | 'normal' | 'detailed' | 'trace'
+
+export interface LogModeState {
+  mode: LogMode
+  until: string | null
+  fixed_by_env: boolean
+  modes: LogMode[]
+  durations: number[]
+}
+
+export interface LogEntry {
+  time: string
+  level: 'DEBUG' | 'INFO' | 'WARNING' | 'ERROR' | 'CRITICAL'
+  logger: string
+  message: string
+  request_id: string | null
+  user: string | null
+}
+
+export interface ApiKey {
+  id: number
+  name: string
+  prefix: string
+  created_at: string
+  last_used_at: string | null
+}
+
+export interface ApiKeyList {
+  allowed: boolean
+  keys: ApiKey[]
+}
+
+export interface ApiKeyCreated extends ApiKey {
+  key: string
 }
 
 export interface About {

@@ -14,6 +14,8 @@ from ..config import get_settings
 from ..models import Setting
 
 PUSH_MODES = ("immediate", "window", "single", "never")
+#: Mirrors ``backups.SCHEDULES``; kept here so the settings do not import the backup service.
+BACKUP_SCHEDULES = ("off", "daily", "weekly", "monthly")
 
 DEFAULTS: dict[str, Any] = {
     "password_login": True,
@@ -46,6 +48,11 @@ DEFAULTS: dict[str, Any] = {
     "raw_days": 7,
     #: Keys of the built-in rules already handed out once. One the operator deleted stays deleted.
     "installed_rules": [],
+    #: Automatic backups: how often, and how many of them stay. Copies made by hand are never pruned.
+    "backup_schedule": "daily",
+    "backup_keep": 7,
+    #: Read-only API keys for dashboards like nexdeck; closed until the operator opens it.
+    "api_keys_allowed": False,
 }
 
 #: What the frontend may read and the operator may change through PUT /api/settings.
@@ -63,6 +70,9 @@ PUBLIC_KEYS = (
     "retention_days",
     "archive_days",
     "raw_days",
+    "backup_schedule",
+    "backup_keep",
+    "api_keys_allowed",
 )
 
 #: Lower and upper bound for every number the operator can set. Outside: refused, not clamped silently.
@@ -74,6 +84,7 @@ BOUNDS: dict[str, tuple[int, int]] = {
     "retention_days": (1, 3650),
     "archive_days": (1, 3650),
     "raw_days": (0, 365),
+    "backup_keep": (1, 100),
 }
 
 

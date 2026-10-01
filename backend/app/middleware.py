@@ -11,11 +11,15 @@ from typing import Any
 from fastapi import Request
 from fastapi.responses import JSONResponse
 
+from .services import logs
+
 logger = logging.getLogger("nexsift.api")
 
 #: Paths whose calls explain nothing but fill the log.
-QUIET_PATHS = ("/api/health", "/api/auth/me", "/api/stream")
+QUIET_PATHS = ("/api/health", "/api/auth/me", "/api/stream", "/api/logs")
 SLOW_MS = 3000
+#: What takes long by nature: a backup grows with the database, the authentik setup waits for authentik.
+SLOW_EXPECTED = ("/api/backups", "/api/oidc/authentik")
 
 CSP = (
     b"default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; "
@@ -31,21 +35,27 @@ SECURITY_HEADERS: tuple[tuple[bytes, bytes], ...] = (
 
 
 class RequestContextMiddleware:
-    """Pure ASGI, so the event stream is not buffered."""
+    """Pure ASGI, so the event stream is not buffered.
 
-    def __init__(self, app: Any) -> None:
+    Every request gets an id: in the ``X-Request-Id`` answer header, in every log line it causes and in every error
+    answer. ``door`` says which app this is; the path is logged masked (``logs.mask_path``), because on the
+    webhook, the Discord path and the ntfy door the address itself is the permission."""
+
+    def __init__(self, app: Any, door: str = logs.WEB) -> None:
         self.app = app
+        self.door = door
 
     async def __call__(self, scope: dict, receive: Callable, send: Callable) -> None:
-        if scope["type"] != "http":
+        if scope["type"] not in ("http", "websocket"):
             await self.app(scope, receive, send)
             return
         request_id = secrets.token_hex(3)
         scope.setdefault("state", {})["request_id"] = request_id
+        token = logs.bind_request(request_id)
         start = time.perf_counter()
         status = 0
-        path = scope.get("path", "?")
-        method = scope.get("method", "?")
+        path = logs.mask_path(scope.get("path", "?"), self.door)
+        method = scope.get("method", "WS")
 
         async def send_wrapper(message: dict) -> None:
             nonlocal status
@@ -59,15 +69,21 @@ class RequestContextMiddleware:
         try:
             await self.app(scope, receive, send_wrapper)
         except Exception:
-            logger.exception("Unhandled error on %s %s", method, path)
+            duration = (time.perf_counter() - start) * 1000
+            logger.exception("Unhandled error on %s %s after %dms", method, path, duration)
             raise
-        duration = (time.perf_counter() - start) * 1000
-        if status >= 500:
-            logger.error("%s %s -> %s in %dms", method, path, status, duration)
-        elif duration >= SLOW_MS and not path.startswith(QUIET_PATHS):
-            logger.warning("Slow request: %s %s -> %s in %dms", method, path, status, duration)
-        elif not path.startswith(QUIET_PATHS):
-            logger.debug("%s %s -> %s in %dms", method, path, status, duration)
+        else:
+            if scope["type"] != "http":
+                return
+            duration = (time.perf_counter() - start) * 1000
+            if status >= 500:
+                logger.error("%s %s -> %s in %dms", method, path, status, duration)
+            elif duration >= SLOW_MS and not path.startswith(QUIET_PATHS + SLOW_EXPECTED):
+                logger.warning("Slow request: %s %s -> %s in %dms", method, path, status, duration)
+            elif not path.startswith(QUIET_PATHS):
+                logger.debug("%s %s -> %s in %dms", method, path, status, duration)
+        finally:
+            logs.unbind_request(token)
 
 
 async def unhandled_error(request: Request, _exc: Exception) -> JSONResponse:

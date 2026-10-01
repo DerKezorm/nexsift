@@ -63,6 +63,31 @@
       "small": [
         "Signing in with a password can only be switched off once authentik is linked, and the link only removed while the password counts again. That way you cannot lock yourself out."
       ]
+    },
+    "0.5.0": {
+      "lead": "nexsift now backs itself up, keeps a log you read in the interface, and lets dashboards like nexdeck read along.",
+      "sections": [
+        {
+          "title": "Backup and restore",
+          "body": "A copy of the database every night, plus one before every update that changes the database. Download gives you an encrypted ZIP with the key, which 7-Zip opens too. Only such an archive on another device is a real backup. Restoring first shows what the archive holds and makes a copy of the current state.",
+          "where": "Settings › Backup"
+        },
+        {
+          "title": "The log in the interface",
+          "body": "The newest lines with a filter by level, search, download and clear. To track down a problem, switch to Detailed or Trace; both go back by themselves after the chosen time. Every error message now names a request id; type it into the search and you see exactly that request. Tokens, topics and credentials are on no level.",
+          "where": "Settings › Log"
+        },
+        {
+          "title": "API keys for dashboards",
+          "body": "Flip the switch first, then make one key per dashboard. It reads only numbers and titles under /api/v1/status and /api/v1/threads, no message text, and changes nothing.",
+          "where": "Settings › API keys"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "The log is a file at data/logs/nexsift.log and tidies itself up.",
+        "NEXSIFT_LOG_LEVEL is no longer needed. When set it overrides the level from the interface, as an emergency exit."
+      ]
     }
   }
 }

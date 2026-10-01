@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from fastapi import APIRouter
@@ -12,6 +13,8 @@ from ..deps import CurrentAccount, DbSession
 from ..meldungen import fehler
 from ..models import Rule, Source
 from ..services import presets, rules
+
+logger = logging.getLogger("nexsift.rules")
 
 router = APIRouter(prefix="/api/rules", tags=["rules"])
 
@@ -56,6 +59,7 @@ def create(payload: RuleIn, account: CurrentAccount, db: DbSession) -> dict[str,
     rule = Rule(position=last + 10, **data)
     db.add(rule)
     db.commit()
+    logger.info("Rule created id=%s name=%s", rule.id, rule.name)
     return rules.as_dict(rule)
 
 
@@ -67,6 +71,7 @@ def reorder(payload: OrderIn, account: CurrentAccount, db: DbSession) -> list[di
     for index, rule_id in enumerate(payload.ids):
         known[rule_id].position = (index + 1) * 10
     db.commit()
+    logger.info("Rules reordered count=%s", len(payload.ids))
     return [rules.as_dict(rule) for rule in rules.ordered(db)]
 
 
@@ -84,6 +89,7 @@ def update(rule_id: int, payload: RuleIn, account: CurrentAccount, db: DbSession
     for key, value in _clean(db, payload).items():
         setattr(rule, key, value)
     db.commit()
+    logger.info("Rule changed id=%s name=%s enabled=%s", rule.id, rule.name, rule.enabled)
     return rules.as_dict(rule)
 
 
@@ -92,5 +98,7 @@ def delete(rule_id: int, account: CurrentAccount, db: DbSession) -> None:
     rule = db.get(Rule, rule_id)
     if rule is None:
         raise fehler("not_found", "Rule not found.", 404)
+    name = rule.name
     db.delete(rule)
     db.commit()
+    logger.info("Rule deleted id=%s name=%s", rule_id, name)

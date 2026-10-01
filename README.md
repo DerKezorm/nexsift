@@ -79,6 +79,16 @@ a Gotify server, an ntfy server, a Discord webhook, a mail server, a syslog serv
 - **One operator account** with a password, optionally OpenID Connect; for authentik there is a one-button setup.
   The account at the provider is linked once, signed in, under Settings, Sign-in; from then on exactly that one
   gets in, and the password can be switched off.
+- **Backup and restore:** a copy of the database every night (or weekly, monthly, off), one before every update
+  that changes the database, and one whenever you press the button. Download it as an AES-256 ZIP that 7-Zip opens
+  without nexsift; it carries the key, so tokens and credentials come back with it. Restoring shows first what the
+  archive holds and makes a copy of the current state as the way back.
+- **A log you read in the interface:** newest lines with a filter by level, search, download and clear. Four
+  levels, switchable at runtime; the two talkative ones switch themselves off. Every error message names a request
+  id that finds its lines. Tokens, topics, target credentials, Web Push keys and passwords never go in, on no level.
+- **Read-only API keys for dashboards** such as nexdeck, behind a switch that is off out of the box:
+  `GET /api/v1/status` (unread, open critical, messages today, …) and `GET /api/v1/threads` (newest lines, titles
+  only), with `Authorization: Bearer nxs_…`.
 - **What's new** after every update, once, with where to find each change; all of them on the About page.
 - **Housekeeping:** archived lines go after 30 days, all others after 90, what senders sent verbatim after 7. All
   three are settings.
@@ -141,11 +151,23 @@ through a proxy, so the setup hints have to send the devices to nexsift directly
 
 ## Where things are stored
 
-Everything lives in `/data`: the SQLite database `nexsift.db` and `secret.key`. Mount it from a local disk, never
-from an SMB or NFS share; SQLite's locking does not hold up over network filesystems.
+Everything lives in `/data`. Mount it from a local disk, never from an SMB or NFS share; SQLite's locking does not
+hold up over network filesystems.
 
-`secret.key` protects the stored secrets: source tokens, push target credentials, the OIDC client secret. Back it
-up together with the database.
+| Path | What |
+|---|---|
+| `nexsift.db` | The SQLite database: sources, rules, targets, messages, settings |
+| `secret.key` | Protects the stored secrets: source tokens, push target credentials, the OIDC client secret, the Web Push key pair |
+| `backups/` | Copies of the database with a small `.json` next to each (version, kind, note, counts) |
+| `backups/restore-pending/` | Only for a moment: a checked archive waiting for the next start |
+| `logs/nexsift.log` | The log; rolls over at 5 MB, three older files, gone after 14 days |
+
+The copies in `backups/` lie on the same disk as the database. A real backup is the archive you download under
+Settings, Backup, kept somewhere else; it holds `nexsift.db` and `secret.key`. Without its password nobody opens it.
+
+A restore happens at the next start: nexsift ends itself after the upload and comes back through
+`restart: unless-stopped`. It also ends with exit code 3, so `restart: on-failure` brings it back too. All browsers
+are signed out afterwards.
 
 Forgot the password? In the container: `python -m app.reset_password`.
 
@@ -160,7 +182,7 @@ Forgot the password? In the container: `python -m app.reset_password`.
 | `NEXSIFT_TRUSTED_PROXIES` | none | Addresses or networks of reverse proxies whose `X-Forwarded-For` is believed, comma separated |
 | `NEXSIFT_SESSION_DAYS` | `30` | A browser session ends after this many days |
 | `NEXSIFT_COOKIE_SECURE` | `auto` | `on`, `off` or `auto` (from the request or `X-Forwarded-Proto`) |
-| `NEXSIFT_LOG_LEVEL` | `INFO` | `DEBUG`, `INFO`, `WARNING` or `ERROR` |
+| `NEXSIFT_LOG_LEVEL` | empty | Usually left out: the level is set under Settings, Log. When set (`quiet`, `normal`, `detailed`, `trace`, or `WARNING`, `INFO`, `DEBUG`) it wins and the interface cannot change it; the way out when nexsift does not even start |
 | `NEXSIFT_API_DOCS` | `false` | Serves `/api/docs` and `/api/openapi.json` |
 | `NEXSIFT_GOTIFY_PORT`, `NEXSIFT_NTFY_PORT`, `NEXSIFT_SMTP_PORT`, `NEXSIFT_SYSLOG_PORT` | `8001`, `8002`, `2525`, `5514` | Ports inside the container; `0` turns that door off |
 | `PUID`, `PGID` | `1000` | Owner of the files in the data directory |
@@ -174,6 +196,10 @@ Forgot the password? In the container: `python -m app.reset_password`.
 - Every changing request of the interface needs the header `X-Requested-By: nexsift`.
 - Responses carry a Content Security Policy, `X-Frame-Options: DENY` and friends.
 - Links in messages are only made clickable for `http` and `https`.
+- API keys only read, only through `/api/v1`, and only while the switch under Settings, API keys is on. Only their
+  hash is stored. A signed-in browser does not get into `/api/v1`.
+- The log masks tokens in addresses before a line is written; a test sends tokens through every door at the
+  most talkative level and searches the file for them.
 
 ## Development
 

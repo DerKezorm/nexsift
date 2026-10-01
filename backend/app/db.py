@@ -51,8 +51,25 @@ def get_db() -> Iterator[Session]:
 
 
 def init_db() -> None:
+    _backup_before_new_tables()
     Base.metadata.create_all(engine)
     _add_missing_columns()
+
+
+def _backup_before_schema_change() -> None:
+    # The way back when changing the schema goes wrong; only when there is something to change.
+    from .services import backups
+
+    backups.create(kind=backups.UPDATE, note="before schema change")
+
+
+def _backup_before_new_tables() -> None:
+    """A release that brings a new table changes the schema too. A database that has none of nexsift's tables yet
+    is a first start: nothing to keep."""
+    present = set(inspect(engine).get_table_names())
+    wanted = set(Base.metadata.tables)
+    if present & wanted and wanted - present:
+        _backup_before_schema_change()
 
 
 def _sql_literal(value: Any) -> str:
@@ -67,6 +84,7 @@ def _sql_literal(value: Any) -> str:
 
 def _add_missing_columns() -> None:
     inspector = inspect(engine)
+    backed_up = False
     with engine.begin() as connection:
         for table in Base.metadata.sorted_tables:
             existing = {column["name"] for column in inspector.get_columns(table.name)}
@@ -85,5 +103,8 @@ def _add_missing_columns() -> None:
                 statement = f'ALTER TABLE "{table.name}" ADD COLUMN "{column.name}" {column_type}'
                 if default is not None:
                     statement += f" DEFAULT {_sql_literal(default)}"
+                if not backed_up:
+                    _backup_before_schema_change()
+                    backed_up = True
                 connection.execute(text(statement))
                 logger.info("Added column %s.%s", table.name, column.name)

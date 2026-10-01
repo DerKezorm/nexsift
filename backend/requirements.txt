@@ -12,3 +12,8 @@ pyjwt==2.15.0
 aiosmtpd==1.4.6
 # Web Push: encrypts each message for the device (RFC 8291); only needs cryptography.
 http-ece==1.2.1
+# Backups download as an AES-256 ZIP that 7-Zip opens without nexsift.
+pyzipper==0.4.0
+pycryptodomex==3.23.0
+# Uploads (the backup archive to restore).
+python-multipart==0.0.32

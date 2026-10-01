@@ -19,6 +19,7 @@ from .db import get_db
 from .meldungen import fehler
 from .models import Account
 from .security import CSRF_HEADER, CSRF_VALUE, SESSION_COOKIE, session_account
+from .services import logs
 
 DbSession = Annotated[Session, Depends(get_db)]
 UNSAFE = {"POST", "PUT", "PATCH", "DELETE"}
@@ -73,6 +74,7 @@ def current_account(request: Request, db: DbSession) -> Account:
     account = session_account(db, request.cookies.get(SESSION_COOKIE))
     if account is None:
         raise fehler("not_signed_in", "Not signed in.", 401)
+    logs.set_actor(account.name)
     return account
 
 

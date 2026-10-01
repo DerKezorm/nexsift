@@ -444,6 +444,13 @@ async def deliver_due() -> int:
                 target.last_ok_at = utcnow()
                 target.last_error = ""
                 sent += 1
+                logger.debug(
+                    "Push sent to %s target_kind=%s kind=%s attempt=%s",
+                    target.name,
+                    target.kind,
+                    delivery.kind,
+                    delivery.attempts,
+                )
             db.commit()
             if delivery.thread_id:
                 bus.publish("thread", id=delivery.thread_id)

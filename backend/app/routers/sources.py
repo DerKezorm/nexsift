@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from datetime import timedelta
 from typing import Any
 
@@ -15,6 +16,8 @@ from ..meldungen import fehler
 from ..models import Source, utcnow
 from ..services import bus, ingest, presets, strangers
 from ..services import sources as sources_service
+
+logger = logging.getLogger("nexsift.sources")
 
 router = APIRouter(prefix="/api/sources", tags=["sources"])
 
@@ -68,6 +71,8 @@ def create(payload: SourceIn, request: Request, account: CurrentAccount, db: DbS
     if source.match_key:
         protocol, _, key = source.match_key.partition(":")
         strangers.forget(protocol, key)
+    # Name, preset and door only: the token and the topic are the permission to send.
+    logger.info("Source created id=%s name=%s kind=%s door=%s", source.id, source.name, source.kind, source.protocol)
     bus.publish("source", id=source.id)
     return {
         **sources_service.view(db, source),
@@ -89,6 +94,7 @@ def rename(source_id: int, payload: SourceEdit, account: CurrentAccount, db: DbS
     source = _get(db, source_id)
     source.name = " ".join(payload.name.split())[:80]
     db.commit()
+    logger.info("Source renamed id=%s name=%s", source.id, source.name)
     bus.publish("source", id=source.id)
     return sources_service.view(db, source)
 
@@ -98,6 +104,7 @@ def mute(source_id: int, payload: MuteIn, account: CurrentAccount, db: DbSession
     source = _get(db, source_id)
     source.muted_until = utcnow() + timedelta(minutes=payload.minutes) if payload.minutes else None
     db.commit()
+    logger.info("Source muted id=%s name=%s minutes=%s", source.id, source.name, payload.minutes)
     bus.publish("source", id=source.id)
     return sources_service.view(db, source)
 
@@ -109,6 +116,7 @@ def renew(source_id: int, request: Request, account: CurrentAccount, db: DbSessi
         sources_service.renew_token(db, source)
     except sources_service.SourceError as error:
         raise fehler(error.code, str(error), error.status) from error
+    logger.info("Source got a new token id=%s name=%s", source.id, source.name)
     return {
         **sources_service.view(db, source),
         "connection": sources_service.connection(db, source, request.url.hostname or ""),
@@ -134,6 +142,8 @@ def test(source_id: int, account: CurrentAccount, db: DbSession) -> dict[str, An
 @router.delete("/{source_id}", status_code=204, summary="Delete the source with all its messages and rules")
 def delete(source_id: int, account: CurrentAccount, db: DbSession) -> None:
     source = _get(db, source_id)
+    name = source.name
     db.delete(source)
     db.commit()
+    logger.info("Source deleted id=%s name=%s", source_id, name)
     bus.publish("source", id=source_id)

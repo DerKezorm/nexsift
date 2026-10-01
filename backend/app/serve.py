@@ -10,7 +10,9 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import logging
 import signal
+import sys
 from collections.abc import Iterator
 
 import uvicorn
@@ -43,7 +45,16 @@ def _server(app: str, port: int, log_level: str) -> _Server:
 
 async def main() -> None:
     settings = get_settings()
-    level = settings.log_level.lower()
+    # A restore waiting from the last run is swapped in before any of the three apps can open the database.
+    from .services import backups, logs
+
+    logs.setup()
+    try:
+        backups.apply_pending()
+    except Exception:
+        logging.getLogger("nexsift").exception("Applying the pending restore failed")
+    # uvicorn's own lines; how much nexsift writes is set in the interface (services/logs.py).
+    level = "info"
     servers = [_server("app.main:app", settings.web_port, level)]
     if settings.gotify_port:
         servers.append(_server("app.gateways:gotify", settings.gotify_port, level))
@@ -67,3 +78,8 @@ async def main() -> None:
 if __name__ == "__main__":
     with contextlib.suppress(KeyboardInterrupt):
         asyncio.run(main())
+    from .services import backups
+
+    if backups.restart_requested:
+        # Ended for a restore: a code other than 0 brings the container back under "restart: on-failure" too.
+        sys.exit(backups.RESTART_CODE)

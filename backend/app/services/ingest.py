@@ -34,6 +34,8 @@ from ..models import ARCHIVED, CRIT, INFO, RANK, ROUTINE_KEY, UNREAD, Event, Sou
 from . import bus, push, rules, settings_service
 
 logger = logging.getLogger("nexsift.ingest")
+#: What a message said; written at the level ``trace`` only (see ``services/logs.py``).
+content_log = logging.getLogger("nexsift.content")
 
 #: The group key of the line that collects a source's overflow when it sends too much of everything.
 OVERFLOW_KEY = "__overflow__"
@@ -98,7 +100,22 @@ def _accept(db: Session, source: Source, incoming: Incoming, payload: dict, *, t
         thread_id = _store(db, source, item)
         if thread_id is not None and thread_id not in changed:
             changed.append(thread_id)
+        content_log.debug(
+            "Message from source_id=%s priority=%s title=%r body=%r",
+            source.id,
+            item.priority,
+            item.title[:200],
+            item.body[:500],
+        )
     db.commit()
+    logger.debug(
+        "Taken in source_id=%s door=%s events=%s threads=%s test=%s",
+        source.id,
+        source.protocol,
+        len(events),
+        changed,
+        test,
+    )
     for thread_id in changed:
         bus.publish("thread", id=thread_id)
     bus.publish("source", id=source.id)

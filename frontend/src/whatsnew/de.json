@@ -63,6 +63,31 @@
       "small": [
         "Die Anmeldung mit Passwort lässt sich erst ausschalten, wenn authentik verknüpft ist, und die Verknüpfung erst lösen, wenn das Passwort wieder gilt. So sperrst du dich nicht aus."
       ]
+    },
+    "0.5.0": {
+      "lead": "nexsift sichert sich jetzt selbst, führt ein Protokoll, das du in der Oberfläche liest, und lässt Dashboards wie nexdeck mitlesen.",
+      "sections": [
+        {
+          "title": "Sicherung und Zurückspielen",
+          "body": "Jede Nacht eine Kopie der Datenbank, dazu eine vor jedem Update, das die Datenbank ändert. Mit „Herunterladen“ bekommst du ein verschlüsseltes ZIP samt Schlüssel, das auch 7-Zip öffnet. Erst so ein Archiv auf einem anderen Gerät ist eine echte Sicherung. Zurückspielen zeigt vorher, was im Archiv steckt, und legt eine Kopie vom jetzigen Stand an.",
+          "where": "Einstellungen › Sicherung"
+        },
+        {
+          "title": "Protokoll in der Oberfläche",
+          "body": "Die neuesten Zeilen mit Filter nach Stufe, Suche, Herunterladen und Leeren. Für die Fehlersuche schaltest du auf Ausführlich oder Spur, beides geht nach der gewählten Zeit von selbst zurück. Jede Fehlermeldung nennt jetzt eine Vorgangsnummer; die ins Suchfeld, und du siehst genau diesen Vorgang. Tokens, Topics und Zugangsdaten stehen auf keiner Stufe drin.",
+          "where": "Einstellungen › Protokoll"
+        },
+        {
+          "title": "API-Schlüssel für Dashboards",
+          "body": "Erst den Schalter umlegen, dann je Dashboard einen Schlüssel anlegen. Er liest nur Zahlen und Titel unter /api/v1/status und /api/v1/threads, keinen Meldungstext, und ändert nichts.",
+          "where": "Einstellungen › API-Schlüssel"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Das Protokoll liegt als Datei unter data/logs/nexsift.log und räumt sich selbst auf.",
+        "NEXSIFT_LOG_LEVEL ist kein Pflichtwert mehr. Gesetzt übersteuert es die Stufe aus der Oberfläche, als Notausgang."
+      ]
     }
   }
 }

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from collections.abc import AsyncIterator
 from typing import Any
 
@@ -15,6 +16,8 @@ from ..config import get_settings
 from ..deps import CurrentAccount, DbSession
 from ..meldungen import fehler
 from ..services import bus, settings_service
+
+logger = logging.getLogger("nexsift.settings")
 
 router = APIRouter(prefix="/api", tags=["system"])
 
@@ -70,6 +73,9 @@ def write_settings(payload: SettingsIn, account: CurrentAccount, db: DbSession) 
         elif key == "push_mode":
             if value not in settings_service.PUSH_MODES:
                 raise fehler("invalid_input", "Unknown push behaviour.", 422, field=key)
+        elif key == "backup_schedule":
+            if value not in settings_service.BACKUP_SCHEDULES:
+                raise fehler("invalid_input", "Unknown backup schedule.", 422, field=key)
         elif key == "public_url":
             try:
                 value = settings_service.normalize_public_url(str(value))
@@ -93,7 +99,12 @@ def write_settings(payload: SettingsIn, account: CurrentAccount, db: DbSession) 
                 field=key,
             )
         clean[key] = value
+    before = settings_service.public(db)
     settings_service.save(db, clean)
+    changed = sorted(key for key, value in clean.items() if before.get(key) != value)
+    if changed:
+        # Names only: values like the public address are harmless, but a setting added later may not be.
+        logger.info("Settings changed keys=%s", ",".join(changed))
     return settings_service.public(db)
 
 

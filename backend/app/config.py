@@ -35,7 +35,9 @@ class Settings(BaseSettings):
     cookie_secure: str = "auto"
     disable_background: bool = False
     frontend_dist: Path = PROJECT_DIR / "frontend" / "dist"
-    log_level: str = "INFO"
+    #: Overrides the level set in the interface (quiet, normal, detailed, trace; or WARNING, INFO, DEBUG). Empty:
+    #: the interface decides. The emergency exit for "the app does not even start".
+    log_level: str = ""
     #: Where the interface is reached from outside, for the OIDC redirect and the setup hints. Empty: from the
     #: request.
     public_url: str = ""
@@ -81,6 +83,9 @@ class Settings(BaseSettings):
             if name.strip() in ports and value.strip().isdigit():
                 ports[name.strip()] = int(value.strip())
         return ports
+
+    def key_from_environment(self) -> bool:
+        return bool(self.secret_key)
 
     def resolved_secret_key(self) -> str:
         if self.secret_key:

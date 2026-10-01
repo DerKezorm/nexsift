@@ -219,3 +219,17 @@ class Delivery(Base):
     created_at: Mapped[datetime] = mapped_column(UtcDateTime, default=utcnow)
     sent_at: Mapped[datetime | None] = mapped_column(UtcDateTime, nullable=True)
     last_error: Mapped[str] = mapped_column(String(300), default="")
+
+
+class ApiKey(Base):
+    """A read-only key for a dashboard (nexdeck and the like). Only the hash is kept; the key is shown once."""
+
+    __tablename__ = "api_keys"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(String(64))
+    #: The first characters, so the operator can tell keys apart without the key.
+    prefix: Mapped[str] = mapped_column(String(16))
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    created_at: Mapped[datetime] = mapped_column(UtcDateTime, default=utcnow)
+    last_used_at: Mapped[datetime | None] = mapped_column(UtcDateTime, nullable=True)

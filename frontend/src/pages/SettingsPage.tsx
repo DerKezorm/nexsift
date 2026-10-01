@@ -10,7 +10,10 @@ import { Symbol } from '../components/Symbol'
 import { TabRow } from '../components/TabRow'
 import { Banner, Button, Field, PageHeader, Section, Switch } from '../components/ui'
 import { useLoad } from '../lib/useLoad'
+import { ApiKeysTab } from './settings/ApiKeysTab'
+import { BackupTab } from './settings/BackupTab'
 import { Languages } from './settings/Languages'
+import { LogTab } from './settings/LogTab'
 import { ProviderLink } from './settings/ProviderLink'
 
 interface OidcConfig {
@@ -21,7 +24,7 @@ interface OidcConfig {
   redirect_uri: string
 }
 
-const TABS = ['account', 'signin', 'addresses', 'retention', 'languages'] as const
+const TABS = ['account', 'signin', 'addresses', 'retention', 'backup', 'log', 'api', 'languages'] as const
 type Tab = (typeof TABS)[number]
 
 function isTab(value: string | null): value is Tab {
@@ -43,7 +46,7 @@ export function SettingsPage() {
     <div className="flex flex-col gap-6">
       <PageHeader title={t('settings.title')} lead={t('settings.lead')} />
       <TabRow tabs={tabs} active={tab} onChange={(value) => setParams(value === 'account' ? {} : { tab: value }, { replace: true })} label={t('settings.title')} />
-      <div className="max-w-3xl">
+      <div className={tab === 'log' ? 'max-w-5xl' : 'max-w-3xl'}>
         {tab === 'account' && <AccountSection />}
         {tab === 'signin' && (
           <div className="flex flex-col gap-6">
@@ -55,6 +58,9 @@ export function SettingsPage() {
         )}
         {tab === 'addresses' && settings.data && <SignIn part="addresses" settings={settings.data} configured={!!oidc.data?.configured} onSaved={settings.set} />}
         {tab === 'retention' && settings.data && <Retention settings={settings.data} onSaved={settings.set} />}
+        {tab === 'backup' && <BackupTab onSettings={settings.set} />}
+        {tab === 'log' && <LogTab />}
+        {tab === 'api' && settings.data && <ApiKeysTab settings={settings.data} onSettings={settings.set} />}
         {tab === 'languages' && <Languages />}
       </div>
     </div>

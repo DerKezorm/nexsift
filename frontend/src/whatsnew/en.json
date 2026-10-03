@@ -88,6 +88,20 @@
         "The log is a file at data/logs/nexsift.log and tidies itself up.",
         "NEXSIFT_LOG_LEVEL is no longer needed. When set it overrides the level from the interface, as an emergency exit."
       ]
+    },
+    "0.6.0": {
+      "lead": "Pushover is a target of its own now, next to ntfy, Gotify and Telegram.",
+      "sections": [
+        {
+          "title": "Pushover",
+          "body": "Create an application on pushover.net, enter its API token and your user key, done. Critical messages arrive with high priority and sound through the quiet hours set in the Pushover app, warnings arrive normally, info without a sound. The all-clear comes with a normal sound. If the message carries a link, it comes along.",
+          "where": "Rules › Forwarding to the phone › + Target › Pushover"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "When Pushover refuses a push, the target says why, for instance that the token is wrong."
+      ]
     }
   }
 }

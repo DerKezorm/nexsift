@@ -10,8 +10,8 @@ what matters: to your phone, or wherever you want it.
 
 **It is not another push server.** ntfy and Gotify deliver every message they are given. nexsift sits in front of
 them: your services report to nexsift, and nexsift decides what is worth a push. That push then goes out through
-the ntfy, Gotify, Telegram or Apprise you already use, or straight to the phone as a Web Push notification without
-any extra app.
+the ntfy, Gotify, Telegram, Pushover or Apprise you already use, or straight to the phone as a Web Push notification
+without any extra app.
 
 | Without nexsift | With nexsift |
 |---|---|
@@ -63,8 +63,8 @@ a Gotify server, an ntfy server, a Discord webhook, a mail server, a syslog serv
   resolved.
 - **All-clears close problems** instead of opening new lines: Uptime Kuma's "up", a successful Proxmox backup
   after a failed one, or anything a rule says.
-- **Push to the phone** through ntfy, Gotify, Telegram, Apprise or a webhook, each with a minimum level (critical
-  by default) and quiet hours.
+- **Push to the phone** through ntfy, Gotify, Telegram, Pushover, Apprise or a webhook, each with a minimum level
+  (critical by default) and quiet hours.
 - **Or straight to the device, no extra app (Web Push):** open nexsift over https, add it to the home screen, tap
   "Sign this device up and save". Works with Chrome, Edge and Firefox, and on the iPhone from the home screen app
   (iOS 16.4 or later). Every device signs itself up and is a target of its own; any device can sign any device

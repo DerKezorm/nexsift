@@ -88,6 +88,20 @@
         "Das Protokoll liegt als Datei unter data/logs/nexsift.log und räumt sich selbst auf.",
         "NEXSIFT_LOG_LEVEL ist kein Pflichtwert mehr. Gesetzt übersteuert es die Stufe aus der Oberfläche, als Notausgang."
       ]
+    },
+    "0.6.0": {
+      "lead": "Pushover ist jetzt ein eigenes Ziel, neben ntfy, Gotify und Telegram.",
+      "sections": [
+        {
+          "title": "Pushover",
+          "body": "Auf pushover.net eine Anwendung anlegen, ihr API-Token und deinen User Key eintragen, fertig. Kritisches kommt mit hoher Priorität und klingelt auch durch die Ruhezeit der Pushover-App, Warnungen kommen normal, Info ohne Ton. Die Entwarnung kommt mit normalem Ton. Hat die Meldung einen Link, kommt er mit.",
+          "where": "Regeln › Weiterleitung aufs Handy › + Ziel › Pushover"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Lehnt Pushover einen Push ab, sagt das Ziel warum, etwa dass das Token falsch ist."
+      ]
     }
   }
 }

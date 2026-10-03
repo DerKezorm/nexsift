@@ -861,6 +861,7 @@
       "apprise": "Apprise API: the address of an Apprise server with a key, like http://apprise:8000/notify/phone. Apprise spreads it further.",
       "gotify": "A real Gotify server with the Gotify app on the phone. Create an application there and enter its token here.",
       "ntfy": "The ntfy app on the phone, with ntfy.sh or your own ntfy server. Subscribe to a topic in the app and enter its full address here.",
+      "pushover": "The Pushover app on the phone. On pushover.net create an application (Your Applications, Create an Application), enter its API token here and the user key from your Pushover dashboard.",
       "telegram": "A Telegram bot writes to you. Create the bot with @BotFather, enter the token here, write to the bot once, then the chat ID.",
       "webhook": "Any service that takes JSON: nexsift POSTs title, message, priority and link.",
       "webpush": "Notifications straight to this device, no extra app. Each device signs itself up: on the phone, open nexsift over https, add it to the home screen as an app and add a target there. The same on the computer. Any device can sign any device off."
@@ -870,6 +871,7 @@
       "apprise": "Apprise",
       "gotify": "Gotify",
       "ntfy": "ntfy",
+      "pushover": "Pushover",
       "telegram": "Telegram",
       "webhook": "Webhook",
       "webpush": "This device (browser or app)"
@@ -901,11 +903,13 @@
     "token": {
       "gotify": "App token",
       "ntfy": "Access token",
+      "pushover": "API token",
       "telegram": "Bot token"
     },
     "tokenHelp": {
       "gotify": "In Gotify: Apps, Create application, copy the token.",
       "ntfy": "Only needed if your ntfy server asks for a sign-in (tk_…). Leave empty for ntfy.sh.",
+      "pushover": "The token of the application you created on pushover.net, not your user key.",
       "telegram": "From @BotFather, looks like 123456:ABC…"
     },
     "tokenKept": "stored; leave empty to keep",
@@ -927,6 +931,8 @@
       "ntfy": "Server and topic together, exactly as subscribed in the app. A long, random topic keeps others from reading along.",
       "webhook": "nexsift sends the JSON here."
     },
+    "userKey": "User key",
+    "userKeyHelp": "At the top of your Pushover dashboard after signing in. A group key works too, then every member gets the push.",
     "webpush": {
       "again": "Sign up again",
       "allow": "Allow",

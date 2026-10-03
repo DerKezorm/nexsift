@@ -37,7 +37,7 @@ from . import sources as sources_service
 
 logger = logging.getLogger("nexsift.push")
 
-TARGET_KINDS = ("ntfy", "gotify", "telegram", "webhook", "apprise", "webpush")
+TARGET_KINDS = ("ntfy", "gotify", "telegram", "pushover", "webhook", "apprise", "webpush")
 #: Pauses between attempts; after the last one the delivery counts as failed and shows on the target.
 RETRY_SECONDS = (30, 120, 600, 1800, 3600)
 TIMEOUT = httpx.Timeout(10.0, connect=5.0)
@@ -268,6 +268,10 @@ def _client() -> httpx.AsyncClient:
 
 NTFY_PRIORITY = {CRIT: "5", WARN: "4"}
 GOTIFY_PRIORITY = {CRIT: 8, WARN: 5}
+#: Pushover's 2 (emergency) repeats until someone acknowledges it; nexsift keeps to 1, which already sounds
+#: through the quiet hours set in the Pushover app. Info arrives without a sound.
+PUSHOVER_PRIORITY = {CRIT: 1, WARN: 0}
+PUSHOVER_URL = "https://api.pushover.net/1/messages.json"
 
 
 async def send(
@@ -311,6 +315,19 @@ async def send(
                     f"https://api.telegram.org/bot{token}/sendMessage",
                     json={"chat_id": chat, "text": text[:4000], "disable_web_page_preview": True},
                 )
+            elif target.kind == "pushover":
+                form = {
+                    "token": token,
+                    "user": str(config.get("user", "")).strip(),
+                    "title": title[:250],
+                    "message": (body or title)[:1024],
+                    "priority": str(0 if kind == "allclear" else PUSHOVER_PRIORITY.get(priority, -1)),
+                }
+                if link:
+                    form["url"] = link[:512]
+                response = await client.post(PUSHOVER_URL, data=form)
+                if 400 <= response.status_code < 500:
+                    raise PushError(_pushover_reason(response))
             elif target.kind == "apprise":
                 kind = {CRIT: "failure", WARN: "warning"}.get(priority, "info")
                 response = await client.post(url, json={"title": title, "body": body or title, "type": kind})
@@ -326,6 +343,16 @@ async def send(
             raise PushError(f"not reachable ({type(error).__name__})") from error
     if response.status_code >= 400:
         raise PushError(f"answered HTTP {response.status_code}")
+
+
+def _pushover_reason(response: httpx.Response) -> str:
+    """Pushover says in plain words what is wrong (a wrong token, an unknown user key); the values are not in it."""
+    try:
+        errors = response.json().get("errors") or []
+    except ValueError:
+        errors = []
+    said = "; ".join(str(error) for error in errors if isinstance(error, str))[:200]
+    return f"Pushover: {said}" if said else f"answered HTTP {response.status_code}"
 
 
 def _header(text: str) -> str:

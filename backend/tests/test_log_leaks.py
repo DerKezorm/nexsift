@@ -27,6 +27,8 @@ NTFY_TARGET_TOKEN = f"tk_{token_hex(12)}"
 GOTIFY_TARGET_TOKEN = f"A{token_hex(7)}"
 TELEGRAM_BOT_SECRET = f"AA{token_hex(16)}"
 TELEGRAM_TOKEN = f"{100000000 + randbelow(899999999)}:{TELEGRAM_BOT_SECRET}"
+PUSHOVER_TOKEN = f"a{token_hex(14)}"
+PUSHOVER_USER = f"u{token_hex(14)}"
 WEBPUSH_DEVICE = token_hex(16)
 WEBPUSH_ENDPOINT = f"https://push.example.net/push/{WEBPUSH_DEVICE}"
 WEBPUSH_AUTH = "BTBZMqHH6r4Tts7J_aSIgg"
@@ -73,6 +75,7 @@ def _run(client: TestClient, gotify_client: TestClient, ntfy_client: TestClient,
         },
         {"kind": "gotify", "name": "gotify box", "url": "https://gotify.example.com", "token": GOTIFY_TARGET_TOKEN},
         {"kind": "telegram", "name": "telegram", "token": TELEGRAM_TOKEN, "chat_id": "4242"},
+        {"kind": "pushover", "name": "pushover", "token": PUSHOVER_TOKEN, "user": PUSHOVER_USER},
     ]
     for target in targets:
         assert client.post("/api/targets", json={**target, "min_priority": "info"}, headers=UI).status_code == 201
@@ -96,7 +99,7 @@ def _run(client: TestClient, gotify_client: TestClient, ntfy_client: TestClient,
         WEBPUSH_ENDPOINT,
         WEBPUSH_AUTH,
     ]
-    secrets += [WEBPUSH_P256DH, WEBPUSH_DEVICE, TELEGRAM_BOT_SECRET]
+    secrets += [WEBPUSH_P256DH, WEBPUSH_DEVICE, TELEGRAM_BOT_SECRET, PUSHOVER_TOKEN, PUSHOVER_USER]
 
     # Through every door, with the permission where each sender puts it.
     title = f"Disk failed {said}"

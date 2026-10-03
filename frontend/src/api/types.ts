@@ -149,7 +149,7 @@ export interface Rule {
   built_in: string
 }
 
-export type TargetKind = 'webpush' | 'ntfy' | 'gotify' | 'telegram' | 'apprise' | 'webhook'
+export type TargetKind = 'webpush' | 'ntfy' | 'gotify' | 'telegram' | 'pushover' | 'apprise' | 'webhook'
 
 export interface Target {
   id: number
@@ -159,6 +159,8 @@ export interface Target {
   device?: string
   url: string
   chat_id: string
+  /** Pushover only: the user or group key. */
+  user: string
   has_token: boolean
   min_priority: Priority
   quiet_from: string

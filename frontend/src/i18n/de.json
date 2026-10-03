@@ -861,6 +861,7 @@
       "apprise": "Apprise API: die Adresse eines Apprise-Servers mit Schlüssel, etwa http://apprise:8000/notify/handy. Apprise verteilt dann weiter.",
       "gotify": "Ein echter Gotify-Server mit der Gotify-App auf dem Handy. Dort eine Anwendung anlegen und ihren Token hier eintragen.",
       "ntfy": "Die ntfy-App auf dem Handy, mit ntfy.sh oder einem eigenen ntfy-Server. In der App ein Thema abonnieren und hier dessen volle Adresse eintragen.",
+      "pushover": "Die Pushover-App auf dem Handy. Auf pushover.net eine Anwendung anlegen (Your Applications, Create an Application), deren API-Token hier eintragen und den User Key aus deinem Pushover-Dashboard.",
       "telegram": "Ein Telegram-Bot schreibt dir. Bot bei @BotFather anlegen, Token hier eintragen, dem Bot einmal schreiben, dann die Chat-ID.",
       "webhook": "Irgendein Dienst, der JSON annimmt: nexsift schickt title, message, priority und link per POST.",
       "webpush": "Benachrichtigungen direkt auf dieses Gerät, ohne zusätzliche App. Jedes Gerät meldet sich selbst an: am Handy nexsift über https öffnen, als App auf den Startbildschirm legen und dort ein Ziel anlegen. Am PC genauso. Abmelden geht von jedem Gerät aus."
@@ -870,6 +871,7 @@
       "apprise": "Apprise",
       "gotify": "Gotify",
       "ntfy": "ntfy",
+      "pushover": "Pushover",
       "telegram": "Telegram",
       "webhook": "Webhook",
       "webpush": "Dieses Gerät (Browser oder App)"
@@ -901,11 +903,13 @@
     "token": {
       "gotify": "App-Token",
       "ntfy": "Zugangstoken",
+      "pushover": "API-Token",
       "telegram": "Bot-Token"
     },
     "tokenHelp": {
       "gotify": "In Gotify: Apps, Anwendung erstellen, den Token kopieren.",
       "ntfy": "Nur nötig, wenn dein ntfy-Server eine Anmeldung verlangt (tk_…). Bei ntfy.sh leer lassen.",
+      "pushover": "Das Token der Anwendung, die du auf pushover.net angelegt hast, nicht dein User Key.",
       "telegram": "Von @BotFather, sieht aus wie 123456:ABC…"
     },
     "tokenKept": "gespeichert, leer lassen zum Behalten",
@@ -927,6 +931,8 @@
       "ntfy": "Server und Thema zusammen, genau wie in der App abonniert. Ein langes, zufälliges Thema schützt vor Mitlesern.",
       "webhook": "Hierhin schickt nexsift das JSON."
     },
+    "userKey": "User Key",
+    "userKeyHelp": "Steht oben in deinem Pushover-Dashboard nach der Anmeldung. Ein Gruppen-Key geht auch, dann bekommt jedes Mitglied den Push.",
     "webpush": {
       "again": "Neu anmelden",
       "allow": "Erlauben",

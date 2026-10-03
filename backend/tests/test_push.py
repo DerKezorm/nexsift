@@ -187,6 +187,8 @@ def test_quiet_hours_hold_back_below_critical(client: TestClient, operator: dict
 def test_target_validation(client: TestClient, operator: dict) -> None:
     missing = client.post("/api/targets", json={"kind": "telegram", "name": "T", "token": "x"}, headers=UI)
     assert missing.status_code == 422 and missing.json()["detail"]["field"] == "chat_id"
+    no_user = client.post("/api/targets", json={"kind": "pushover", "name": "P", "token": "x"}, headers=UI)
+    assert no_user.status_code == 422 and no_user.json()["detail"]["field"] == "user"
     quiet = client.post(
         "/api/targets",
         json={"kind": "ntfy", "name": "n", "url": "https://x.example.com/a", "quiet_from": "23:00"},
@@ -209,3 +211,47 @@ def test_all_clear_waits_out_quiet_hours(client: TestClient, operator: dict) -> 
     send(**KUMA_UP)
     _run()
     assert [entry["headers"]["title"] for entry in SENT] == ["Server: cloud is down"]
+
+
+def _pushover(client: TestClient) -> dict:
+    SENT.clear()
+    push.transport_for_tests = httpx.MockTransport(_record)
+    body = {"kind": "pushover", "name": "Pushover", "token": "AppTokenP1", "user": "UserKeyP1", "min_priority": "crit"}
+    response = client.post("/api/targets", json=body, headers=UI)
+    assert response.status_code == 201, response.text
+    created = response.json()
+    assert "AppTokenP1" not in json.dumps(created) and created["has_token"] is True
+    assert created["user"] == "UserKeyP1"
+    return created
+
+
+def test_pushover_gets_alarm_and_all_clear(client: TestClient, operator: dict) -> None:
+    from urllib.parse import parse_qs
+
+    from tests.test_senders import KUMA_DOWN, KUMA_UP
+
+    _pushover(client)
+    send = _hook(client, "uptimekuma")
+    send(**KUMA_DOWN)
+    _run()
+    send(**KUMA_UP)
+    _run()
+    assert [entry["url"] for entry in SENT] == [push.PUSHOVER_URL] * 2
+    alarm, clear = ({key: value[0] for key, value in parse_qs(entry["body"]).items()} for entry in SENT)
+    assert alarm["token"] == "AppTokenP1" and alarm["user"] == "UserKeyP1"
+    assert alarm["title"] == "Server: cloud is down" and alarm["priority"] == "1"
+    # The all-clear comes with a normal sound, not the loud one.
+    assert clear["title"] == "Server: cloud is up again" and clear["priority"] == "0"
+    assert clear["message"].startswith("Resolved after ")
+
+
+def test_pushover_says_what_is_wrong(client: TestClient, operator: dict) -> None:
+    target = _pushover(client)
+    refusal = {"token": "invalid", "errors": ["application token is invalid"], "status": 0}
+    push.transport_for_tests = httpx.MockTransport(lambda request: httpx.Response(400, json=refusal))
+    assert client.post(f"/api/targets/{target['id']}/test", headers=UI).json() == {
+        "ok": False,
+        "error": "Pushover: application token is invalid",
+    }
+    push.transport_for_tests = httpx.MockTransport(lambda request: httpx.Response(429, text="slow down"))
+    assert client.post(f"/api/targets/{target['id']}/test", headers=UI).json()["error"] == "answered HTTP 429"

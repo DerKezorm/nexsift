@@ -16,7 +16,7 @@ import { Symbol } from '../Symbol'
 import { Badge, Banner, Button, Field, Section, SelectField, Switch } from '../ui'
 import { WebPushSignup, type Subscription } from './WebPushSignup'
 
-const KINDS: TargetKind[] = ['webpush', 'ntfy', 'gotify', 'telegram', 'apprise', 'webhook']
+const KINDS: TargetKind[] = ['webpush', 'ntfy', 'gotify', 'telegram', 'pushover', 'apprise', 'webhook']
 const PRIORITIES: Priority[] = ['info', 'warn', 'crit']
 
 interface Draft {
@@ -26,6 +26,7 @@ interface Draft {
   url: string
   token: string
   chat_id: string
+  user: string
   p256dh: string
   auth: string
   min_priority: Priority
@@ -36,7 +37,7 @@ interface Draft {
   device?: string
 }
 
-const EMPTY: Draft = { kind: 'webpush', name: deviceName(), url: '', token: '', chat_id: '', p256dh: '', auth: '', min_priority: 'crit', quiet_from: '', quiet_to: '', enabled: true }
+const EMPTY: Draft = { kind: 'webpush', name: deviceName(), url: '', token: '', chat_id: '', user: '', p256dh: '', auth: '', min_priority: 'crit', quiet_from: '', quiet_to: '', enabled: true }
 
 /** Where important things go. Each target has a test button, because a push that never arrives is noticed too late. */
 export function Targets() {
@@ -107,7 +108,7 @@ export function Targets() {
                 <Badge>{t(`targets.kind.${target.kind}`)}</Badge>
                 {target.device && target.device === own && <Badge tone="accent">{t('targets.webpush.thisDevice')}</Badge>}
               </p>
-              <p className="truncate font-mono text-xs text-mist-500">{target.url || (target.chat_id && `chat ${target.chat_id}`)}</p>
+              <p className="truncate font-mono text-xs text-mist-500">{target.url || (target.chat_id && `chat ${target.chat_id}`) || (target.user && `user ${target.user}`)}</p>
               <p className="mt-1 flex flex-wrap gap-1.5 text-xs text-mist-500">
                 {t('targets.from')}
                 <span className={'rounded-md border px-1.5 py-px ' + PRIORITY_CHIP[target.min_priority]}>{t(`priority.${target.min_priority}`)}</span>
@@ -203,8 +204,8 @@ function TargetEditor({ draft: initial, own, onClose, onSaved }: { draft: Draft;
   const webpush = draft.kind === 'webpush'
   // A new device, or one signing up again: the sign-up button is the way to save.
   const signingUp = webpush && (!draft.id || signedUp !== null)
-  const needsUrl = draft.kind !== 'telegram' && !webpush
-  const needsToken = draft.kind === 'gotify' || draft.kind === 'telegram' || draft.kind === 'ntfy'
+  const needsUrl = draft.kind !== 'telegram' && draft.kind !== 'pushover' && !webpush
+  const needsToken = draft.kind === 'gotify' || draft.kind === 'telegram' || draft.kind === 'pushover' || draft.kind === 'ntfy'
   const tokenOptional = draft.kind === 'ntfy'
 
   return (
@@ -242,6 +243,7 @@ function TargetEditor({ draft: initial, own, onClose, onSaved }: { draft: Draft;
           />
         )}
         {draft.kind === 'telegram' && <Field label={t('targets.chatId')} value={draft.chat_id} onChange={(event) => set({ chat_id: event.target.value })} help={t('targets.chatIdHelp')} />}
+        {draft.kind === 'pushover' && <Field label={t('targets.userKey')} autoComplete="off" value={draft.user} onChange={(event) => set({ user: event.target.value })} help={t('targets.userKeyHelp')} />}
         <SelectField label={t('targets.minPriority')} value={draft.min_priority} onChange={(value) => set({ min_priority: value as Priority })} help={t('targets.minPriorityHelp')}>
           {PRIORITIES.map((priority) => (
             <option key={priority} value={priority}>

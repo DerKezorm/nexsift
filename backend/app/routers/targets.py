@@ -29,6 +29,8 @@ FIELDS: dict[str, dict[str, tuple[str, ...]]] = {
     "ntfy": {"required": ("url",), "secret": ("token",)},
     "gotify": {"required": ("url", "token"), "secret": ("token",)},
     "telegram": {"required": ("token", "chat_id"), "secret": ("token",)},
+    # The application's API token and the user (or group) key it sends to.
+    "pushover": {"required": ("token", "user"), "secret": ("token",)},
     "apprise": {"required": ("url",), "secret": ()},
     "webhook": {"required": ("url",), "secret": ()},
     # The address at the push service and the two keys of the device, from the browser's sign-up.
@@ -43,6 +45,8 @@ class TargetIn(BaseModel):
     url: str = Field(default="", max_length=500)
     token: str = Field(default="", max_length=500)
     chat_id: str = Field(default="", max_length=64)
+    #: Pushover only: the user or group key.
+    user: str = Field(default="", max_length=64)
     #: Web Push only: the device's keys from its sign-up.
     p256dh: str = Field(default="", max_length=200)
     auth: str = Field(default="", max_length=100)
@@ -68,6 +72,7 @@ def _view(target: Target) -> dict[str, Any]:
         "url": url,
         "device": device,
         "chat_id": config.get("chat_id", ""),
+        "user": config.get("user", ""),
         "has_token": bool(config.get("token")),
         "min_priority": target.min_priority,
         "quiet_from": target.quiet_from,
@@ -92,6 +97,7 @@ def _apply(target: Target, payload: TargetIn) -> None:
         "url": payload.url.strip(),
         "token": payload.token.strip(),
         "chat_id": payload.chat_id.strip(),
+        "user": payload.user.strip(),
         "p256dh": payload.p256dh.strip(),
         "auth": payload.auth.strip(),
     }

@@ -2,14 +2,22 @@ import { useTranslation } from 'react-i18next'
 
 import { Symbol } from '../Symbol'
 
+/** Keys pressed together, shown with a plus instead of the slash for alternatives. */
+const COMBOS = new Set(['pickRange', 'pickAll', 'menu'])
+
 const SHORTCUTS: { keys: string[]; label: string }[] = [
   { keys: ['j', 'k'], label: 'nextPrev' },
   { keys: ['Enter'], label: 'open' },
+  { keys: ['r'], label: 'resolve' },
   { keys: ['e'], label: 'archive' },
   { keys: ['u'], label: 'read' },
   { keys: ['d'], label: 'delete' },
   { keys: ['m'], label: 'mute' },
   { keys: ['o'], label: 'link' },
+  { keys: ['x'], label: 'pick' },
+  { keys: ['Shift', 'click'], label: 'pickRange' },
+  { keys: ['Ctrl', 'A'], label: 'pickAll' },
+  { keys: ['Shift', 'F10'], label: 'menu' },
   { keys: ['/'], label: 'search' },
   { keys: ['1', '4'], label: 'views' },
   { keys: ['?'], label: 'help' },
@@ -17,6 +25,8 @@ const SHORTCUTS: { keys: string[]; label: string }[] = [
 
 export function ShortcutHelp({ onClose }: { onClose: () => void }) {
   const { t } = useTranslation()
+  const mac = /Mac|iPhone|iPad/.test(navigator.platform)
+  const name = (key: string) => (key === 'click' ? t('shortcuts.click') : key === 'Ctrl' ? (mac ? '⌘' : t('inbox.menu.ctrl')) : key)
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-scrim p-4" onClick={onClose}>
       <div
@@ -41,8 +51,8 @@ export function ShortcutHelp({ onClose }: { onClose: () => void }) {
               <dt className="flex items-center gap-1">
                 {keys.map((key, index) => (
                   <span key={key} className="flex items-center gap-1">
-                    {index > 0 && <span className="text-xs text-mist-600">{label === 'views' ? '…' : '/'}</span>}
-                    <kbd>{key}</kbd>
+                    {index > 0 && <span className="text-xs text-mist-600">{label === 'views' ? '…' : COMBOS.has(label) ? '+' : '/'}</span>}
+                    <kbd>{name(key)}</kbd>
                   </span>
                 ))}
               </dt>

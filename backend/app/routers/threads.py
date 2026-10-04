@@ -1,4 +1,4 @@
-"""The inbox: list, open, mark, archive, delete with undo."""
+"""The inbox: list, open, mark, archive, close by hand, delete with undo; one thread or several."""
 
 from __future__ import annotations
 
@@ -63,6 +63,45 @@ def set_state(payload: StateIn, account: CurrentAccount, db: DbSession) -> dict[
     for thread_id in changed:
         bus.publish("thread", id=thread_id)
     return {"changed": changed}
+
+
+class IdsIn(BaseModel):
+    ids: list[int] = Field(max_length=500)
+
+
+class SourceIn(BaseModel):
+    source_id: int | None = None
+
+
+def _changed(changed: list[int]) -> dict[str, Any]:
+    for thread_id in changed:
+        bus.publish("thread", id=thread_id)
+    return {"changed": changed}
+
+
+@router.post("/resolve", summary="Close open problems by hand, as if the all-clear had come")
+def resolve(payload: IdsIn, account: CurrentAccount, db: DbSession) -> dict[str, Any]:
+    return _changed(threads_service.resolve(db, payload.ids))
+
+
+@router.post("/resolve-all", summary="Close everything in critical open, optionally of one source")
+def resolve_all(payload: SourceIn, account: CurrentAccount, db: DbSession) -> dict[str, Any]:
+    return _changed(threads_service.resolve_all(db, payload.source_id))
+
+
+@router.post("/reopen", summary="Undo closing by hand")
+def reopen(payload: IdsIn, account: CurrentAccount, db: DbSession) -> dict[str, Any]:
+    return _changed(threads_service.reopen(db, payload.ids))
+
+
+@router.post("/delete", summary="Delete several; can be undone for a few minutes")
+def delete_many(payload: IdsIn, account: CurrentAccount, db: DbSession) -> dict[str, Any]:
+    return _changed(threads_service.delete(db, payload.ids))
+
+
+@router.post("/restore", summary="Undo deleting several")
+def restore_many(payload: IdsIn, account: CurrentAccount, db: DbSession) -> dict[str, Any]:
+    return _changed(threads_service.restore(db, payload.ids))
 
 
 @router.post("/read-all", summary="Mark everything in a view as read")

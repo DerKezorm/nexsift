@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 
 import type { Source, ThreadDetail as Detail } from '../../api/types'
 import { isMuted } from '../../lib/data'
-import { PRIORITY_CHIP, PRIORITY_DOT } from '../../lib/priority'
+import { PRIORITY_CHIP, PRIORITY_DOT, RESOLVED_BY_HAND, resolvable } from '../../lib/priority'
 import { ruleName } from '../../lib/ruleNames'
 import { threadTitle } from '../../lib/threadTitle'
 import { clock, duration, relative } from '../../lib/time'
@@ -22,6 +22,7 @@ export function ThreadDetail({
   onBack,
   onArchive,
   onToggleRead,
+  onResolve,
   onDelete,
   onMute,
 }: {
@@ -31,6 +32,7 @@ export function ThreadDetail({
   onBack: () => void
   onArchive: () => void
   onToggleRead: () => void
+  onResolve: () => void
   onDelete: () => void
   onMute: () => void
 }) {
@@ -54,6 +56,18 @@ export function ThreadDetail({
             <Symbol name="chevronLeft" />
           </button>
           <div className="ml-auto flex items-center gap-1">
+            {resolvable(thread) && (
+              <button
+                type="button"
+                onClick={onResolve}
+                title={`${t('inbox.resolveHelp')} (r)`}
+                aria-keyshortcuts="r"
+                className="mr-1 inline-flex items-center gap-1.5 rounded-full border border-ok-500/40 bg-ok-500/10 py-1.5 pr-3.5 pl-2.5 text-xs font-semibold text-ok-500 hover:bg-ok-500/20"
+              >
+                <Symbol name="resolved" />
+                {t('inbox.action.resolve')}
+              </button>
+            )}
             <ToolButton symbol="archive" label={thread.state === 'archived' ? t('inbox.action.unarchive') : t('inbox.action.archive')} shortcut="e" onClick={onArchive} />
             <ToolButton symbol="unread" label={thread.state === 'unread' ? t('inbox.action.markRead') : t('inbox.action.markUnread')} shortcut="u" onClick={onToggleRead} />
             <ToolButton symbol="mute" label={muted ? t('inbox.action.unmute') : t('inbox.action.mute')} shortcut="m" onClick={onMute} active={muted} />
@@ -107,7 +121,7 @@ export function ThreadDetail({
         <div className="grid gap-2 sm:grid-cols-2">
           {thread.resolved_at && (
             <Fact symbol="resolved" tone="ok" title={t('inbox.fact.resolved', { after: duration(Date.parse(thread.resolved_at) - Date.parse(thread.first_at), language) })}>
-              {thread.resolved_by}
+              {thread.resolved_by === RESOLVED_BY_HAND ? t('inbox.fact.byHand') : thread.resolved_by}
             </Fact>
           )}
           {thread.throttled_count > 0 && (

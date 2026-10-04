@@ -15,6 +15,8 @@ VIEWS = ("inbox", "unread", "crit", "archived")
 PAGE = 100
 #: Deleted threads stay restorable this long; then the housekeeping removes them for good.
 UNDO_MINUTES = 10
+#: ``resolved_by`` of a problem closed in the interface; the interface shows it in its own words.
+BY_HAND = "Marked as done by hand"
 
 
 def _view_filter(query: Select, view: str) -> Select:
@@ -167,6 +169,58 @@ def set_state(db: Session, ids: list[int], state: str) -> list[int]:
     changed = []
     for thread in db.scalars(select(Thread).where(Thread.id.in_(ids[:500]), Thread.deleted_at.is_(None))):
         thread.state = state
+        changed.append(thread.id)
+    db.commit()
+    return changed
+
+
+def resolve(db: Session, ids: list[int]) -> list[int]:
+    """Close open problems by hand, as if the all-clear had come. Already closed ones stay as they were."""
+    now = utcnow()
+    changed = []
+    query = select(Thread).where(Thread.id.in_(ids[:500]), Thread.deleted_at.is_(None), Thread.resolved_at.is_(None))
+    for thread in db.scalars(query):
+        thread.resolved_at = now
+        thread.resolved_by = BY_HAND
+        changed.append(thread.id)
+    db.commit()
+    return changed
+
+
+def resolve_all(db: Session, source_id: int | None) -> list[int]:
+    """Everything in "critical open", optionally of one source."""
+    query = _view_filter(select(Thread.id), "crit")
+    if source_id:
+        query = query.where(Thread.source_id == source_id)
+    return resolve(db, list(db.scalars(query.limit(500))))
+
+
+def reopen(db: Session, ids: list[int]) -> list[int]:
+    """Undo for ``resolve``: only what was closed by hand opens again, an all-clear from the sender stays."""
+    changed = []
+    query = select(Thread).where(Thread.id.in_(ids[:500]), Thread.deleted_at.is_(None), Thread.resolved_by == BY_HAND)
+    for thread in db.scalars(query):
+        thread.resolved_at = None
+        thread.resolved_by = ""
+        changed.append(thread.id)
+    db.commit()
+    return changed
+
+
+def delete(db: Session, ids: list[int]) -> list[int]:
+    now = utcnow()
+    changed = []
+    for thread in db.scalars(select(Thread).where(Thread.id.in_(ids[:500]), Thread.deleted_at.is_(None))):
+        thread.deleted_at = now
+        changed.append(thread.id)
+    db.commit()
+    return changed
+
+
+def restore(db: Session, ids: list[int]) -> list[int]:
+    changed = []
+    for thread in db.scalars(select(Thread).where(Thread.id.in_(ids[:500]), Thread.deleted_at.is_not(None))):
+        thread.deleted_at = None
         changed.append(thread.id)
     db.commit()
     return changed

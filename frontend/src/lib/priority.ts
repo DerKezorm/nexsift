@@ -18,3 +18,11 @@ export const PRIORITY_CHIP: Record<Priority, string> = {
   warn: 'border-warn-500/40 bg-warn-500/10 text-warn-500',
   info: 'border-info-500/40 bg-info-500/10 text-info-500',
 }
+
+/** What the server writes into `resolved_by` when a problem is closed in the interface (services/threads.py). */
+export const RESOLVED_BY_HAND = 'Marked as done by hand'
+
+/** Warnings and critical problems can be closed by hand while no all-clear came; information has nothing to close. */
+export function resolvable(thread: { priority: Priority; resolved_at: string | null }): boolean {
+  return !thread.resolved_at && thread.priority !== 'info'
+}

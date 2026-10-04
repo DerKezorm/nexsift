@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useSearchParams } from 'react-router-dom'
 
 import { api, errorMessage } from '../api/client'
 import type { Source, ThreadDetail as Detail, ThreadSummary, View } from '../api/types'
+import { ContextMenu, type MenuEntry } from '../components/ContextMenu'
 import { Help } from '../components/Help'
 import { useNotice } from '../components/Notice'
 import { SourceMark } from '../components/SourceMark'
@@ -13,7 +14,7 @@ import { ThreadDetail } from '../components/inbox/ThreadDetail'
 import { Welcome } from '../components/inbox/Welcome'
 import { isMuted, useCounts, useSources, useTargets } from '../lib/data'
 import { useLiveVersion } from '../lib/live'
-import { PRIORITY_DOT } from '../lib/priority'
+import { PRIORITY_DOT, RESOLVED_BY_HAND, resolvable } from '../lib/priority'
 import { threadTitle } from '../lib/threadTitle'
 import { relative, useNow } from '../lib/time'
 
@@ -169,48 +170,109 @@ export function InboxPage() {
     [threads, selectedId],
   )
 
-  /** A thread leaves the view: the next one below takes its place (or the one above at the end). */
-  const leave = useCallback(
-    (id: number) => {
-      const index = threads.findIndex((thread) => thread.id === id)
-      setSelectedId(threads[index + 1]?.id ?? threads[index - 1]?.id ?? null)
-      setThreads((current) => current.filter((thread) => thread.id !== id))
+  // Several lines at once: Ctrl or Shift with a click, x, Ctrl+A, or "Select" in the menu. The actions then act on all of them.
+  const [picked, setPicked] = useState<Set<number>>(new Set())
+  const anchor = useRef<number | null>(null)
+  const pickedThreads = useMemo(() => threads.filter((thread) => picked.has(thread.id)), [threads, picked])
+  const acting = useMemo(() => (pickedThreads.length > 0 ? pickedThreads : selected ? [selected] : []), [pickedThreads, selected])
+  const [menu, setMenu] = useState<{ x: number; y: number; label: string; entries: MenuEntry[] } | null>(null)
+  const closeMenu = useCallback(() => setMenu(null), [])
+
+  // Another view, source or search shows other lines; a selection from before would act on what is out of sight.
+  useEffect(() => setPicked(new Set()), [params])
+
+  const togglePick = useCallback(
+    (id: number, withOpen = false) => {
+      setPicked((current) => {
+        const next = new Set(current)
+        // Like in a file manager: Ctrl+click next to the open line takes that one along.
+        if (withOpen && current.size === 0 && selectedId !== null && selectedId !== id) next.add(selectedId)
+        if (next.has(id)) next.delete(id)
+        else next.add(id)
+        return next
+      })
+      anchor.current = id
     },
-    [threads],
+    [selectedId],
+  )
+
+  const pickRange = useCallback(
+    (id: number) => {
+      const from = threads.findIndex((thread) => thread.id === (anchor.current ?? selectedId))
+      const to = threads.findIndex((thread) => thread.id === id)
+      if (from < 0 || to < 0) return togglePick(id)
+      const [low, high] = from < to ? [from, to] : [to, from]
+      setPicked(new Set(threads.slice(low, high + 1).map((thread) => thread.id)))
+      setSelectedId(id)
+    },
+    [threads, selectedId, togglePick],
+  )
+
+  const pickAll = useCallback(() => setPicked(new Set(threads.map((thread) => thread.id))), [threads])
+
+  /** Threads leave the view: the next one below the open one takes its place (or the one above at the end). */
+  const leave = useCallback(
+    (ids: number[]) => {
+      const gone = new Set(ids)
+      if (selectedId !== null && gone.has(selectedId)) {
+        const index = threads.findIndex((thread) => thread.id === selectedId)
+        const after = threads.slice(index + 1).find((thread) => !gone.has(thread.id)) ?? [...threads.slice(0, index)].reverse().find((thread) => !gone.has(thread.id))
+        setSelectedId(after?.id ?? null)
+      }
+      setThreads((current) => current.filter((thread) => !gone.has(thread.id)))
+      setPicked((current) => new Set([...current].filter((id) => !gone.has(id))))
+    },
+    [threads, selectedId],
+  )
+
+  /** Undo for a state change: every thread goes back to the state it had. */
+  const putBack = useCallback(
+    (list: ThreadSummary[]) => {
+      const byState = new Map<string, number[]>()
+      for (const thread of list) byState.set(thread.state, [...(byState.get(thread.state) ?? []), thread.id])
+      for (const [state, ids] of byState) void api.post('/api/threads/state', { ids, state }).catch((caught) => notify({ text: errorMessage(caught) }))
+    },
+    [notify],
   )
 
   const archive = useCallback(
-    async (thread: ThreadSummary) => {
-      const back = thread.state === 'archived'
-      leave(thread.id)
+    async (list: ThreadSummary[]) => {
+      if (list.length === 0) return
+      const back = list.every((thread) => thread.state === 'archived')
+      const ids = list.map((thread) => thread.id)
+      leave(ids)
       try {
-        await api.post('/api/threads/state', { ids: [thread.id], state: back ? 'read' : 'archived' })
+        await api.post('/api/threads/state', { ids, state: back ? 'read' : 'archived' })
         notify({
-          text: back ? t('inbox.movedBack') : t('inbox.archived'),
-          action: back ? undefined : { label: t('inbox.undo'), run: () => void api.post('/api/threads/state', { ids: [thread.id], state: 'read' }) },
+          text: back ? t('inbox.movedBack', { count: ids.length }) : t('inbox.archived', { count: ids.length }),
+          action: { label: t('inbox.undo'), run: () => putBack(list) },
         })
       } catch (caught) {
         notify({ text: errorMessage(caught) })
       }
     },
-    [leave, notify, t],
+    [leave, notify, putBack, t],
   )
 
   const toggleRead = useCallback(
-    async (thread: ThreadSummary) => {
-      const state = thread.state === 'unread' ? 'read' : 'unread'
-      setThreads((current) => current.map((item) => (item.id === thread.id ? { ...item, state } : item)))
-      await api.post('/api/threads/state', { ids: [thread.id], state }).catch((caught) => notify({ text: errorMessage(caught) }))
+    async (list: ThreadSummary[]) => {
+      if (list.length === 0) return
+      const state = list.some((thread) => thread.state === 'unread') ? 'read' : 'unread'
+      const ids = new Set(list.map((thread) => thread.id))
+      setThreads((current) => current.map((item) => (ids.has(item.id) ? { ...item, state } : item)))
+      await api.post('/api/threads/state', { ids: [...ids], state }).catch((caught) => notify({ text: errorMessage(caught) }))
     },
     [notify],
   )
 
   const destroy = useCallback(
-    async (thread: ThreadSummary) => {
-      leave(thread.id)
+    async (list: ThreadSummary[]) => {
+      if (list.length === 0) return
+      const ids = list.map((thread) => thread.id)
+      leave(ids)
       try {
-        await api.delete(`/api/threads/${thread.id}`)
-        notify({ text: t('inbox.deleted'), action: { label: t('inbox.undo'), run: () => void api.post(`/api/threads/${thread.id}/restore`) } })
+        await api.post('/api/threads/delete', { ids })
+        notify({ text: t('inbox.deleted', { count: ids.length }), action: { label: t('inbox.undo'), run: () => void api.post('/api/threads/restore', { ids }) } })
       } catch (caught) {
         notify({ text: errorMessage(caught) })
       }
@@ -218,9 +280,54 @@ export function InboxPage() {
     [leave, notify, t],
   )
 
+  /** After closing by hand: out of "critical open", elsewhere the line stays and shows it as done. */
+  const closed = useCallback(
+    (ids: number[]) => {
+      if (view === 'crit') return leave(ids)
+      const done = new Set(ids)
+      const at = new Date().toISOString()
+      setThreads((current) => current.map((thread) => (done.has(thread.id) ? { ...thread, resolved_at: at, resolved_by: RESOLVED_BY_HAND } : thread)))
+    },
+    [view, leave],
+  )
+
+  const reopenAction = useCallback(
+    (ids: number[]) => ({ label: t('inbox.undo'), run: () => void api.post('/api/threads/reopen', { ids }).catch((caught) => notify({ text: errorMessage(caught) })) }),
+    [notify, t],
+  )
+
+  const resolve = useCallback(
+    async (list: ThreadSummary[]) => {
+      const ids = list.filter(resolvable).map((thread) => thread.id)
+      if (ids.length === 0) return
+      closed(ids)
+      try {
+        const result = await api.post<{ changed: number[] }>('/api/threads/resolve', { ids })
+        notify({ text: t('inbox.resolvedNow', { count: result.changed.length }), action: reopenAction(result.changed) })
+      } catch (caught) {
+        notify({ text: errorMessage(caught) })
+        void load()
+      }
+    },
+    [closed, notify, reopenAction, load, t],
+  )
+
+  const resolveAll = useCallback(
+    async (sourceId: number | null) => {
+      try {
+        const result = await api.post<{ changed: number[] }>('/api/threads/resolve-all', { source_id: sourceId })
+        if (result.changed.length === 0) return notify({ text: t('inbox.nothingOpen') })
+        closed(result.changed)
+        notify({ text: t('inbox.resolvedNow', { count: result.changed.length }), action: reopenAction(result.changed) })
+      } catch (caught) {
+        notify({ text: errorMessage(caught) })
+      }
+    },
+    [closed, notify, reopenAction, t],
+  )
+
   const muteSource = useCallback(
-    async (thread: ThreadSummary) => {
-      const source = sourceById.get(thread.source_id)
+    async (source: Source | undefined) => {
       if (!source) return
       const muted = isMuted(source)
       try {
@@ -230,28 +337,145 @@ export function InboxPage() {
         notify({ text: errorMessage(caught) })
       }
     },
-    [sourceById, notify, t],
+    [notify, t],
   )
+
+  const markAllRead = useCallback(
+    async (inView: View, sourceId: number | null) => {
+      try {
+        const result = await api.post<{ changed: number }>('/api/threads/read-all', { view: inView, source_id: sourceId })
+        notify({ text: t('inbox.markedRead', { count: result.changed }) })
+        void load()
+      } catch (caught) {
+        notify({ text: errorMessage(caught) })
+      }
+    },
+    [notify, load, t],
+  )
+
+  const modifier = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : t('inbox.menu.ctrl')
+
+  const threadMenu = useCallback(
+    (list: ThreadSummary[]): MenuEntry[] => {
+      const one = list.length === 1 ? list[0] : null
+      const entries: MenuEntry[] = []
+      if (!one) entries.push({ heading: t('inbox.menu.count', { count: list.length }) })
+      if (list.some(resolvable)) entries.push({ label: t('inbox.action.resolve'), symbol: 'resolved', shortcut: 'r', run: () => void resolve(list) })
+      entries.push({
+        label: list.every((thread) => thread.state === 'archived') ? t('inbox.action.unarchive') : t('inbox.action.archive'),
+        symbol: 'archive',
+        shortcut: 'e',
+        run: () => void archive(list),
+      })
+      entries.push({
+        label: list.some((thread) => thread.state === 'unread') ? t('inbox.action.markRead') : t('inbox.action.markUnread'),
+        symbol: 'unread',
+        shortcut: 'u',
+        run: () => void toggleRead(list),
+      })
+      const link = one?.links[0]
+      if (link) entries.push({ label: t('inbox.menu.openLink'), symbol: 'external', shortcut: 'o', run: () => window.open(link.url, '_blank', 'noopener,noreferrer') })
+      entries.push('separator')
+      if (one) {
+        const source = sourceById.get(one.source_id)
+        if (source) {
+          entries.push({
+            label: sourceFilter === source.id ? t('inbox.showAllSources') : t('inbox.onlySource', { name: source.name }),
+            symbol: 'rules',
+            run: () => setSourceFilter(sourceFilter === source.id ? null : source.id),
+          })
+          entries.push({ label: isMuted(source) ? t('inbox.action.unmute') : t('inbox.action.mute'), symbol: 'mute', shortcut: 'm', run: () => void muteSource(source) })
+        }
+        entries.push({ label: t('inbox.menu.select'), symbol: 'check', shortcut: 'x', run: () => togglePick(one.id) })
+      } else {
+        entries.push({ label: t('inbox.menu.selectAll'), symbol: 'list', shortcut: `${modifier}+A`, run: pickAll })
+        entries.push({ label: t('inbox.menu.clearSelection'), symbol: 'close', shortcut: 'Esc', run: () => setPicked(new Set()) })
+      }
+      entries.push('separator')
+      entries.push({ label: t('inbox.action.delete'), symbol: 'trash', shortcut: 'd', danger: true, run: () => void destroy(list) })
+      return entries
+    },
+    [archive, destroy, modifier, muteSource, pickAll, resolve, sourceById, sourceFilter, t, togglePick, toggleRead],
+  )
+
+  /** Right click on a line: on a picked one the menu is for all picked ones, otherwise for that line alone. */
+  const openThreadMenu = useCallback(
+    (thread: ThreadSummary, x: number, y: number) => {
+      let list = [thread]
+      if (picked.has(thread.id) && pickedThreads.length > 1) list = pickedThreads
+      else {
+        setPicked(new Set())
+        setSelectedId(thread.id)
+      }
+      setMenu({ x, y, label: list.length > 1 ? t('inbox.menu.count', { count: list.length }) : threadTitle(thread, t), entries: threadMenu(list) })
+    },
+    [picked, pickedThreads, threadMenu, t],
+  )
+
+  function openSourceMenu(source: Source, x: number, y: number) {
+    const entries: MenuEntry[] = [
+      {
+        label: sourceFilter === source.id ? t('inbox.showAllSources') : t('inbox.onlySource', { name: source.name }),
+        symbol: 'rules',
+        run: () => setSourceFilter(sourceFilter === source.id ? null : source.id),
+      },
+      { label: t('inbox.menu.readAllSource'), symbol: 'check', run: () => void markAllRead('inbox', source.id) },
+      { label: t('inbox.menu.resolveAllSource'), symbol: 'resolved', run: () => void resolveAll(source.id) },
+      'separator',
+      { label: isMuted(source) ? t('inbox.action.unmute') : t('inbox.action.mute'), symbol: 'mute', run: () => void muteSource(source) },
+    ]
+    setMenu({ x, y, label: source.name, entries })
+  }
+
+  function openViewMenu(key: View, x: number, y: number): boolean {
+    const entries: MenuEntry[] = []
+    if (key !== 'archived') entries.push({ label: t('inbox.menu.readAllView'), symbol: 'check', run: () => void markAllRead(key, null) })
+    if (key === 'crit') entries.push({ label: t('inbox.menu.resolveAll'), symbol: 'resolved', run: () => void resolveAll(null) })
+    if (entries.length === 0) return false
+    setMenu({ x, y, label: t(`inbox.view.${key}`), entries })
+    return true
+  }
 
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
-      if (event.ctrlKey || event.metaKey || event.altKey) return
       if (typing(event.target)) {
         if (event.key === 'Escape') (event.target as HTMLElement).blur()
         return
       }
       const key = event.key
+      if ((event.ctrlKey || event.metaKey) && !event.altKey && key.toLowerCase() === 'a') {
+        pickAll()
+        event.preventDefault()
+        return
+      }
+      if ((key === 'ContextMenu' || (event.shiftKey && key === 'F10')) && selected) {
+        const row = listRef.current?.querySelector(`[data-thread="${selected.id}"]`)?.getBoundingClientRect()
+        openThreadMenu(selected, row ? row.left + 48 : 0, row ? row.top + row.height / 2 : 0)
+        event.preventDefault()
+        return
+      }
+      if (event.ctrlKey || event.metaKey || event.altKey) return
       if (key === '?') setHelp((open) => !open)
       else if (key === 'Escape') {
         if (help) setHelp(false)
+        else if (picked.size > 0) setPicked(new Set())
         else setDetailOpen(false)
+      } else if (event.shiftKey && (key === 'J' || key === 'ArrowDown' || key === 'K' || key === 'ArrowUp')) {
+        // Shift with up or down takes the next line into the selection, like in a file manager.
+        const index = threads.findIndex((thread) => thread.id === selectedId)
+        const target = threads[Math.min(threads.length - 1, Math.max(0, index + (key === 'J' || key === 'ArrowDown' ? 1 : -1)))]
+        if (!selected || !target) return
+        setPicked((current) => new Set([...current, selected.id, target.id]))
+        setSelectedId(target.id)
       } else if (key === 'j' || key === 'ArrowDown') move(1)
       else if (key === 'k' || key === 'ArrowUp') move(-1)
       else if (key === 'Enter' && selected) setDetailOpen(true)
-      else if (key === 'e' && selected) void archive(selected)
-      else if (key === 'u' && selected) void toggleRead(selected)
-      else if ((key === 'd' || key === 'Delete' || key === '#') && selected) void destroy(selected)
-      else if (key === 'm' && selected) void muteSource(selected)
+      else if (key === 'x' && selected) togglePick(selected.id)
+      else if (key === 'e') void archive(acting)
+      else if (key === 'u') void toggleRead(acting)
+      else if (key === 'r') void resolve(acting)
+      else if (key === 'd' || key === 'Delete' || key === '#') void destroy(acting)
+      else if (key === 'm' && selected) void muteSource(sourceById.get(selected.source_id))
       else if (key === 'o' && selected?.links[0]) window.open(selected.links[0].url, '_blank', 'noopener,noreferrer')
       else if (key === '/') searchBox.current?.focus()
       else if (['1', '2', '3', '4'].includes(key)) setView(VIEWS[Number(key) - 1].key)
@@ -260,16 +484,17 @@ export function InboxPage() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [help, move, selected, archive, toggleRead, destroy, muteSource])
+  }, [help, move, selected, selectedId, threads, picked, acting, archive, toggleRead, resolve, destroy, muteSource, sourceById, pickAll, togglePick, openThreadMenu])
 
-  async function markAllRead() {
-    try {
-      const result = await api.post<{ changed: number }>('/api/threads/read-all', { view, source_id: sourceFilter })
-      notify({ text: t('inbox.markedRead', { count: result.changed }) })
-      void load()
-    } catch (caught) {
-      notify({ text: errorMessage(caught) })
-    }
+  function clickRow(thread: ThreadSummary, event: MouseEvent) {
+    if (event.shiftKey) return pickRange(thread.id)
+    if (event.ctrlKey || event.metaKey) return togglePick(thread.id, true)
+    // While picking on a phone, a tap adds or removes; with a mouse a plain click starts over, as everywhere else.
+    if (picked.size > 0 && (event.nativeEvent as PointerEvent).pointerType === 'touch') return togglePick(thread.id)
+    setPicked(new Set())
+    anchor.current = thread.id
+    setSelectedId(thread.id)
+    setDetailOpen(true)
   }
 
   const noSources = sources.data !== undefined && sources.data.length === 0
@@ -284,6 +509,9 @@ export function InboxPage() {
               key={key}
               type="button"
               onClick={() => setView(key)}
+              onContextMenu={(event) => {
+                if (openViewMenu(key, event.clientX, event.clientY)) event.preventDefault()
+              }}
               aria-current={view === key ? 'page' : undefined}
               title={t(`inbox.viewHelp.${key}`)}
               className={
@@ -311,6 +539,7 @@ export function InboxPage() {
               unread={counts.data?.unread_by_source[String(source.id)] ?? 0}
               muted={isMuted(source, now)}
               onClick={() => setSourceFilter(sourceFilter === source.id ? null : source.id)}
+              onMenu={(x, y) => openSourceMenu(source, x, y)}
             />
           ))}
           <Link to="/sources?add=1" className="mt-1 flex items-center gap-2 rounded-xl px-3 py-1.5 text-sm text-mist-500 hover:bg-ink-850 hover:text-mist-100">
@@ -332,6 +561,33 @@ export function InboxPage() {
         aria-label={t('inbox.list')}
       >
         <div className="flex flex-col gap-2 border-b border-ink-700 p-3">
+          {pickedThreads.length > 0 ? (
+            <div className="flex min-h-[38px] items-center gap-1" role="toolbar" aria-label={t('inbox.menu.count', { count: pickedThreads.length })}>
+              <button type="button" onClick={() => setPicked(new Set())} title={`${t('inbox.menu.clearSelection')} (Esc)`} aria-label={t('inbox.menu.clearSelection')} className="rounded-full p-2 text-mist-500 hover:bg-ink-850 hover:text-mist-100">
+                <Symbol name="close" />
+              </button>
+              <span className="mr-auto text-sm font-semibold text-mist-100 tabular-nums">{t('inbox.menu.count', { count: pickedThreads.length })}</span>
+              {pickedThreads.length < threads.length && (
+                <button type="button" onClick={pickAll} className="mr-1 rounded-full px-2.5 py-1 text-xs font-medium text-accent-400 hover:bg-accent-500/10">
+                  {t('inbox.menu.selectAll')}
+                </button>
+              )}
+              {pickedThreads.some(resolvable) && <BarButton symbol="resolved" label={t('inbox.action.resolve')} shortcut="r" onClick={() => void resolve(pickedThreads)} />}
+              <BarButton
+                symbol="archive"
+                label={pickedThreads.every((thread) => thread.state === 'archived') ? t('inbox.action.unarchive') : t('inbox.action.archive')}
+                shortcut="e"
+                onClick={() => void archive(pickedThreads)}
+              />
+              <BarButton
+                symbol="unread"
+                label={pickedThreads.some((thread) => thread.state === 'unread') ? t('inbox.action.markRead') : t('inbox.action.markUnread')}
+                shortcut="u"
+                onClick={() => void toggleRead(pickedThreads)}
+              />
+              <BarButton symbol="trash" label={t('inbox.action.delete')} shortcut="d" danger onClick={() => void destroy(pickedThreads)} />
+            </div>
+          ) : (
           <div className="flex items-center gap-2">
             <label className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-ink-700 bg-ink-950/60 px-3 py-1.5 focus-within:border-accent-500">
               <Symbol name="search" className="h-4 w-4 shrink-0 text-mist-600" />
@@ -345,9 +601,20 @@ export function InboxPage() {
               />
               <kbd className="hidden sm:inline">/</kbd>
             </label>
+            {view === 'crit' && threads.length > 0 && (
+              <button
+                type="button"
+                onClick={() => void resolveAll(sourceFilter)}
+                title={sourceFilter ? t('inbox.resolveAllSourceHelp', { name: sourceById.get(sourceFilter)?.name }) : t('inbox.resolveAllHelp')}
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-ok-500/40 bg-ok-500/10 py-2 pr-3.5 pl-2.5 text-xs font-semibold text-ok-500 hover:bg-ok-500/20"
+              >
+                <Symbol name="resolved" />
+                {t('inbox.resolveAll')}
+              </button>
+            )}
             <button
               type="button"
-              onClick={() => void markAllRead()}
+              onClick={() => void markAllRead(view, sourceFilter)}
               title={t('inbox.markAllRead')}
               aria-label={t('inbox.markAllRead')}
               className="rounded-full border border-ink-700 bg-ink-850 p-2 text-mist-500 hover:text-mist-100"
@@ -355,6 +622,7 @@ export function InboxPage() {
               <Symbol name="check" />
             </button>
           </div>
+          )}
           <div className="flex gap-1.5 overflow-x-auto md:hidden">
             {VIEWS.map(({ key }) => (
               <button
@@ -386,20 +654,21 @@ export function InboxPage() {
         ) : threads.length === 0 ? (
           <EmptyList view={view} searching={!!search} hasTargets={(targets.data?.length ?? 0) > 0} />
         ) : (
-          <ul ref={listRef} className="ns-scroll min-h-0 flex-1 overflow-y-auto" role="listbox" aria-label={t('inbox.list')}>
+          <ul ref={listRef} className="ns-scroll min-h-0 flex-1 overflow-y-auto" role="listbox" aria-multiselectable="true" aria-label={t('inbox.list')}>
             {threads.map((thread) => (
               <ThreadRow
                 key={thread.id}
                 thread={thread}
                 source={sourceById.get(thread.source_id)}
                 selected={thread.id === selectedId}
+                picked={picked.has(thread.id)}
+                picking={pickedThreads.length > 0}
                 fresh={fresh.has(thread.id)}
                 now={now}
                 language={i18n.language}
-                onSelect={() => {
-                  setSelectedId(thread.id)
-                  setDetailOpen(true)
-                }}
+                onClick={(event) => clickRow(thread, event)}
+                onPick={() => togglePick(thread.id)}
+                onMenu={(x, y) => openThreadMenu(thread, x, y)}
               />
             ))}
             {next && (
@@ -421,10 +690,11 @@ export function InboxPage() {
             source={sourceById.get(detail.source_id)}
             now={now}
             onBack={() => setDetailOpen(false)}
-            onArchive={() => void archive(selected)}
-            onToggleRead={() => void toggleRead(selected)}
-            onDelete={() => void destroy(selected)}
-            onMute={() => void muteSource(selected)}
+            onArchive={() => void archive([selected])}
+            onToggleRead={() => void toggleRead([selected])}
+            onResolve={() => void resolve([selected])}
+            onDelete={() => void destroy([selected])}
+            onMute={() => void muteSource(sourceById.get(selected.source_id))}
           />
         ) : (
           <div className="flex flex-1 items-center justify-center rounded-2xl border border-dashed border-ink-700 px-6 text-center text-sm text-mist-600">
@@ -434,16 +704,50 @@ export function InboxPage() {
       </section>
 
       {help && <ShortcutHelp onClose={() => setHelp(false)} />}
+      {menu && <ContextMenu x={menu.x} y={menu.y} label={menu.label} entries={menu.entries} onClose={closeMenu} />}
     </div>
   )
 }
 
-function SourceFilterButton({ source, active, unread, muted, onClick }: { source: Source; active: boolean; unread: number; muted: boolean; onClick: () => void }) {
+function BarButton({ symbol, label, shortcut, danger = false, onClick }: { symbol: SymbolName; label: string; shortcut: string; danger?: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={`${label} (${shortcut})`}
+      aria-label={label}
+      aria-keyshortcuts={shortcut}
+      className={'rounded-full p-2 transition-colors ' + (danger ? 'text-mist-500 hover:bg-bad-500/10 hover:text-bad-500' : 'text-mist-500 hover:bg-ink-850 hover:text-mist-100')}
+    >
+      <Symbol name={symbol} />
+    </button>
+  )
+}
+
+function SourceFilterButton({
+  source,
+  active,
+  unread,
+  muted,
+  onClick,
+  onMenu,
+}: {
+  source: Source
+  active: boolean
+  unread: number
+  muted: boolean
+  onClick: () => void
+  onMenu: (x: number, y: number) => void
+}) {
   const { t } = useTranslation()
   return (
     <button
       type="button"
       onClick={onClick}
+      onContextMenu={(event) => {
+        event.preventDefault()
+        onMenu(event.clientX, event.clientY)
+      }}
       aria-pressed={active}
       title={active ? t('inbox.showAllSources') : t('inbox.onlyThisSource')}
       className={'flex items-center gap-2.5 rounded-xl px-3 py-1.5 text-left text-sm transition-colors ' + (active ? 'bg-ink-800 text-mist-100' : 'text-mist-400 hover:bg-ink-850 hover:text-mist-100')}
@@ -477,18 +781,26 @@ function ThreadRow({
   thread,
   source,
   selected,
+  picked,
+  picking,
   fresh,
   now,
   language,
-  onSelect,
+  onClick,
+  onPick,
+  onMenu,
 }: {
   thread: ThreadSummary
   source?: Source
   selected: boolean
+  picked: boolean
+  picking: boolean
   fresh: boolean
   now: number
   language: string
-  onSelect: () => void
+  onClick: (event: MouseEvent) => void
+  onPick: () => void
+  onMenu: (x: number, y: number) => void
 }) {
   const { t } = useTranslation()
   const unread = thread.state === 'unread'
@@ -496,13 +808,43 @@ function ThreadRow({
     <li
       data-thread={thread.id}
       role="option"
-      aria-selected={selected}
-      onClick={onSelect}
-      className={'relative flex cursor-pointer gap-3 border-b border-ink-700/60 px-4 py-3 transition-colors ' + (selected ? 'bg-accent-500/10 ' : 'hover:bg-ink-850 ') + (fresh ? 'ns-arrive' : '')}
+      aria-selected={picking ? picked : selected}
+      onClick={onClick}
+      // Shift+click picks a range; without this the browser would also mark the text in between.
+      onMouseDown={(event) => {
+        if (event.shiftKey) event.preventDefault()
+      }}
+      onContextMenu={(event) => {
+        event.preventDefault()
+        onMenu(event.clientX, event.clientY)
+      }}
+      className={
+        'group relative flex cursor-pointer gap-3 border-b border-ink-700/60 px-4 py-3 transition-colors ' +
+        (picked ? 'bg-accent-500/15 ' : selected ? 'bg-accent-500/10 ' : 'hover:bg-ink-850 ') +
+        (fresh ? 'ns-arrive' : '')
+      }
     >
       {selected && <span className="absolute inset-y-0 left-0 w-0.5 bg-accent-500" aria-hidden="true" />}
       <div className="relative self-start">
         <SourceMark kind={source?.kind} protocol={source?.protocol} />
+        {/* Like Gmail: under the pointer, or while picking, the source mark turns into a box to tick. */}
+        <button
+          type="button"
+          role="checkbox"
+          aria-checked={picked}
+          aria-label={t('inbox.menu.select')}
+          onClick={(event) => {
+            event.stopPropagation()
+            onPick()
+          }}
+          className={
+            'absolute inset-0 flex items-center justify-center rounded-lg border transition-opacity ' +
+            (picked ? 'border-accent-500 bg-accent-500 text-on-accent opacity-100 ' : 'border-ink-600 bg-ink-850 text-transparent ') +
+            (picked || picking ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 focus-visible:opacity-100')
+          }
+        >
+          <Symbol name="check" className="h-4 w-4" />
+        </button>
         <span
           className={'absolute -right-1 -bottom-1 h-3 w-3 rounded-full border-2 border-ink-900 ' + (thread.resolved_at ? 'bg-ok-500' : PRIORITY_DOT[thread.priority])}
           title={thread.resolved_at ? t('inbox.resolved') : t(`priority.${thread.priority}`)}

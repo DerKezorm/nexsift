@@ -170,6 +170,67 @@ def test_delete_can_be_undone(client: TestClient, operator: dict) -> None:
     assert len(inbox(client)) == 1
 
 
+def _changed(client: TestClient, action: str, **payload) -> list[int]:
+    response = client.post(f"/api/threads/{action}", json=payload, headers=UI)
+    assert response.status_code == 200, response.text
+    return sorted(response.json()["changed"])
+
+
+def test_a_problem_can_be_closed_by_hand_and_opened_again(client: TestClient, operator: dict) -> None:
+    send = _hook(client, add_source(client, "webhook"))
+    send(title="Container gotify stopped", priority="critical")
+    [thread] = inbox(client, "crit")
+    assert _changed(client, "resolve", ids=[thread["id"]]) == [thread["id"]]
+    assert inbox(client, "crit") == []
+    [closed] = inbox(client)
+    assert closed["resolved_at"] and closed["resolved_by"] == "Marked as done by hand"
+    # The same problem again is a new problem, not a note on the closed one.
+    send(title="Container gotify stopped", priority="critical")
+    assert len(inbox(client, "crit")) == 1
+    assert _changed(client, "reopen", ids=[thread["id"]]) == [thread["id"]]
+    assert len(inbox(client, "crit")) == 2
+
+
+def test_reopening_leaves_an_all_clear_from_the_sender_alone(client: TestClient, operator: dict) -> None:
+    send = _hook(client, add_source(client, "webhook"))
+    send(title="Pool FAILED", priority="critical")
+    [thread] = inbox(client, "crit")
+    with SessionLocal() as db:
+        row = db.get(Thread, thread["id"])
+        row.resolved_at = row.last_at
+        row.resolved_by = "Pool ONLINE"
+        db.commit()
+    assert _changed(client, "resolve", ids=[thread["id"]]) == []
+    assert _changed(client, "reopen", ids=[thread["id"]]) == []
+    assert inbox(client)[0]["resolved_by"] == "Pool ONLINE"
+
+
+def test_close_everything_critical_of_one_source(client: TestClient, operator: dict) -> None:
+    nas = _hook(client, add_source(client, "webhook", name="NAS"))
+    pve = _hook(client, add_source(client, "webhook", name="PVE"))
+    nas(title="Container a stopped", priority="critical")
+    nas(title="Container b stopped", priority="critical")
+    nas(title="Disk warm", priority="warning")
+    pve(title="VM 104 stopped", priority="critical")
+    nas_id = next(thread["source_id"] for thread in inbox(client) if thread["title"] == "Disk warm")
+    assert len(_changed(client, "resolve-all", source_id=nas_id)) == 2
+    assert [thread["title"] for thread in inbox(client, "crit")] == ["VM 104 stopped"]
+    assert next(thread for thread in inbox(client) if thread["title"] == "Disk warm")["resolved_at"] is None
+    assert len(_changed(client, "resolve-all")) == 1
+    assert inbox(client, "crit") == []
+
+
+def test_several_can_be_deleted_and_restored_at_once(client: TestClient, operator: dict) -> None:
+    send = _hook(client, add_source(client, "webhook"))
+    for title in ("one", "two", "three"):
+        send(title=title, priority="warning")
+    ids = [thread["id"] for thread in inbox(client)]
+    assert _changed(client, "delete", ids=ids[:2]) == sorted(ids[:2])
+    assert [thread["id"] for thread in inbox(client)] == ids[2:]
+    assert _changed(client, "restore", ids=ids) == sorted(ids[:2])
+    assert len(inbox(client)) == 3
+
+
 def test_views_counts_search_and_read_all(client: TestClient, operator: dict) -> None:
     send = _hook(client, add_source(client, "webhook"))
     send(title="Pool FAILED", message="zpool tank")

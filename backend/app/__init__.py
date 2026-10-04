@@ -1,3 +1,3 @@
 """nexsift: one inbox for everything the homelab has to say."""
 
-__version__ = "0.7.0"
+__version__ = "0.7.1"

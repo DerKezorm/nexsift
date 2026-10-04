@@ -137,6 +137,20 @@
         "New keys: r marks done, x selects, Shift+F10 opens the menu. The overview comes with ?.",
         "A push to ntfy with an umlaut in its title got lost. Fixed."
       ]
+    },
+    "0.7.1": {
+      "lead": "Tidy up whole views and sources at once, with a right click.",
+      "sections": [
+        {
+          "title": "Archive, bring back, delete everything",
+          "body": "A right click on Inbox, Unread or Critical open archives everything there. On Archive you bring everything back or empty it. On a source you archive or delete all of its messages, those in the archive too. Deleting asks first and names how many, and everything can be undone.",
+          "where": "Inbox › right click on a view or a source"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "The actions cover the whole view, not only the lines loaded."
+      ]
     }
   }
 }

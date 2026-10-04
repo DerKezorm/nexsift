@@ -137,6 +137,20 @@
         "Neue Tasten: r erledigt, x wählt aus, Shift+F10 öffnet das Menü. Die Übersicht kommt mit ?.",
         "Ein Push an ntfy mit Umlaut im Titel ging verloren. Das ist behoben."
       ]
+    },
+    "0.7.1": {
+      "lead": "Ganze Ansichten und Quellen auf einmal aufräumen, per Rechtsklick.",
+      "sections": [
+        {
+          "title": "Alles archivieren, zurückholen, löschen",
+          "body": "Ein Rechtsklick auf Posteingang, Ungelesen oder Kritisch offen archiviert alles dort. Auf dem Archiv holst du alles zurück oder leerst es. Auf einer Quelle archivierst oder löschst du alle ihre Meldungen, auch die im Archiv. Löschen fragt vorher mit der Anzahl nach, und alles lässt sich rückgängig machen.",
+          "where": "Posteingang › Rechtsklick auf eine Ansicht oder eine Quelle"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Die Aktionen gelten für die ganze Ansicht, nicht nur für die geladenen Zeilen."
+      ]
     }
   }
 }

@@ -151,6 +151,20 @@
       "small": [
         "Die Aktionen gelten für die ganze Ansicht, nicht nur für die geladenen Zeilen."
       ]
+    },
+    "0.7.2": {
+      "lead": "Was du in Ungelesen öffnest, bleibt dort stehen, bis du weitergehst.",
+      "sections": [
+        {
+          "title": "Nachrichten verschwinden nicht mehr beim Lesen",
+          "body": "Eine Nachricht in Ungelesen wird beim Öffnen als gelesen markiert und flog dann sofort aus der Liste, während du sie noch gelesen hast. Jetzt bleibt sie stehen, ohne blauen Punkt, und die Zahl in der Seitenleiste zählt trotzdem herunter. Erst wenn du die Ansicht, die Quelle oder die Suche wechselst, ist sie aus Ungelesen weg.",
+          "where": "Posteingang › Ungelesen"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Das gilt auch, wenn du mit u oder dem Knopf selbst als gelesen markierst."
+      ]
     }
   }
 }

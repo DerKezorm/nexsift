@@ -151,6 +151,20 @@
       "small": [
         "The actions cover the whole view, not only the lines loaded."
       ]
+    },
+    "0.7.2": {
+      "lead": "What you open in Unread stays there until you move on.",
+      "sections": [
+        {
+          "title": "Messages no longer vanish while you read them",
+          "body": "Opening a message in Unread marks it read, and it then dropped out of the list while you were still reading. Now it stays, without the blue dot, and the number in the side bar still counts down. Once you change the view, the source or the search, it is gone from Unread.",
+          "where": "Inbox › Unread"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "The same holds when you mark it read yourself with u or the button."
+      ]
     }
   }
 }

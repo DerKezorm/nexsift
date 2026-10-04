@@ -31,6 +31,9 @@ DEFAULTS: dict[str, Any] = {
     "sender_host": "",
     #: What happens with a critical event when no rule says otherwise.
     "push_mode": "immediate",
+    #: Language of what nexsift words itself in a push (its own sentences, messages it understood). The words of a
+    #: sender stay as they came.
+    "push_language": "en",
     #: How long a thread stays open for more of the same, in minutes.
     "bundle_minutes": 15,
     #: Per source and minute; above it events are only counted.
@@ -61,6 +64,7 @@ PUBLIC_KEYS = (
     "public_url",
     "sender_host",
     "push_mode",
+    "push_language",
     "bundle_minutes",
     "throttle_per_minute",
     "storm_enabled",

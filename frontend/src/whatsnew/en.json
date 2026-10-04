@@ -104,12 +104,17 @@
       ]
     },
     "0.7.0": {
-      "lead": "Open problems can now be closed by hand, and a lot works with a right click and for several messages at once.",
+      "lead": "Open problems can now be closed by hand, Uptime Kuma says in plain words what is wrong, and a lot works with a right click and for several messages at once.",
       "sections": [
         {
           "title": "Done, even without an all-clear",
           "body": "Some senders never say \"back again\", such as Synology about a stopped container. You close such problems yourself now: open the message and tap Done. In Critical open one button closes them all, only those of the chosen source if one is selected. If the same problem comes back, it is a new message.",
           "where": "Inbox › message › Done, or Critical open › All done"
+        },
+        {
+          "title": "Uptime Kuma in plain words",
+          "body": "Instead of \"MeTube is down\" and \"connect ECONNREFUSED\" it now says \"MeTube is not reachable\", with the group, the address and the likely cause below: not running, not answering, unknown name, expired certificate and more. Missing signs of life from push checks and expiring certificates are messages of their own, groups only a note. Kuma's own sentence is still under raw data.",
+          "where": "Inbox › message from Uptime Kuma"
         },
         {
           "title": "Right click",
@@ -120,11 +125,17 @@
           "title": "Several at once",
           "body": "Ctrl and click adds single messages, Shift and click a range, Ctrl+A all of them. Or click the mark on the left of a line; on a phone a tap is enough. The top then says how many are selected, and Done, Archive, Read and Delete act on all of them.",
           "where": "Inbox › mark on the left of a line"
+        },
+        {
+          "title": "Language of pushes",
+          "body": "What nexsift words itself reaches the phone in the language you choose here. English out of the box. What a sender writes itself stays as it came.",
+          "where": "Rules › Defaults › Language of pushes"
         }
       ],
       "smallTitle": "Also",
       "small": [
-        "New keys: r marks done, x selects, Shift+F10 opens the menu. The overview comes with ?."
+        "New keys: r marks done, x selects, Shift+F10 opens the menu. The overview comes with ?.",
+        "A push to ntfy with an umlaut in its title got lost. Fixed."
       ]
     }
   }

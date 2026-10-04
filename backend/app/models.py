@@ -162,6 +162,9 @@ class Event(Base):
     raw: Mapped[str] = mapped_column(Text, default="")
     #: Whether the adapter understood the format. False: taken as plain title and text.
     recognized: Mapped[bool] = mapped_column(Boolean, default=True)
+    #: Title and body as text keys when nexsift worded the message itself (``services/texts.py``); the interface
+    #: and the pushes show them in their language. Empty for words that came from the sender.
+    texts: Mapped[Any] = mapped_column(JSON, nullable=True)
 
 
 class Rule(Base):

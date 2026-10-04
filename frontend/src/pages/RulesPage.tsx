@@ -11,6 +11,7 @@ import { SourceMark } from '../components/SourceMark'
 import { Symbol } from '../components/Symbol'
 import { Badge, Banner, Button, Field, INPUT_CLASS, PageHeader, Section, SelectField, Switch } from '../components/ui'
 import { Targets } from '../components/rules/Targets'
+import { LANGUAGES } from '../i18n'
 import { useSources } from '../lib/data'
 import { PRIORITY_CHIP } from '../lib/priority'
 import { ruleName } from '../lib/ruleNames'
@@ -18,6 +19,8 @@ import { useLoad } from '../lib/useLoad'
 
 const PRIORITIES: Priority[] = ['info', 'warn', 'crit']
 const PUSH_MODES: PushMode[] = ['immediate', 'window', 'single', 'never']
+/** The languages the server can write pushes in (backend/app/texts). */
+const PUSH_LANGUAGES: Settings['push_language'][] = ['de', 'en']
 
 type Draft = Omit<Rule, 'id' | 'position' | 'built_in'> & { id?: number; built_in?: string }
 
@@ -323,6 +326,18 @@ function Defaults() {
         ))}
       </SelectField>
       <p className="-mt-2 text-xs text-mist-500">{t(`push.hint.${draft.push_mode}`)}</p>
+      <SelectField
+        label={t('rules.defaults.pushLanguage')}
+        value={draft.push_language}
+        onChange={(value) => setDraft({ ...draft, push_language: value as Settings['push_language'] })}
+        help={t('rules.defaults.pushLanguageHelp')}
+      >
+        {PUSH_LANGUAGES.map((code) => (
+          <option key={code} value={code}>
+            {LANGUAGES[code].name}
+          </option>
+        ))}
+      </SelectField>
       <div className="grid grid-cols-2 gap-3">
         <Field label={t('rules.defaults.window')} help={t('rules.defaults.windowHelp')} {...number('bundle_minutes')} />
         <Field label={t('rules.defaults.throttle')} help={t('rules.defaults.throttleHelp')} {...number('throttle_per_minute')} />

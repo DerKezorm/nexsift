@@ -6,6 +6,7 @@ import type { Source, ThreadDetail as Detail } from '../../api/types'
 import { isMuted } from '../../lib/data'
 import { PRIORITY_CHIP, PRIORITY_DOT, RESOLVED_BY_HAND, resolvable } from '../../lib/priority'
 import { ruleName } from '../../lib/ruleNames'
+import { textBody, textTitle } from '../../lib/senderTexts'
 import { threadTitle } from '../../lib/threadTitle'
 import { clock, duration, relative } from '../../lib/time'
 import { Help } from '../Help'
@@ -47,6 +48,9 @@ export function ThreadDetail({
   const sent = thread.deliveries.filter((delivery) => delivery.status === 'sent')
   const waiting = thread.deliveries.filter((delivery) => delivery.status === 'pending')
   const failed = thread.deliveries.filter((delivery) => delivery.status === 'failed')
+  // The all-clear that closed it, in the chosen language when nexsift worded it.
+  const closer = thread.events.find((event) => event.title === thread.resolved_by)
+  const resolvedBy = textTitle(t, closer?.texts) ?? thread.resolved_by
 
   return (
     <article className="flex min-h-0 w-full flex-col border-ink-700 bg-ink-900/60 sm:rounded-2xl sm:border">
@@ -121,7 +125,7 @@ export function ThreadDetail({
         <div className="grid gap-2 sm:grid-cols-2">
           {thread.resolved_at && (
             <Fact symbol="resolved" tone="ok" title={t('inbox.fact.resolved', { after: duration(Date.parse(thread.resolved_at) - Date.parse(thread.first_at), language) })}>
-              {thread.resolved_by === RESOLVED_BY_HAND ? t('inbox.fact.byHand') : thread.resolved_by}
+              {thread.resolved_by === RESOLVED_BY_HAND ? t('inbox.fact.byHand') : resolvedBy}
             </Fact>
           )}
           {thread.throttled_count > 0 && (
@@ -169,12 +173,14 @@ export function ThreadDetail({
             <li key={event.id} className="relative border-l border-ink-700 pb-4 pl-5 last:pb-0">
               <span className={'absolute top-1.5 -left-[5px] h-2.5 w-2.5 rounded-full border-2 border-ink-900 ' + PRIORITY_DOT[event.priority]} aria-hidden="true" />
               <div className="flex items-baseline gap-2">
-                <p className="min-w-0 text-sm font-medium break-words text-mist-200">{event.title}</p>
+                <p className="min-w-0 text-sm font-medium break-words text-mist-200">{textTitle(t, event.texts) ?? event.title}</p>
                 <span className="ml-auto shrink-0 text-xs text-mist-600 tabular-nums" title={clock(event.received_at, language)}>
                   {relative(event.received_at, language, now)}
                 </span>
               </div>
-              {event.body && <p className="mt-1 text-sm break-words whitespace-pre-line text-mist-400">{event.body}</p>}
+              {(textBody(t, event.texts) ?? event.body) && (
+                <p className="mt-1 text-sm break-words whitespace-pre-line text-mist-400">{textBody(t, event.texts) ?? event.body}</p>
+              )}
               {!event.recognized && (
                 <p className="mt-1.5 inline-flex items-center gap-1.5 rounded-md bg-warn-500/10 px-2 py-0.5 text-xs text-warn-500">
                   <Symbol name="warn" className="h-3.5 w-3.5" />

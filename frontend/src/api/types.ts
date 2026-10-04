@@ -85,6 +85,16 @@ export interface ThreadSummary {
   routine: boolean
   preview: string
   links: Link[]
+  /** Text keys of the newest event when nexsift worded it; `title_from_texts`: the line's title came from them. */
+  texts: Texts | null
+  title_from_texts: boolean
+}
+
+export type TextSegment = { key: string; args: Record<string, string | number> } | { text: string }
+/** Words nexsift wrote itself, as text keys; lines of segments joined with " · ". See services/texts.py. */
+export interface Texts {
+  title?: TextSegment
+  body?: TextSegment[][]
 }
 
 export interface NsEvent {
@@ -96,6 +106,7 @@ export interface NsEvent {
   links: Link[]
   raw: string
   recognized: boolean
+  texts: Texts | null
 }
 
 export interface DeliveryInfo {
@@ -176,6 +187,7 @@ export interface Settings {
   sender_host: string
   webpush_enabled: boolean
   push_mode: PushMode
+  push_language: 'en' | 'de'
   bundle_minutes: number
   throttle_per_minute: number
   storm_enabled: boolean

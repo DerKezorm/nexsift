@@ -4,11 +4,14 @@ When a sender changes its wording, a new sample goes next to the old one; both m
 """
 
 import json
+from pathlib import Path
 
+import pytest
 from fastapi.testclient import TestClient
 
 from app.adapters import doors
 from app.adapters.kinds import refine, shape
+from app.services import texts
 from tests.conftest import UI, add_source, inbox
 
 KUMA_DOWN = {
@@ -58,7 +61,7 @@ def _refine(kind: str, incoming_payload: tuple) -> list:
 
 def test_uptime_kuma_uses_the_status_number() -> None:
     [down] = _refine("uptimekuma", doors.webhook(json.dumps(KUMA_DOWN).encode(), "application/json"))
-    assert (down.title, down.priority, down.group_key) == ("cloud is down", "crit", "monitor-7")
+    assert (down.title, down.priority, down.group_key) == ("cloud is not reachable", "crit", "monitor-7")
     [up] = _refine("uptimekuma", doors.webhook(json.dumps(KUMA_UP).encode(), "application/json"))
     assert (up.priority, up.resolves) == ("info", "monitor-7")
     assert up.links[0]["url"] == "https://cloud.example.com"
@@ -136,11 +139,11 @@ def test_uptime_kuma_all_clear_closes_the_problem(client: TestClient, operator: 
     client.post(path, json=KUMA_DOWN)
     client.post(path, json=KUMA_DOWN)
     [problem] = inbox(client)
-    assert problem["title"] == "cloud is down" and problem["event_count"] == 2
+    assert problem["title"] == "cloud is not reachable" and problem["event_count"] == 2
     client.post(path, json=KUMA_UP)
     [thread] = inbox(client)
     assert thread["resolved_at"] is not None
-    assert thread["resolved_by"] == "cloud is up again"
+    assert thread["resolved_by"] == "cloud is reachable again"
     assert inbox(client, "crit") == []
 
 
@@ -300,7 +303,7 @@ def test_kuma_webhook_format_is_recognized_on_a_plain_webhook_source(client: Tes
     client.post(path, json=KUMA_DOWN)
     client.post(path, json=KUMA_UP)
     [thread] = inbox(client)
-    assert thread["title"] == "cloud is down" and thread["resolved_at"] is not None
+    assert thread["title"] == "cloud is not reachable" and thread["resolved_at"] is not None
 
 
 def test_other_discord_messages_stay_as_they_are(client: TestClient, operator: dict) -> None:
@@ -340,3 +343,132 @@ def test_paperless_json_inside_a_json_string_is_read_as_the_object(client: TestC
     client.post("/api/v1/hook/" + source["connection"]["token"], json=inner)
     (thread,) = inbox(client)
     assert thread["title"] == "New document: Offer"
+
+
+# --- Uptime Kuma in plain words ------------------------------------------------------------------------------ #
+# Shapes as Uptime Kuma 1.23.17 sends them (read from a real instance on 04.10.2026), with example addresses.
+
+
+def _kuma(status: int, message: str, **monitor: object) -> dict:
+    base = {
+        "id": 12,
+        "name": "MeTube",
+        "pathName": "Own apps / MeTube",
+        "url": "http://192.0.2.10:8081/",
+        "type": "http",
+    }
+    return {"heartbeat": {"monitorID": 12, "status": status, "msg": message}, "monitor": {**base, **monitor}, "msg": ""}
+
+
+def _kuma_event(payload: dict):
+    [event] = _refine("uptimekuma", doors.webhook(json.dumps(payload).encode(), "application/json"))
+    return event
+
+
+@pytest.mark.parametrize(
+    ("message", "monitor", "cause"),
+    [
+        ("connect ECONNREFUSED 192.0.2.10:8081", {}, "why.refused"),
+        ("timeout of 48000ms exceeded", {}, "why.timeout"),
+        ("connect ETIMEDOUT 192.0.2.10:8081", {}, "why.timeout"),
+        ("getaddrinfo ENOTFOUND app.example.com", {}, "why.dns"),
+        ("getaddrinfo EAI_AGAIN app.example.com", {}, "why.dns"),
+        ("connect EHOSTUNREACH 192.0.2.10:8081", {}, "why.unreachable"),
+        ("socket hang up", {}, "why.reset"),
+        ("Request failed with status code 500", {}, "why.http500"),
+        ("Request failed with status code 502", {}, "why.httpProxy"),
+        ("Request failed with status code 404", {}, "why.http4xx"),
+        ("certificate has expired", {}, "why.certExpired"),
+        ("self-signed certificate", {}, "why.certInvalid"),
+        ("Hostname/IP does not match certificate's altnames", {}, "why.certInvalid"),
+        (
+            "PING 192.0.2.9 (192.0.2.9) 56(84) bytes of data. 1 packets transmitted, 0 received, 100% packet loss",
+            {"type": "ping", "url": "", "hostname": "192.0.2.9"},
+            "why.ping",
+        ),
+        ("No heartbeat in the time window", {"type": "push", "url": "", "interval": 90000}, "why.push"),
+    ],
+)
+def test_kuma_says_the_likely_cause_in_plain_words(message: str, monitor: dict, cause: str) -> None:
+    event = _kuma_event(_kuma(0, message, **monitor))
+    assert event.priority == "crit"
+    assert [part.get("key") for part in event.texts["body"][-1]] == [f"sender.kuma.{cause}"]
+    # Kuma's own sentence is gone from title and body, and kept in the raw data.
+    assert message not in event.body.splitlines() and message in event.raw
+
+
+def test_kuma_title_names_what_is_affected_and_where() -> None:
+    down = _kuma_event(_kuma(0, "connect ECONNREFUSED 192.0.2.10:8081"))
+    assert down.title == "MeTube is not reachable"
+    assert down.body.splitlines()[0] == "Own apps · 192.0.2.10:8081"
+    assert texts.title(down.texts, "de") == "MeTube ist nicht erreichbar"
+    assert texts.body(down.texts, "de").splitlines()[1].startswith("Nimmt keine Verbindung an.")
+    up = _kuma_event(_kuma(1, "200 - OK"))
+    assert (up.title, up.priority, up.resolves) == ("MeTube is reachable again", "info", "monitor-12")
+    assert texts.title(up.texts, "de") == "MeTube ist wieder erreichbar"
+    pending = _kuma_event(_kuma(2, "timeout of 48000ms exceeded"))
+    assert (pending.title, pending.priority) == ("MeTube is not answering, Kuma is retrying", "warn")
+
+
+def test_kuma_ping_names_its_host_and_a_push_its_interval() -> None:
+    ping = _kuma_event(
+        _kuma(0, "100% packet loss", type="ping", url="", hostname="192.0.2.9", pathName="Base / MeTube")
+    )
+    assert ping.body.splitlines()[0] == "Base · 192.0.2.9"
+    beat = _kuma_event(
+        _kuma(
+            0,
+            "No heartbeat in the time window",
+            name="Night backup",
+            type="push",
+            url="",
+            interval=90000,
+            pathName="Signs of life / Night backup",
+        )
+    )
+    assert beat.title == "Night backup: no sign of life"
+    assert beat.body.splitlines()[0] == "Signs of life · expected every 25 h"
+    assert texts.title(beat.texts, "de") == "Night backup: Lebenszeichen ausgeblieben"
+    assert texts.body(beat.texts, "de").splitlines()[0] == "Signs of life · erwartet alle 25 Std."
+    back = _kuma_event(_kuma(1, "OK", name="Night backup", type="push", url="", interval=90000))
+    assert back.title == "Night backup: sign of life is back" and back.resolves == "monitor-12"
+
+
+def test_an_unknown_kuma_error_keeps_kumas_words() -> None:
+    event = _kuma_event(_kuma(0, "keyword [ready] not found"))
+    assert event.body.splitlines()[-1] == "keyword [ready] not found"
+
+
+def test_a_kuma_group_is_a_note_not_a_problem(client: TestClient, operator: dict) -> None:
+    group = _kuma(0, "Child inaccessible", id=1, name="Own apps", pathName="Own apps", type="group", url="")
+    event = _kuma_event(group)
+    assert (event.title, event.priority) == ("Own apps: a check in it is failing", "info")
+    source = add_source(client, "uptimekuma")
+    client.post("/api/v1/hook/" + source["connection"]["token"], json=group)
+    assert len(inbox(client)) == 1 and inbox(client, "crit") == []
+
+
+def test_kuma_certificate_warning_is_understood() -> None:
+    line = "[cloud][https://cloud.example.com/] Server certificate cloud.example.com will be expired in 7 days"
+    event = _kuma_event({"heartbeat": None, "monitor": None, "msg": line})
+    assert (event.title, event.priority) == ("Certificate of cloud.example.com expires in 7 days", "warn")
+    assert texts.title(event.texts, "de") == "Zertifikat von cloud.example.com läuft in 7 Tagen ab"
+    assert event.links[0]["url"] == "https://cloud.example.com/"
+
+
+def test_the_interface_shows_kuma_in_its_language(client: TestClient, operator: dict) -> None:
+    source = add_source(client, "uptimekuma")
+    client.post("/api/v1/hook/" + source["connection"]["token"], json=_kuma(0, "connect ECONNREFUSED x"))
+    [thread] = inbox(client)
+    assert thread["title_from_texts"] is True
+    assert thread["texts"]["title"] == {"key": "sender.kuma.down", "args": {"name": "MeTube"}}
+    detail = client.get(f"/api/threads/{thread['id']}").json()
+    assert detail["events"][0]["texts"]["title"]["key"] == "sender.kuma.down"
+
+
+def test_server_and_interface_have_the_same_sender_words() -> None:
+    """The interface shows what nexsift worded in the chosen language, the pushes in theirs: one set of words."""
+    frontend = Path(__file__).resolve().parents[2] / "frontend" / "src" / "i18n"
+    for language in texts.LANGUAGES:
+        interface = json.loads((frontend / f"{language}.json").read_text(encoding="utf-8"))["sender"]
+        assert interface == texts.table(language)["sender"], language

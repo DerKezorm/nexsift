@@ -15,7 +15,7 @@ from .. import __version__
 from ..config import get_settings
 from ..deps import CurrentAccount, DbSession
 from ..meldungen import fehler
-from ..services import bus, settings_service
+from ..services import bus, settings_service, texts
 
 logger = logging.getLogger("nexsift.settings")
 
@@ -73,6 +73,9 @@ def write_settings(payload: SettingsIn, account: CurrentAccount, db: DbSession) 
         elif key == "push_mode":
             if value not in settings_service.PUSH_MODES:
                 raise fehler("invalid_input", "Unknown push behaviour.", 422, field=key)
+        elif key == "push_language":
+            if value not in texts.LANGUAGES:
+                raise fehler("invalid_input", "Unknown language.", 422, field=key)
         elif key == "backup_schedule":
             if value not in settings_service.BACKUP_SCHEDULES:
                 raise fehler("invalid_input", "Unknown backup schedule.", 422, field=key)

@@ -15,7 +15,7 @@ import { Welcome } from '../components/inbox/Welcome'
 import { isMuted, useCounts, useSources, useTargets } from '../lib/data'
 import { useLiveVersion } from '../lib/live'
 import { PRIORITY_DOT, RESOLVED_BY_HAND, resolvable } from '../lib/priority'
-import { threadTitle } from '../lib/threadTitle'
+import { threadPreview, threadTitle } from '../lib/threadTitle'
 import { relative, useNow } from '../lib/time'
 
 const VIEWS: { key: View; symbol: SymbolName }[] = [
@@ -804,6 +804,8 @@ function ThreadRow({
 }) {
   const { t } = useTranslation()
   const unread = thread.state === 'unread'
+  const title = threadTitle(thread, t)
+  const preview = threadPreview(thread, t)
   return (
     <li
       data-thread={thread.id}
@@ -857,9 +859,9 @@ function ThreadRow({
         </div>
         <p className={'mt-0.5 flex items-center gap-2 text-sm ' + (unread ? 'font-semibold text-mist-100' : 'text-mist-300')}>
           {unread && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent-500" aria-label={t('inbox.unread')} />}
-          <span className={'truncate ' + (thread.resolved_at ? 'text-mist-500' : '')}>{threadTitle(thread, t)}</span>
+          <span className={'truncate ' + (thread.resolved_at ? 'text-mist-500' : '')}>{title}</span>
         </p>
-        {thread.preview && thread.preview !== thread.title && <p className="mt-0.5 truncate text-xs text-mist-500">{thread.preview}</p>}
+        {preview && preview !== title && <p className="mt-0.5 truncate text-xs text-mist-500">{preview}</p>}
         <div className="mt-1.5 flex flex-wrap gap-1.5 empty:hidden">
           {thread.event_count > 1 && <Chip symbol="stack">×{thread.event_count}</Chip>}
           {thread.resolved_at && (

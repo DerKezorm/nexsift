@@ -242,6 +242,7 @@ def _add_event(db: Session, thread: Thread, item: Incoming, priority: str) -> Ev
         links=item.links,
         raw=item.raw,
         recognized=item.recognized,
+        texts=item.texts or None,
     )
     db.add(event)
     thread.event_count += 1

@@ -106,6 +106,10 @@ def summary(thread: Thread, latest: Event | None, pushed: bool) -> dict[str, Any
         "routine": routine,
         "preview": _preview(latest, routine),
         "links": latest.links if latest else [],
+        # Words nexsift wrote itself, for the interface to show in its language; the title only when it came
+        # from that event (a rule's bundle title did not).
+        "texts": latest.texts if latest is not None and latest.texts else None,
+        "title_from_texts": bool(latest is not None and latest.texts and thread.title == latest.title),
     }
 
 
@@ -133,6 +137,7 @@ def detail(db: Session, thread: Thread, limit: int = 200) -> dict[str, Any]:
             "links": event.links or [],
             "raw": event.raw,
             "recognized": event.recognized,
+            "texts": event.texts or None,
         }
         for event in events
     ]

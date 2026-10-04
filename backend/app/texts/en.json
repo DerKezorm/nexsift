@@ -1,0 +1,50 @@
+{
+  "sender": {
+    "kuma": {
+      "down": "{{name}} is not reachable",
+      "up": "{{name}} is reachable again",
+      "pending": "{{name}} is not answering, Kuma is retrying",
+      "maintenance": "{{name}} is in maintenance",
+      "pushDown": "{{name}}: no sign of life",
+      "pushUp": "{{name}}: sign of life is back",
+      "groupDown": "{{name}}: a check in it is failing",
+      "groupUp": "{{name}}: everything in it is reachable again",
+      "certExpiry_one": "Certificate of {{host}} expires in 1 day",
+      "certExpiry_other": "Certificate of {{host}} expires in {{count}} days",
+      "everyHours_one": "expected every hour",
+      "everyHours_other": "expected every {{count}} h",
+      "everyMinutes_one": "expected every minute",
+      "everyMinutes_other": "expected every {{count}} min",
+      "why": {
+        "refused": "Refuses the connection. Usually the container or service is not running, or it listens on another port.",
+        "timeout": "Does not answer in time. The machine is gone, overloaded, or a firewall swallows the request.",
+        "dns": "The name cannot be resolved. The DNS entry is missing, or the DNS server cannot be reached.",
+        "unreachable": "The machine cannot be reached on the network. Usually it is off, or cable, Wi-Fi or VLAN are wrong.",
+        "ping": "Does not answer ping. The machine is off or not on the network.",
+        "reset": "The connection broke off midway. Often the service is just restarting.",
+        "http500": "The app reports an internal error ({{code}}). Its log says more.",
+        "httpProxy": "The reverse proxy cannot reach the app behind it ({{code}}). Usually it is not running or just starting.",
+        "http4xx": "Unexpected answer ({{code}}). The address is no longer right, or it needs a sign-in (401/403).",
+        "certExpired": "The certificate has expired. Browsers and apps refuse the connection.",
+        "certInvalid": "The certificate is not valid or does not match the address. Browsers and apps refuse the connection.",
+        "certExpiry": "After that browsers warn and apps refuse the connection. Usually the reverse proxy renews it by itself, otherwise renew it by hand.",
+        "push": "The job did not report in: it did not run, failed, or could not reach Kuma.",
+        "group": "Which one, the check reports itself.",
+        "upAgain": "Answers normally again."
+      }
+    }
+  },
+  "push": {
+    "resolved": "resolved",
+    "resolvedAfter": "Resolved after {{took}}",
+    "more_one": "+1 more since the first message",
+    "more_other": "+{{count}} more since the first message",
+    "messages_one": "1 message",
+    "messages_other": "{{count}} messages",
+    "storm": "{{count}} more critical messages from {{sources}} sources",
+    "minutes": "{{count}} min",
+    "hours": "{{count}} h",
+    "days_one": "1 day",
+    "days_other": "{{count}} days"
+  }
+}

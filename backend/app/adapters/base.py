@@ -13,8 +13,10 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
+from typing import Any
 
 from ..models import CRIT, INFO, WARN
+from ..services import texts
 
 #: What is kept of a raw message. Enough to see the format, not enough to fill the disk.
 RAW_MAX = 16_000
@@ -37,8 +39,14 @@ class Incoming:
     resolves: str = ""
     #: Set by adapters that know what belongs together (Uptime Kuma: per monitor).
     group_key: str = ""
+    #: Title and body as text keys, for adapters that word a message themselves (``services/texts.py``). When set,
+    #: title and body are made from them in English.
+    texts: dict[str, Any] = field(default_factory=dict)
 
     def clean(self) -> Incoming:
+        if self.texts:
+            self.title = texts.title(self.texts) or self.title
+            self.body = texts.body(self.texts) or ""
         self.title = " ".join((self.title or "").split())[:TITLE_MAX] or "(no title)"
         self.body = (self.body or "").strip()[:BODY_MAX]
         self.raw = (self.raw or "")[:RAW_MAX]

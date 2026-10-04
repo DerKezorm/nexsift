@@ -85,7 +85,10 @@ def test_all_clear_follows_the_alarm(client: TestClient, operator: dict) -> None
     _run()
     send(**KUMA_UP)
     _run()
-    assert [entry["headers"]["title"] for entry in SENT] == ["Server: cloud is down", "Server: cloud is up again"]
+    assert [entry["headers"]["title"] for entry in SENT] == [
+        "Server: cloud is not reachable",
+        "Server: cloud is reachable again",
+    ]
     # The all-clear reaches the same phone, but quietly, and says how long it took.
     assert SENT[0]["headers"]["priority"] == "5"
     assert SENT[1]["headers"]["priority"] == "3"
@@ -210,7 +213,7 @@ def test_all_clear_waits_out_quiet_hours(client: TestClient, operator: dict) -> 
     _run()
     send(**KUMA_UP)
     _run()
-    assert [entry["headers"]["title"] for entry in SENT] == ["Server: cloud is down"]
+    assert [entry["headers"]["title"] for entry in SENT] == ["Server: cloud is not reachable"]
 
 
 def _pushover(client: TestClient) -> dict:
@@ -239,9 +242,9 @@ def test_pushover_gets_alarm_and_all_clear(client: TestClient, operator: dict) -
     assert [entry["url"] for entry in SENT] == [push.PUSHOVER_URL] * 2
     alarm, clear = ({key: value[0] for key, value in parse_qs(entry["body"]).items()} for entry in SENT)
     assert alarm["token"] == "AppTokenP1" and alarm["user"] == "UserKeyP1"
-    assert alarm["title"] == "Server: cloud is down" and alarm["priority"] == "1"
+    assert alarm["title"] == "Server: cloud is not reachable" and alarm["priority"] == "1"
     # The all-clear comes with a normal sound, not the loud one.
-    assert clear["title"] == "Server: cloud is up again" and clear["priority"] == "0"
+    assert clear["title"] == "Server: cloud is reachable again" and clear["priority"] == "0"
     assert clear["message"].startswith("Resolved after ")
 
 
@@ -255,3 +258,40 @@ def test_pushover_says_what_is_wrong(client: TestClient, operator: dict) -> None
     }
     push.transport_for_tests = httpx.MockTransport(lambda request: httpx.Response(429, text="slow down"))
     assert client.post(f"/api/targets/{target['id']}/test", headers=UI).json()["error"] == "answered HTTP 429"
+
+
+def test_pushes_speak_the_push_language(client: TestClient, operator: dict) -> None:
+    from tests.test_senders import KUMA_DOWN, KUMA_UP
+
+    assert client.put("/api/settings", json={"values": {"push_language": "fr"}}, headers=UI).status_code == 422
+    assert client.put("/api/settings", json={"values": {"push_language": "de"}}, headers=UI).status_code == 200
+    _phone(client)
+    send = _hook(client, "uptimekuma")
+    send(**KUMA_DOWN)
+    _run()
+    send(**KUMA_UP)
+    _run()
+    assert [entry["headers"]["title"] for entry in SENT] == [
+        "Server: cloud ist nicht erreichbar",
+        "Server: cloud ist wieder erreichbar",
+    ]
+    assert SENT[0]["body"].startswith("cloud.example.com\nAntwortet nicht rechtzeitig.")
+    assert SENT[1]["body"].startswith("Erledigt nach ")
+    # What a sender worded itself stays as it came: nexsift does not translate other people's sentences.
+    plain = _hook(client)
+    plain(title="VM 104 stopped", priority="critical")
+    _run()
+    assert SENT[2]["headers"]["title"] == "Server: VM 104 stopped"
+
+
+def test_a_german_title_with_umlauts_reaches_ntfy(client: TestClient, operator: dict) -> None:
+    from tests.test_senders import _kuma
+
+    client.put("/api/settings", json={"values": {"push_language": "de"}}, headers=UI)
+    _phone(client, min_priority="warn")
+    send = _hook(client, "uptimekuma")
+    send(**_kuma(2, "timeout of 48000ms exceeded"))
+    _run()
+    assert len(SENT) == 1
+    title = SENT[0]["headers"]["title"]
+    assert title.startswith("=?UTF-8?B?") or "prüft" in title

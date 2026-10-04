@@ -104,12 +104,17 @@
       ]
     },
     "0.7.0": {
-      "lead": "Offene Probleme lassen sich jetzt von Hand schließen, und vieles geht per Rechtsklick und für mehrere Meldungen auf einmal.",
+      "lead": "Offene Probleme lassen sich jetzt von Hand schließen, Uptime Kuma sagt in Alltagssprache, was los ist, und vieles geht per Rechtsklick und für mehrere Meldungen auf einmal.",
       "sections": [
         {
           "title": "Erledigt, auch ohne Entwarnung",
           "body": "Manche Absender schicken nie ein „wieder da“, etwa die Synology bei einem gestoppten Container. Solche Probleme schließt du jetzt selbst: Meldung öffnen und auf Erledigt tippen. In Kritisch offen erledigt ein Knopf alles auf einmal, bei gewählter Quelle nur deren Probleme. Kommt dasselbe Problem wieder, ist es eine neue Meldung.",
           "where": "Posteingang › Meldung › Erledigt, oder Kritisch offen › Alle erledigen"
+        },
+        {
+          "title": "Uptime Kuma in Alltagssprache",
+          "body": "Statt „MeTube is down“ und „connect ECONNREFUSED“ steht da jetzt „MeTube ist nicht erreichbar“, darunter Gruppe und Adresse und die wahrscheinliche Ursache: läuft nicht, antwortet nicht, Name unbekannt, Zertifikat abgelaufen und mehr. Ausgebliebene Lebenszeichen von Push-Prüfungen und ablaufende Zertifikate sind eigene Meldungen, Gruppen nur noch ein Hinweis. Kumas eigener Satz steht weiter unter Rohdaten.",
+          "where": "Posteingang › Meldung von Uptime Kuma"
         },
         {
           "title": "Rechtsklick",
@@ -120,11 +125,17 @@
           "title": "Mehrere auf einmal",
           "body": "Mit Strg und Klick wählst du einzelne dazu, mit Shift und Klick einen Bereich, mit Strg+A alle. Oder du klickst auf das Zeichen links in der Zeile, am Handy reicht Antippen. Oben steht dann, wie viele ausgewählt sind, und Erledigt, Archivieren, Gelesen und Löschen wirken auf alle.",
           "where": "Posteingang › Zeichen links in einer Zeile"
+        },
+        {
+          "title": "Sprache der Pushes",
+          "body": "Was nexsift selbst formuliert, kommt auf dem Handy in der Sprache, die du hier wählst. Ab Werk Englisch. Was ein Absender selbst schreibt, bleibt, wie es kam.",
+          "where": "Regeln › Standard › Sprache der Pushes"
         }
       ],
       "smallTitle": "Außerdem",
       "small": [
-        "Neue Tasten: r erledigt, x wählt aus, Shift+F10 öffnet das Menü. Die Übersicht kommt mit ?."
+        "Neue Tasten: r erledigt, x wählt aus, Shift+F10 öffnet das Menü. Die Übersicht kommt mit ?.",
+        "Ein Push an ntfy mit Umlaut im Titel ging verloren. Das ist behoben."
       ]
     }
   }

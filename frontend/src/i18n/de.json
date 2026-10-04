@@ -369,6 +369,8 @@
       "intro": "Was gilt, wenn keine Regel etwas anderes sagt.",
       "push": "Push-Verhalten",
       "pushHelp": "Wie kritische Meldungen aufs Handy kommen. „Sofort, dann still bündeln“ ist für fast alle richtig.",
+      "pushLanguage": "Sprache der Pushes",
+      "pushLanguageHelp": "In dieser Sprache schreibt nexsift, was es selbst formuliert: verstandene Meldungen wie die von Uptime Kuma und Sätze wie „Erledigt nach 5 Min.“. Was ein Absender selbst schreibt, kommt so an, wie er es schickt.",
       "throttle": "Drosselung ab je Minute",
       "throttleHelp": "Schickt eine Quelle mehr als so viele Meldungen pro Minute, zählt nexsift den Rest nur noch. Schützt vor Endlosschleifen.",
       "title": "Standard",
@@ -1219,5 +1221,40 @@
     "deleteTitle": "„{{name}}“ löschen?",
     "deleteText": "Jedes Dashboard, das diesen Schlüssel benutzt, bekommt ab sofort keine Daten mehr.",
     "deleteNow": "Ja, löschen"
+  },
+  "sender": {
+    "kuma": {
+      "down": "{{name}} ist nicht erreichbar",
+      "up": "{{name}} ist wieder erreichbar",
+      "pending": "{{name}} antwortet nicht, Kuma prüft erneut",
+      "maintenance": "{{name}} ist in Wartung",
+      "pushDown": "{{name}}: Lebenszeichen ausgeblieben",
+      "pushUp": "{{name}}: Lebenszeichen wieder da",
+      "groupDown": "{{name}}: Eine Prüfung darin schlägt fehl",
+      "groupUp": "{{name}}: Alles darin wieder erreichbar",
+      "certExpiry_one": "Zertifikat von {{host}} läuft in 1 Tag ab",
+      "certExpiry_other": "Zertifikat von {{host}} läuft in {{count}} Tagen ab",
+      "everyHours_one": "erwartet jede Stunde",
+      "everyHours_other": "erwartet alle {{count}} Std.",
+      "everyMinutes_one": "erwartet jede Minute",
+      "everyMinutes_other": "erwartet alle {{count}} Min.",
+      "why": {
+        "refused": "Nimmt keine Verbindung an. Meist läuft der Container oder Dienst nicht, oder er hört auf einem anderen Port.",
+        "timeout": "Antwortet nicht rechtzeitig. Der Rechner ist weg, überlastet, oder eine Firewall verschluckt die Anfrage.",
+        "dns": "Der Name lässt sich nicht auflösen. Der DNS-Eintrag fehlt, oder der DNS-Server ist nicht erreichbar.",
+        "unreachable": "Der Rechner ist im Netz nicht erreichbar. Meist ist er aus, oder Kabel, WLAN oder VLAN stimmen nicht.",
+        "ping": "Antwortet nicht auf Ping. Der Rechner ist aus oder nicht im Netz.",
+        "reset": "Die Verbindung brach mittendrin ab. Oft startet der Dienst gerade neu.",
+        "http500": "Die App meldet einen internen Fehler ({{code}}). Ihr Protokoll sagt mehr.",
+        "httpProxy": "Der Reverse Proxy erreicht die App dahinter nicht ({{code}}). Meist läuft sie nicht oder startet gerade.",
+        "http4xx": "Unerwartete Antwort ({{code}}). Die Adresse stimmt nicht mehr, oder es braucht eine Anmeldung (401/403).",
+        "certExpired": "Das Zertifikat ist abgelaufen. Browser und Apps verweigern die Verbindung.",
+        "certInvalid": "Das Zertifikat ist ungültig oder passt nicht zur Adresse. Browser und Apps verweigern die Verbindung.",
+        "certExpiry": "Danach warnen Browser, Apps verweigern die Verbindung. Meist erneuert der Reverse Proxy es selbst, sonst von Hand.",
+        "push": "Der Auftrag hat sich nicht gemeldet: Er lief nicht, schlug fehl oder erreichte Kuma nicht.",
+        "group": "Welche, meldet die Prüfung selbst.",
+        "upAgain": "Antwortet wieder normal."
+      }
+    }
   }
 }

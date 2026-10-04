@@ -32,7 +32,7 @@ from sqlalchemy.orm import Session
 from .. import crypto
 from ..db import SessionLocal
 from ..models import CRIT, INFO, RANK, WARN, Delivery, Event, Source, Target, Thread, utcnow
-from . import bus, settings_service, webpush
+from . import bus, settings_service, texts, webpush
 from . import sources as sources_service
 
 logger = logging.getLogger("nexsift.push")
@@ -141,14 +141,37 @@ def _storming(db: Session, now: datetime) -> bool:
     return False
 
 
+def _language(db: Session) -> str:
+    return str(settings_service.get(db, "push_language") or texts.FALLBACK)
+
+
+def _event_title(db: Session, event: Event) -> str:
+    return texts.title(event.texts, _language(db)) or event.title
+
+
+def _event_body(db: Session, event: Event) -> str:
+    body = texts.body(event.texts, _language(db))
+    return event.body if body is None else body
+
+
+def _thread_title(db: Session, thread: Thread, event: Event | None = None) -> str:
+    """The line's title in the push language, when nexsift worded it; a rule's bundle title stays as it is."""
+    if event is None:
+        event = db.scalar(select(Event).where(Event.thread_id == thread.id).order_by(Event.id.desc()).limit(1))
+    if event is not None and event.texts and event.title == thread.title:
+        return _event_title(db, event)
+    return thread.title
+
+
 def _first(db: Session, source: Source, thread: Thread, event: Event) -> None:
     now = utcnow()
+    title = _thread_title(db, thread, event)
     if _storming(db, now):
-        _storm_swallowed.append((source.name, thread.title))
+        _storm_swallowed.append((source.name, title))
         thread.pushed = True
         thread.since_push = 0
         return
-    if _enqueue(db, thread, "first", f"{source.name}: {thread.title}", event.body, thread.priority, _link(event)):
+    if _enqueue(db, thread, "first", f"{source.name}: {title}", _event_body(db, event), thread.priority, _link(event)):
         thread.pushed = True
         thread.since_push = 0
 
@@ -161,7 +184,15 @@ def on_event(db: Session, source: Source, thread: Thread, event: Event, *, is_ne
         return
     window = timedelta(minutes=int(settings_service.get(db, "bundle_minutes")))
     if mode == "single":
-        _enqueue(db, thread, "first", f"{source.name}: {event.title}", event.body, event.priority, _link(event))
+        _enqueue(
+            db,
+            thread,
+            "first",
+            f"{source.name}: {_event_title(db, event)}",
+            _event_body(db, event),
+            event.priority,
+            _link(event),
+        )
         thread.pushed = True
         return
     if mode == "window":
@@ -188,13 +219,17 @@ def on_resolved(db: Session, thread: Thread) -> None:
     name = source.name if source else "nexsift"
     # Same targets as the alarm, but not as loud: found with a real ntfy and Gotify on 01.10.2026, where the
     # all-clear arrived with the alarm's top priority.
-    took = _took((thread.resolved_at or utcnow()) - thread.first_at)
+    language = _language(db)
+    took = _took((thread.resolved_at or utcnow()) - thread.first_at, language)
+    # The all-clear is the newest event; when nexsift worded it, it says so in the push language too.
+    latest = db.scalar(select(Event).where(Event.thread_id == thread.id).order_by(Event.id.desc()).limit(1))
+    said = _event_title(db, latest) if latest is not None and latest.title == thread.resolved_by else ""
     _enqueue(
         db,
         thread,
         "allclear",
-        f"{name}: {thread.resolved_by or 'resolved'}",
-        f"Resolved after {took}",
+        f"{name}: {said or thread.resolved_by or texts.say('push.resolved', language)}",
+        texts.say("push.resolvedAfter", language, took=took),
         thread.priority,
         send_as=INFO,
     )
@@ -202,12 +237,14 @@ def on_resolved(db: Session, thread: Thread) -> None:
     thread.since_push = 0
 
 
-def _took(span: timedelta) -> str:
+def _took(span: timedelta, language: str = texts.FALLBACK) -> str:
     minutes = max(1, round(span.total_seconds() / 60))
     if minutes < 120:
-        return f"{minutes} min"
+        return texts.say("push.minutes", language, count=minutes)
     hours = minutes / 60
-    return f"{hours:.0f} h" if hours < 48 else f"{hours / 24:.0f} days"
+    if hours < 48:
+        return texts.say("push.hours", language, count=round(hours))
+    return texts.say("push.days", language, count=round(hours / 24))
 
 
 def due_windows(db: Session) -> int:
@@ -220,20 +257,15 @@ def due_windows(db: Session) -> int:
         source = db.get(Source, thread.source_id)
         name = source.name if source else "nexsift"
         mode = _mode(db, thread)
+        language = _language(db)
         if thread.since_push > 0 and not thread.resolved_at:
+            title = f"{name}: {_thread_title(db, thread)}"
             if mode == "window" and not thread.pushed:
-                count += _enqueue(
-                    db, thread, "first", f"{name}: {thread.title}", f"{thread.since_push} messages", thread.priority
-                )
+                body = texts.say("push.messages", language, count=thread.since_push)
+                count += _enqueue(db, thread, "first", title, body, thread.priority)
             elif mode == "immediate":
-                count += _enqueue(
-                    db,
-                    thread,
-                    "followup",
-                    f"{name}: {thread.title}",
-                    f"+{thread.since_push} more since the first message",
-                    thread.priority,
-                )
+                body = texts.say("push.more", language, count=thread.since_push)
+                count += _enqueue(db, thread, "followup", title, body, thread.priority)
             thread.pushed = True
         thread.since_push = 0
         thread.window_until = None
@@ -242,7 +274,7 @@ def due_windows(db: Session) -> int:
         if _storm_swallowed:
             sources_hit = sorted({name for name, _ in _storm_swallowed})
             lines = "\n".join(f"{name}: {title}" for name, title in _storm_swallowed[:15])
-            title = f"{len(_storm_swallowed)} more critical messages from {len(sources_hit)} sources"
+            title = texts.say("push.storm", _language(db), count=len(_storm_swallowed), sources=len(sources_hit))
             count += _enqueue(db, None, "storm", title, lines, CRIT)
             _storm_swallowed.clear()
         _storm_until = None
@@ -356,9 +388,10 @@ def _pushover_reason(response: httpx.Response) -> str:
 
 
 def _header(text: str) -> str:
-    """HTTP headers are Latin-1; ntfy reads RFC 2047 for everything else."""
+    """httpx sends header values as ASCII (an umlaut raised before 0.7.0 and the push was lost); ntfy reads RFC 2047
+    for everything else."""
     try:
-        text.encode("latin-1")
+        text.encode("ascii")
         return text
     except UnicodeEncodeError:
         import base64

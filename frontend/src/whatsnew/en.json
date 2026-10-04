@@ -102,6 +102,30 @@
       "small": [
         "When Pushover refuses a push, the target says why, for instance that the token is wrong."
       ]
+    },
+    "0.7.0": {
+      "lead": "Open problems can now be closed by hand, and a lot works with a right click and for several messages at once.",
+      "sections": [
+        {
+          "title": "Done, even without an all-clear",
+          "body": "Some senders never say \"back again\", such as Synology about a stopped container. You close such problems yourself now: open the message and tap Done. In Critical open one button closes them all, only those of the chosen source if one is selected. If the same problem comes back, it is a new message.",
+          "where": "Inbox › message › Done, or Critical open › All done"
+        },
+        {
+          "title": "Right click",
+          "body": "A right click on a message shows everything you can do with it: mark it done, archive, read, mute the source, delete. On a source on the left it is about all of its messages, on Critical open about every open problem.",
+          "where": "Inbox › right click on a message, a source or a view"
+        },
+        {
+          "title": "Several at once",
+          "body": "Ctrl and click adds single messages, Shift and click a range, Ctrl+A all of them. Or click the mark on the left of a line; on a phone a tap is enough. The top then says how many are selected, and Done, Archive, Read and Delete act on all of them.",
+          "where": "Inbox › mark on the left of a line"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "New keys: r marks done, x selects, Shift+F10 opens the menu. The overview comes with ?."
+      ]
     }
   }
 }

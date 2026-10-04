@@ -102,6 +102,30 @@
       "small": [
         "Lehnt Pushover einen Push ab, sagt das Ziel warum, etwa dass das Token falsch ist."
       ]
+    },
+    "0.7.0": {
+      "lead": "Offene Probleme lassen sich jetzt von Hand schließen, und vieles geht per Rechtsklick und für mehrere Meldungen auf einmal.",
+      "sections": [
+        {
+          "title": "Erledigt, auch ohne Entwarnung",
+          "body": "Manche Absender schicken nie ein „wieder da“, etwa die Synology bei einem gestoppten Container. Solche Probleme schließt du jetzt selbst: Meldung öffnen und auf Erledigt tippen. In Kritisch offen erledigt ein Knopf alles auf einmal, bei gewählter Quelle nur deren Probleme. Kommt dasselbe Problem wieder, ist es eine neue Meldung.",
+          "where": "Posteingang › Meldung › Erledigt, oder Kritisch offen › Alle erledigen"
+        },
+        {
+          "title": "Rechtsklick",
+          "body": "Ein Rechtsklick auf eine Meldung zeigt alles, was mit ihr geht: erledigen, archivieren, gelesen, Quelle stummschalten, löschen. Auf einer Quelle links geht es um alle ihre Meldungen, auf Kritisch offen um alle offenen Probleme.",
+          "where": "Posteingang › Rechtsklick auf eine Meldung, eine Quelle oder eine Ansicht"
+        },
+        {
+          "title": "Mehrere auf einmal",
+          "body": "Mit Strg und Klick wählst du einzelne dazu, mit Shift und Klick einen Bereich, mit Strg+A alle. Oder du klickst auf das Zeichen links in der Zeile, am Handy reicht Antippen. Oben steht dann, wie viele ausgewählt sind, und Erledigt, Archivieren, Gelesen und Löschen wirken auf alle.",
+          "where": "Posteingang › Zeichen links in einer Zeile"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Neue Tasten: r erledigt, x wählt aus, Shift+F10 öffnet das Menü. Die Übersicht kommt mit ?."
+      ]
     }
   }
 }

@@ -352,3 +352,53 @@ def test_untouched_built_in_rules_get_the_new_words_edited_ones_keep_theirs(clie
         warning = db.query(Rule).filter(Rule.built_in == "keywords-warning").one()
         assert "FEHLGESCHLAGEN" in critical.conditions[0]["value"]
         assert warning.conditions[0]["value"] == "WARN|MINE"
+
+
+def test_archive_all_of_a_view_and_back(client: TestClient, operator: dict) -> None:
+    nas = _hook(client, add_source(client, "webhook", name="NAS"))
+    pve = _hook(client, add_source(client, "webhook", name="PVE"))
+    nas(title="Container a stopped", priority="critical")
+    nas(title="Disk warm", priority="warning")
+    pve(title="VM 104 stopped", priority="critical")
+    [read] = [thread for thread in inbox(client) if thread["title"] == "Disk warm"]
+    client.post("/api/threads/state", json={"ids": [read["id"]], "state": "read"}, headers=UI)
+    result = client.post("/api/threads/archive-all", json={"view": "crit"}, headers=UI).json()
+    assert len(result["changed"]) == 2 and set(result["before"]) == {"unread"}
+    assert [thread["title"] for thread in inbox(client)] == ["Disk warm"]
+    # Everything else; the states before come back so the undo restores them.
+    result = client.post("/api/threads/archive-all", json={"view": "inbox"}, headers=UI).json()
+    assert result["before"] == {"read": [read["id"]]}
+    assert inbox(client) == [] and len(inbox(client, "archived")) == 3
+    # What is archived already does not count again, so the undo would not bring it out of the archive.
+    assert client.post("/api/threads/archive-all", json={"view": "all"}, headers=UI).json()["changed"] == []
+    nas_id = read["source_id"]
+    assert len(_changed(client, "unarchive-all", source_id=nas_id)) == 2
+    assert sorted(thread["title"] for thread in inbox(client)) == ["Container a stopped", "Disk warm"]
+
+
+def test_delete_everything_in_the_archive_or_of_a_source(client: TestClient, operator: dict) -> None:
+    nas = _hook(client, add_source(client, "webhook", name="NAS"))
+    pve = _hook(client, add_source(client, "webhook", name="PVE"))
+    for title in ("one", "two", "three"):
+        nas(title=title, priority="warning")
+    pve(title="VM 104 stopped", priority="critical")
+    threads = inbox(client)
+    nas_id = next(thread["source_id"] for thread in threads if thread["title"] == "one")
+    one = next(thread["id"] for thread in threads if thread["title"] == "one")
+    client.post("/api/threads/state", json={"ids": [one], "state": "archived"}, headers=UI)
+    assert client.get(f"/api/threads/counts?source_id={nas_id}").json()["views"] == {
+        "inbox": 2,
+        "unread": 2,
+        "crit": 0,
+        "archived": 1,
+    }
+    assert _changed(client, "delete-all", view="archived") == [one]
+    assert inbox(client, "archived") == [] and len(inbox(client)) == 3
+    # "all" of a source: its inbox and its archive, never another source.
+    client.post("/api/threads/archive-all", json={"view": "inbox", "source_id": nas_id}, headers=UI)
+    nas(title="four", priority="warning")
+    deleted = _changed(client, "delete-all", view="all", source_id=nas_id)
+    assert len(deleted) == 3
+    assert [thread["title"] for thread in inbox(client)] == ["VM 104 stopped"]
+    assert len(_changed(client, "restore", ids=deleted + [one])) == 4
+    assert len(inbox(client)) + len(inbox(client, "archived")) == 5

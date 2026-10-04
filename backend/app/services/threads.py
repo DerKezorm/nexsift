@@ -17,6 +17,8 @@ PAGE = 100
 UNDO_MINUTES = 10
 #: ``resolved_by`` of a problem closed in the interface; the interface shows it in its own words.
 BY_HAND = "Marked as done by hand"
+#: Most threads one action touches: "all in the archive" with its undo, without the database choking on the list.
+BULK = 10_000
 
 
 def _view_filter(query: Select, view: str) -> Select:
@@ -158,8 +160,14 @@ def detail(db: Session, thread: Thread, limit: int = 200) -> dict[str, Any]:
     return data
 
 
-def counts(db: Session) -> dict[str, Any]:
-    views = {view: int(db.scalar(_view_filter(select(func.count()).select_from(Thread), view)) or 0) for view in VIEWS}
+def counts(db: Session, source_id: int | None = None) -> dict[str, Any]:
+    def count(view: str) -> int:
+        query = _view_filter(select(func.count()).select_from(Thread), view)
+        if source_id:
+            query = query.where(Thread.source_id == source_id)
+        return int(db.scalar(query) or 0)
+
+    views = {view: count(view) for view in VIEWS}
     unread = dict(
         db.execute(
             select(Thread.source_id, func.count())
@@ -172,7 +180,7 @@ def counts(db: Session) -> dict[str, Any]:
 
 def set_state(db: Session, ids: list[int], state: str) -> list[int]:
     changed = []
-    for thread in db.scalars(select(Thread).where(Thread.id.in_(ids[:500]), Thread.deleted_at.is_(None))):
+    for thread in db.scalars(select(Thread).where(Thread.id.in_(ids[:BULK]), Thread.deleted_at.is_(None))):
         thread.state = state
         changed.append(thread.id)
     db.commit()
@@ -183,7 +191,7 @@ def resolve(db: Session, ids: list[int]) -> list[int]:
     """Close open problems by hand, as if the all-clear had come. Already closed ones stay as they were."""
     now = utcnow()
     changed = []
-    query = select(Thread).where(Thread.id.in_(ids[:500]), Thread.deleted_at.is_(None), Thread.resolved_at.is_(None))
+    query = select(Thread).where(Thread.id.in_(ids[:BULK]), Thread.deleted_at.is_(None), Thread.resolved_at.is_(None))
     for thread in db.scalars(query):
         thread.resolved_at = now
         thread.resolved_by = BY_HAND
@@ -197,13 +205,13 @@ def resolve_all(db: Session, source_id: int | None) -> list[int]:
     query = _view_filter(select(Thread.id), "crit")
     if source_id:
         query = query.where(Thread.source_id == source_id)
-    return resolve(db, list(db.scalars(query.limit(500))))
+    return resolve(db, list(db.scalars(query.limit(BULK))))
 
 
 def reopen(db: Session, ids: list[int]) -> list[int]:
     """Undo for ``resolve``: only what was closed by hand opens again, an all-clear from the sender stays."""
     changed = []
-    query = select(Thread).where(Thread.id.in_(ids[:500]), Thread.deleted_at.is_(None), Thread.resolved_by == BY_HAND)
+    query = select(Thread).where(Thread.id.in_(ids[:BULK]), Thread.deleted_at.is_(None), Thread.resolved_by == BY_HAND)
     for thread in db.scalars(query):
         thread.resolved_at = None
         thread.resolved_by = ""
@@ -215,7 +223,7 @@ def reopen(db: Session, ids: list[int]) -> list[int]:
 def delete(db: Session, ids: list[int]) -> list[int]:
     now = utcnow()
     changed = []
-    for thread in db.scalars(select(Thread).where(Thread.id.in_(ids[:500]), Thread.deleted_at.is_(None))):
+    for thread in db.scalars(select(Thread).where(Thread.id.in_(ids[:BULK]), Thread.deleted_at.is_(None))):
         thread.deleted_at = now
         changed.append(thread.id)
     db.commit()
@@ -224,11 +232,45 @@ def delete(db: Session, ids: list[int]) -> list[int]:
 
 def restore(db: Session, ids: list[int]) -> list[int]:
     changed = []
-    for thread in db.scalars(select(Thread).where(Thread.id.in_(ids[:500]), Thread.deleted_at.is_not(None))):
+    for thread in db.scalars(select(Thread).where(Thread.id.in_(ids[:BULK]), Thread.deleted_at.is_not(None))):
         thread.deleted_at = None
         changed.append(thread.id)
     db.commit()
     return changed
+
+
+def _everything(db: Session, view: str, source_id: int | None) -> list[Thread]:
+    """All threads of a view, optionally of one source. "all" is every thread, archived ones too."""
+    query = select(Thread).where(Thread.deleted_at.is_(None)) if view == "all" else _view_filter(select(Thread), view)
+    if source_id:
+        query = query.where(Thread.source_id == source_id)
+    return list(db.scalars(query.order_by(Thread.id).limit(BULK)))
+
+
+def archive_all(db: Session, view: str, source_id: int | None) -> dict[str, list[int]]:
+    """Everything of a view into the archive. Returns the ids by the state they had, for the undo."""
+    before: dict[str, list[int]] = {}
+    for thread in _everything(db, view, source_id):
+        if thread.state == ARCHIVED:
+            continue
+        before.setdefault(thread.state, []).append(thread.id)
+        thread.state = ARCHIVED
+    db.commit()
+    return before
+
+
+def unarchive_all(db: Session, source_id: int | None) -> list[int]:
+    changed = []
+    for thread in _everything(db, "archived", source_id):
+        thread.state = READ
+        changed.append(thread.id)
+    db.commit()
+    return changed
+
+
+def delete_all(db: Session, view: str, source_id: int | None) -> list[int]:
+    """Like deleting one by one: restorable for ``UNDO_MINUTES``, then gone."""
+    return delete(db, [thread.id for thread in _everything(db, view, source_id)])
 
 
 def mark_all_read(db: Session, view: str, source_id: int | None) -> list[int]:

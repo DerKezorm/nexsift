@@ -5,6 +5,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { api, errorMessage } from '../api/client'
 import type { Source, ThreadDetail as Detail, ThreadSummary, View } from '../api/types'
 import { ContextMenu, type MenuEntry } from '../components/ContextMenu'
+import { Dialog } from '../components/Dialog'
 import { Help } from '../components/Help'
 import { useNotice } from '../components/Notice'
 import { SourceMark } from '../components/SourceMark'
@@ -12,6 +13,7 @@ import { Symbol, type SymbolName } from '../components/Symbol'
 import { ShortcutHelp } from '../components/inbox/ShortcutHelp'
 import { ThreadDetail } from '../components/inbox/ThreadDetail'
 import { Welcome } from '../components/inbox/Welcome'
+import { Button } from '../components/ui'
 import { isMuted, useCounts, useSources, useTargets } from '../lib/data'
 import { useLiveVersion } from '../lib/live'
 import { PRIORITY_DOT, RESOLVED_BY_HAND, resolvable } from '../lib/priority'
@@ -412,6 +414,71 @@ export function InboxPage() {
     [picked, pickedThreads, threadMenu, t],
   )
 
+  // Everything of a view or a source at once, on the server: also what is not loaded into the list yet.
+  const [confirm, setConfirm] = useState<{ title: string; text: string; run: () => void } | null>(null)
+
+  const archiveAll = useCallback(
+    async (inView: View, sourceId: number | null) => {
+      try {
+        const result = await api.post<{ changed: number[]; before: Record<string, number[]> }>('/api/threads/archive-all', { view: inView, source_id: sourceId })
+        if (result.changed.length === 0) return notify({ text: t('inbox.nothingHere') })
+        leave(result.changed)
+        const undo = () => {
+          for (const [state, ids] of Object.entries(result.before)) void api.post('/api/threads/state', { ids, state }).catch((caught) => notify({ text: errorMessage(caught) }))
+        }
+        notify({ text: t('inbox.archived', { count: result.changed.length }), action: { label: t('inbox.undo'), run: undo } })
+      } catch (caught) {
+        notify({ text: errorMessage(caught) })
+      }
+    },
+    [leave, notify, t],
+  )
+
+  const unarchiveAll = useCallback(
+    async (sourceId: number | null) => {
+      try {
+        const result = await api.post<{ changed: number[] }>('/api/threads/unarchive-all', { source_id: sourceId })
+        if (result.changed.length === 0) return notify({ text: t('inbox.nothingHere') })
+        leave(result.changed)
+        const undo = () => void api.post('/api/threads/state', { ids: result.changed, state: 'archived' }).catch((caught) => notify({ text: errorMessage(caught) }))
+        notify({ text: t('inbox.movedBack', { count: result.changed.length }), action: { label: t('inbox.undo'), run: undo } })
+      } catch (caught) {
+        notify({ text: errorMessage(caught) })
+      }
+    },
+    [leave, notify, t],
+  )
+
+  const deleteAll = useCallback(
+    async (inView: View | 'all', sourceId: number | null) => {
+      try {
+        const result = await api.post<{ changed: number[] }>('/api/threads/delete-all', { view: inView, source_id: sourceId })
+        leave(result.changed)
+        const undo = () => void api.post('/api/threads/restore', { ids: result.changed }).catch((caught) => notify({ text: errorMessage(caught) }))
+        notify({ text: t('inbox.deleted', { count: result.changed.length }), action: { label: t('inbox.undo'), run: undo } })
+      } catch (caught) {
+        notify({ text: errorMessage(caught) })
+      }
+    },
+    [leave, notify, t],
+  )
+
+  /** Deleting everything asks first and names how many: an undo that runs out after a few seconds is not enough. */
+  async function askDeleteAll(source: Source | null) {
+    try {
+      const numbers = source ? (await api.get<{ views: Record<View, number> }>(`/api/threads/counts?source_id=${source.id}`)).views : viewCounts
+      const count = source ? (numbers?.inbox ?? 0) + (numbers?.archived ?? 0) : (numbers?.archived ?? 0)
+      if (count === 0) return notify({ text: t('inbox.nothingHere') })
+      setConfirm({
+        title: source ? t('inbox.confirm.sourceTitle', { count, name: source.name }) : t('inbox.confirm.archiveTitle', { count }),
+        text: source ? t('inbox.confirm.sourceText') : t('inbox.confirm.archiveText'),
+        run: () => void deleteAll(source ? 'all' : 'archived', source?.id ?? null),
+      })
+    } catch (caught) {
+      notify({ text: errorMessage(caught) })
+    }
+  }
+
   function openSourceMenu(source: Source, x: number, y: number) {
     const entries: MenuEntry[] = [
       {
@@ -421,17 +488,26 @@ export function InboxPage() {
       },
       { label: t('inbox.menu.readAllSource'), symbol: 'check', run: () => void markAllRead('inbox', source.id) },
       { label: t('inbox.menu.resolveAllSource'), symbol: 'resolved', run: () => void resolveAll(source.id) },
+      { label: t('inbox.menu.archiveAllSource'), symbol: 'archive', run: () => void archiveAll('inbox', source.id) },
       'separator',
       { label: isMuted(source) ? t('inbox.action.unmute') : t('inbox.action.mute'), symbol: 'mute', run: () => void muteSource(source) },
+      'separator',
+      { label: t('inbox.menu.deleteAllSource'), symbol: 'trash', danger: true, run: () => void askDeleteAll(source) },
     ]
     setMenu({ x, y, label: source.name, entries })
   }
 
   function openViewMenu(key: View, x: number, y: number): boolean {
     const entries: MenuEntry[] = []
-    if (key !== 'archived') entries.push({ label: t('inbox.menu.readAllView'), symbol: 'check', run: () => void markAllRead(key, null) })
-    if (key === 'crit') entries.push({ label: t('inbox.menu.resolveAll'), symbol: 'resolved', run: () => void resolveAll(null) })
-    if (entries.length === 0) return false
+    if (key === 'archived') {
+      entries.push({ label: t('inbox.menu.unarchiveAll'), symbol: 'inbox', run: () => void unarchiveAll(null) })
+      entries.push('separator')
+      entries.push({ label: t('inbox.menu.deleteAll'), symbol: 'trash', danger: true, run: () => void askDeleteAll(null) })
+    } else {
+      entries.push({ label: t('inbox.menu.readAllView'), symbol: 'check', run: () => void markAllRead(key, null) })
+      if (key === 'crit') entries.push({ label: t('inbox.menu.resolveAll'), symbol: 'resolved', run: () => void resolveAll(null) })
+      entries.push({ label: t('inbox.menu.archiveAll'), symbol: 'archive', run: () => void archiveAll(key, null) })
+    }
     setMenu({ x, y, label: t(`inbox.view.${key}`), entries })
     return true
   }
@@ -705,6 +781,25 @@ export function InboxPage() {
 
       {help && <ShortcutHelp onClose={() => setHelp(false)} />}
       {menu && <ContextMenu x={menu.x} y={menu.y} label={menu.label} entries={menu.entries} onClose={closeMenu} />}
+      {confirm && (
+        <Dialog title={confirm.title} onClose={() => setConfirm(null)}>
+          <p className="text-sm text-mist-300">{confirm.text}</p>
+          <div className="mt-5 flex justify-end gap-2">
+            <Button variant="ghost" onClick={() => setConfirm(null)}>
+              {t('common.cancel')}
+            </Button>
+            <Button
+              variant="danger"
+              onClick={() => {
+                confirm.run()
+                setConfirm(null)
+              }}
+            >
+              {t('inbox.confirm.delete')}
+            </Button>
+          </div>
+        </Dialog>
+      )}
     </div>
   )
 }

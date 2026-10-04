@@ -17,7 +17,7 @@ router = APIRouter(prefix="/api/threads", tags=["threads"])
 
 
 class StateIn(BaseModel):
-    ids: list[int] = Field(max_length=500)
+    ids: list[int] = Field(max_length=threads_service.BULK)
     state: str
 
 
@@ -45,9 +45,9 @@ def listing(
     return threads_service.listing(db, view, source_id, q, before)
 
 
-@router.get("/counts", summary="Numbers for the side bar")
-def counts(account: CurrentAccount, db: DbSession) -> dict[str, Any]:
-    return threads_service.counts(db)
+@router.get("/counts", summary="Numbers for the side bar, optionally of one source")
+def counts(account: CurrentAccount, db: DbSession, source_id: int | None = None) -> dict[str, Any]:
+    return threads_service.counts(db, source_id)
 
 
 @router.get("/{thread_id}", summary="One thread with its events and pushes")
@@ -66,7 +66,7 @@ def set_state(payload: StateIn, account: CurrentAccount, db: DbSession) -> dict[
 
 
 class IdsIn(BaseModel):
-    ids: list[int] = Field(max_length=500)
+    ids: list[int] = Field(max_length=threads_service.BULK)
 
 
 class SourceIn(BaseModel):
@@ -102,6 +102,33 @@ def delete_many(payload: IdsIn, account: CurrentAccount, db: DbSession) -> dict[
 @router.post("/restore", summary="Undo deleting several")
 def restore_many(payload: IdsIn, account: CurrentAccount, db: DbSession) -> dict[str, Any]:
     return _changed(threads_service.restore(db, payload.ids))
+
+
+class ViewIn(BaseModel):
+    #: "all": every thread, archived ones too (everything of a source).
+    view: Literal["inbox", "unread", "crit", "archived", "all"] = "inbox"
+    source_id: int | None = None
+
+
+@router.post("/archive-all", summary="Everything of a view into the archive; the old states come back for the undo")
+def archive_all(payload: ViewIn, account: CurrentAccount, db: DbSession) -> dict[str, Any]:
+    before = threads_service.archive_all(db, payload.view, payload.source_id)
+    bus.publish("threads")
+    return {"changed": [thread_id for ids in before.values() for thread_id in ids], "before": before}
+
+
+@router.post("/unarchive-all", summary="Everything in the archive back into the inbox")
+def unarchive_all(payload: SourceIn, account: CurrentAccount, db: DbSession) -> dict[str, Any]:
+    changed = threads_service.unarchive_all(db, payload.source_id)
+    bus.publish("threads")
+    return {"changed": changed}
+
+
+@router.post("/delete-all", summary="Delete everything of a view; can be undone for a few minutes")
+def delete_all(payload: ViewIn, account: CurrentAccount, db: DbSession) -> dict[str, Any]:
+    changed = threads_service.delete_all(db, payload.view, payload.source_id)
+    bus.publish("threads")
+    return {"changed": changed}
 
 
 @router.post("/read-all", summary="Mark everything in a view as read")

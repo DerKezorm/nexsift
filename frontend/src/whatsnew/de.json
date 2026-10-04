@@ -165,6 +165,20 @@
       "small": [
         "Das gilt auch, wenn du mit u oder dem Knopf selbst als gelesen markierst."
       ]
+    },
+    "0.7.3": {
+      "lead": "Der authentik-Knopf kommt jetzt mit einem zweiten nexsift am selben authentik zurecht.",
+      "sections": [
+        {
+          "title": "Zweites nexsift am selben authentik",
+          "body": "Hängt an deinem authentik schon ein anderes nexsift, legt der Knopf jetzt einen eigenen Anbieter und eine eigene Anwendung an, mit der Adresse dieser Instanz im Namen, etwa „nexsift (nexsift.example.com)“. Bisher übernahm er die vorhandenen und schickte die Anmeldung der ersten Instanz hierher, dort ging dann nichts mehr. Läuft der Knopf auf derselben Instanz noch einmal, ändert er wie bisher das Vorhandene.",
+          "where": "Einstellungen › Anmeldung › authentik"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Die Schritte der Einrichtung nennen keinen festen Namen mehr, weil Anbieter und Anwendung jetzt auch anders heißen können."
+      ]
     }
   }
 }

@@ -165,6 +165,20 @@
       "small": [
         "The same holds when you mark it read yourself with u or the button."
       ]
+    },
+    "0.7.3": {
+      "lead": "The authentik button now copes with a second nexsift at the same authentik.",
+      "sections": [
+        {
+          "title": "A second nexsift at the same authentik",
+          "body": "If another nexsift is already connected to your authentik, the button now creates a provider and an application of its own, with this instance's address in the name, such as “nexsift (nexsift.example.com)”. Until now it took over the existing ones and sent the first instance's sign-in here, which broke it. Running the button again on the same instance still updates what is there.",
+          "where": "Settings › Sign-in › authentik"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "The setup steps no longer name a fixed provider and application, since they can now carry other names."
+      ]
     }
   }
 }

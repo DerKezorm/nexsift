@@ -513,10 +513,10 @@
       "lead": "nexsift creates everything in authentik itself. It needs an API token once for that.",
       "setUp": "Set up",
       "step": {
-        "application": "Application \"nexsift\" created",
+        "application": "Application created",
         "filled": "Client ID and secret filled into nexsift",
         "mapping": "Mapping for email_verified created",
-        "provider": "Provider \"nexsift\" created, redirect {{redirect}}",
+        "provider": "Provider created, redirect {{redirect}}",
         "reached": "authentik reached",
         "signingKey": "Signing key chosen (RS256)"
       },

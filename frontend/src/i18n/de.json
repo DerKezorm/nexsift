@@ -513,10 +513,10 @@
       "lead": "nexsift legt in authentik alles selbst an. Dafür braucht es einmal einen API-Token.",
       "setUp": "Einrichten",
       "step": {
-        "application": "Anwendung „nexsift“ angelegt",
+        "application": "Anwendung angelegt",
         "filled": "Client-ID und Geheimnis in nexsift eingetragen",
         "mapping": "Zuordnung für email_verified angelegt",
-        "provider": "Anbieter „nexsift“ angelegt, Weiterleitung {{redirect}}",
+        "provider": "Anbieter angelegt, Weiterleitung {{redirect}}",
         "reached": "authentik erreicht",
         "signingKey": "Signaturschlüssel gewählt (RS256)"
       },

@@ -88,9 +88,12 @@ export function InboxPage() {
   }, [view, sourceFilter, search])
 
   const knownIds = useRef<Set<number>>(new Set())
+  // Read while looking at "unread": those lines stay until the view changes, so nothing vanishes while being read.
+  const keptRead = useRef<Set<number>>(new Set())
+  const keep = useCallback(() => [...keptRead.current].slice(-500).map((id) => `&keep=${id}`).join(''), [])
   const load = useCallback(async () => {
     try {
-      const page = await api.get<Page>(`/api/threads?${params}`)
+      const page = await api.get<Page>(`/api/threads?${params}${keep()}`)
       // Rows that were not there at the last load glow once.
       const known = knownIds.current
       setFresh(new Set(page.items.filter((item) => known.size > 0 && !known.has(item.id)).map((item) => item.id)))
@@ -103,10 +106,11 @@ export function InboxPage() {
     } finally {
       setLoaded(true)
     }
-  }, [params])
+  }, [params, keep])
 
   useEffect(() => {
     knownIds.current = new Set()
+    keptRead.current = new Set()
     void load()
   }, [load])
   useEffect(() => {
@@ -115,7 +119,7 @@ export function InboxPage() {
 
   async function loadMore() {
     if (!next) return
-    const page = await api.get<Page>(`/api/threads?${params}&before=${encodeURIComponent(next)}`)
+    const page = await api.get<Page>(`/api/threads?${params}&before=${encodeURIComponent(next)}${keep()}`)
     setThreads((current) => [...current, ...page.items.filter((item) => !current.some((known) => known.id === item.id))])
     setNext(page.next)
   }
@@ -151,11 +155,12 @@ export function InboxPage() {
   useEffect(() => {
     if (!selectedUnread) return
     const timer = window.setTimeout(() => {
+      if (view === 'unread') keptRead.current.add(selectedUnread)
       void api.post('/api/threads/state', { ids: [selectedUnread], state: 'read' }).catch(() => undefined)
       setThreads((current) => current.map((thread) => (thread.id === selectedUnread ? { ...thread, state: 'read' } : thread)))
     }, 900)
     return () => window.clearTimeout(timer)
-  }, [selectedUnread])
+  }, [selectedUnread, view])
 
   useEffect(() => {
     if (selectedId === null) return
@@ -261,10 +266,11 @@ export function InboxPage() {
       if (list.length === 0) return
       const state = list.some((thread) => thread.state === 'unread') ? 'read' : 'unread'
       const ids = new Set(list.map((thread) => thread.id))
+      if (view === 'unread' && state === 'read') ids.forEach((id) => keptRead.current.add(id))
       setThreads((current) => current.map((item) => (ids.has(item.id) ? { ...item, state } : item)))
       await api.post('/api/threads/state', { ids: [...ids], state }).catch((caught) => notify({ text: errorMessage(caught) }))
     },
-    [notify],
+    [notify, view],
   )
 
   const destroy = useCallback(

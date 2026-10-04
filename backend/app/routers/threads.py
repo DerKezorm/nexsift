@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from pydantic import BaseModel, Field
 
 from ..deps import CurrentAccount, DbSession
@@ -14,6 +14,9 @@ from ..services import bus
 from ..services import threads as threads_service
 
 router = APIRouter(prefix="/api/threads", tags=["threads"])
+
+# How many just-read threads may stay in "unread": more than anyone reads in one sitting.
+KEEP = 500
 
 
 class StateIn(BaseModel):
@@ -41,8 +44,10 @@ def listing(
     source_id: int | None = None,
     q: str = "",
     before: str | None = None,
+    keep: Annotated[list[int] | None, Query(max_length=KEEP)] = None,
 ) -> dict[str, Any]:
-    return threads_service.listing(db, view, source_id, q, before)
+    """`keep`: threads read in "unread" that should stay in that list for now."""
+    return threads_service.listing(db, view, source_id, q, before, keep)
 
 
 @router.get("/counts", summary="Numbers for the side bar, optionally of one source")

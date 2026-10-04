@@ -21,20 +21,25 @@ BY_HAND = "Marked as done by hand"
 BULK = 10_000
 
 
-def _view_filter(query: Select, view: str) -> Select:
+def _view_filter(query: Select, view: str, keep: list[int] | None = None) -> Select:
     query = query.where(Thread.deleted_at.is_(None))
     if view == "archived":
         return query.where(Thread.state == ARCHIVED)
     query = query.where(Thread.state != ARCHIVED)
     if view == "unread":
+        # What was just read stays in the list until the view changes, like in a mail client.
+        if keep:
+            return query.where(or_(Thread.state == UNREAD, (Thread.state == READ) & Thread.id.in_(keep)))
         return query.where(Thread.state == UNREAD)
     if view == "crit":
         return query.where(Thread.priority == CRIT, Thread.resolved_at.is_(None))
     return query
 
 
-def listing(db: Session, view: str, source_id: int | None, text: str, before: str | None) -> dict[str, Any]:
-    query = _view_filter(select(Thread), view)
+def listing(
+    db: Session, view: str, source_id: int | None, text: str, before: str | None, keep: list[int] | None = None
+) -> dict[str, Any]:
+    query = _view_filter(select(Thread), view, keep)
     if source_id:
         query = query.where(Thread.source_id == source_id)
     needle = text.strip()

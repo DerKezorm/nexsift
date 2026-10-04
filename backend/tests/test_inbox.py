@@ -402,3 +402,21 @@ def test_delete_everything_in_the_archive_or_of_a_source(client: TestClient, ope
     assert [thread["title"] for thread in inbox(client)] == ["VM 104 stopped"]
     assert len(_changed(client, "restore", ids=deleted + [one])) == 4
     assert len(inbox(client)) + len(inbox(client, "archived")) == 5
+
+
+def test_a_thread_read_in_unread_stays_there_while_asked_for(client: TestClient, operator: dict) -> None:
+    """Opening a line in "unread" marks it read; it must not vanish under the reader's eyes."""
+    send = _hook(client, add_source(client, "webhook"))
+    send(title="Read now", priority="warning")
+    send(title="Still unread", priority="warning")
+    send(title="Archived", priority="warning")
+    ids = {thread["title"]: thread["id"] for thread in inbox(client)}
+    client.post("/api/threads/state", json={"ids": [ids["Read now"]], "state": "read"}, headers=UI)
+    client.post("/api/threads/state", json={"ids": [ids["Archived"]], "state": "archived"}, headers=UI)
+    assert [thread["title"] for thread in inbox(client, "unread")] == ["Still unread"]
+    kept = client.get(f"/api/threads?view=unread&keep={ids['Read now']}&keep={ids['Archived']}").json()["items"]
+    assert {thread["title"]: thread["state"] for thread in kept} == {"Still unread": "unread", "Read now": "read"}
+    # Only "unread" keeps them; the other views are what they are.
+    crit = client.get(f"/api/threads?view=crit&keep={ids['Read now']}").json()["items"]
+    assert crit == []
+    assert client.get("/api/threads/counts").json()["views"]["unread"] == 1

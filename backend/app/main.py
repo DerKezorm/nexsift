@@ -23,9 +23,24 @@ from .config import get_settings
 from .db import SessionLocal, init_db
 from .meldungen import meldung
 from .middleware import RequestContextMiddleware, unhandled_error
-from .routers import api_keys, api_v1, auth, backups, ingress, logs, oidc, rules, sources, system, targets, threads
+from .routers import (
+    api_keys,
+    api_v1,
+    auth,
+    backups,
+    icons,
+    ingress,
+    logs,
+    oidc,
+    rules,
+    sources,
+    system,
+    targets,
+    threads,
+)
 from .services import backups as backup_service
 from .services import bus, presets, push, settings_service
+from .services import icons as icon_service
 from .services import logs as log_service
 
 logger = logging.getLogger("nexsift")
@@ -102,6 +117,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
         for task in tasks:
             task.cancel()
         await asyncio.gather(*tasks, return_exceptions=True)
+        await icon_service.close()
         for closer in closers:
             # The SMTP controller stops, the syslog transport and server close.
             try:
@@ -156,7 +172,7 @@ async def _http_error(request: Request, exc: StarletteHTTPException) -> JSONResp
 
 app.add_exception_handler(Exception, unhandled_error)
 
-for module in (system, auth, oidc, sources, threads, rules, targets, ingress, backups, logs, api_keys, api_v1):
+for module in (system, auth, oidc, sources, icons, threads, rules, targets, ingress, backups, logs, api_keys, api_v1):
     app.include_router(module.router)
 
 

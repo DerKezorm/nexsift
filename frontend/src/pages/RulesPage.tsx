@@ -6,6 +6,7 @@ import { api, errorMessage } from '../api/client'
 import type { Condition, Priority, PushMode, Rule, RuleActions, Settings, Source } from '../api/types'
 import { Dialog } from '../components/Dialog'
 import { Explainer, Help } from '../components/Help'
+import { IconField, IconPicker } from '../components/IconPicker'
 import { useNotice } from '../components/Notice'
 import { SourceMark } from '../components/SourceMark'
 import { Symbol } from '../components/Symbol'
@@ -13,6 +14,7 @@ import { Badge, Banner, Button, Field, INPUT_CLASS, PageHeader, Section, SelectF
 import { Targets } from '../components/rules/Targets'
 import { LANGUAGES } from '../i18n'
 import { useSources } from '../lib/data'
+import { iconPreview } from '../lib/icons'
 import { PRIORITY_CHIP } from '../lib/priority'
 import { ruleName } from '../lib/ruleNames'
 import { useLoad } from '../lib/useLoad'
@@ -148,7 +150,7 @@ function RuleRow({
           <span>{t('rules.when')}</span>
           {source ? (
             <span className="inline-flex items-center gap-1 rounded-md bg-ink-800 px-1.5 py-0.5 text-mist-300">
-              <SourceMark kind={source.kind} protocol={source.protocol} className="h-4 w-4 text-[7px]" />
+              <SourceMark kind={source.kind} protocol={source.protocol} src={source.icon_url} className="h-4 w-4 text-[7px]" />
               {source.name}
             </span>
           ) : (
@@ -195,6 +197,12 @@ function ThenChips({ actions }: { actions: RuleActions }) {
       {actions.title_template && (
         <span className="rounded-md bg-ink-800 px-1.5 py-0.5 text-mist-300">
           {t('rules.titleAs')} <code className="font-mono">{actions.title_template}</code>
+        </span>
+      )}
+      {actions.icon && (
+        <span className="inline-flex items-center gap-1 rounded-md bg-ink-800 px-1.5 py-0.5 text-mist-300">
+          {iconPreview(actions.icon) && <img src={iconPreview(actions.icon) ?? undefined} alt="" className="h-3.5 w-3.5 object-contain" />}
+          {t('icon.chip')}
         </span>
       )}
       {actions.push && (
@@ -371,6 +379,8 @@ function RuleEditor({ rule, sources, onSaved, onClose }: { rule: Draft; sources:
   const [confirmDelete, setConfirmDelete] = useState(false)
   const setActions = (patch: Partial<RuleActions>) => setDraft({ ...draft, actions: { ...draft.actions, ...patch } })
   const setCondition = (index: number, patch: Partial<Condition>) => setDraft({ ...draft, conditions: draft.conditions.map((c, i) => (i === index ? { ...c, ...patch } : c)) })
+  const [picking, setPicking] = useState(false)
+  const ruleSource = sources.find((source) => source.id === draft.source_id)
 
   async function save() {
     const body = { name: draft.name, enabled: draft.enabled, source_id: draft.source_id, conditions: draft.conditions, actions: draft.actions }
@@ -391,6 +401,21 @@ function RuleEditor({ rule, sources, onSaved, onClose }: { rule: Draft; sources:
     } catch (caught) {
       setError(errorMessage(caught))
     }
+  }
+
+  if (picking) {
+    return (
+      <Dialog title={t('icon.pickTitle', { name: draft.name.trim() || t('rules.editor.new') })} onClose={onClose} wide>
+        <IconPicker
+          value={draft.actions.icon ?? ''}
+          onPick={(icon) => {
+            setActions({ icon })
+            setPicking(false)
+          }}
+          onBack={() => setPicking(false)}
+        />
+      </Dialog>
+    )
   }
 
   return (
@@ -476,6 +501,19 @@ function RuleEditor({ rule, sources, onSaved, onClose }: { rule: Draft; sources:
               <Field label={t('rules.editor.groupKey')} help={t('rules.editor.groupKeyHelp')} value={draft.actions.group_key ?? ''} onChange={(event) => setActions({ group_key: event.target.value || undefined })} />
               <Field label={t('rules.editor.titleTemplate')} help={t('rules.editor.titleTemplateHelp')} value={draft.actions.title_template ?? ''} onChange={(event) => setActions({ title_template: event.target.value || undefined })} />
               <Field label={t('rules.editor.resolves')} help={t('rules.editor.resolvesHelp')} value={draft.actions.resolves ?? ''} onChange={(event) => setActions({ resolves: event.target.value || undefined })} />
+              <div className="flex flex-col gap-3 sm:col-span-2">
+                <IconField
+                  value={draft.actions.icon ?? ''}
+                  onChange={(icon) => setActions({ icon: icon || undefined })}
+                  onBrowse={() => setPicking(true)}
+                  preview={iconPreview(draft.actions.icon)}
+                  kind={ruleSource?.kind}
+                  protocol={ruleSource?.protocol}
+                  label={t('icon.ruleLabel')}
+                  help={t('icon.ruleHelp')}
+                  none={t('icon.ruleNone')}
+                />
+              </div>
             </div>
           )}
         </fieldset>

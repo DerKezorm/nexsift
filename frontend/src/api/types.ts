@@ -30,6 +30,10 @@ export interface Source {
   muted_until: string | null
   unrecognized_streak: number
   last_unrecognized_at: string | null
+  /** `dashboard-icons/<name>`, `selfhst/<name>` or an own address; empty: two letters. */
+  icon: string
+  /** Where the interface loads the icon from (through nexsift); null without one. */
+  icon_url: string | null
 }
 
 export interface Connection {
@@ -56,6 +60,14 @@ export interface Preset {
   kind: string
   protocol: Protocol
   name: string
+  /** The logo a new source of this kind starts with. */
+  icon?: string
+}
+
+/** One logo of dashboard-icons or selfh.st, as the picker lists it. */
+export interface IconName {
+  name: string
+  icon: string
 }
 
 export interface Stranger {
@@ -88,6 +100,8 @@ export interface ThreadSummary {
   /** Text keys of the newest event when nexsift worded it; `title_from_texts`: the line's title came from them. */
   texts: Texts | null
   title_from_texts: boolean
+  /** The icon a rule gave this line (several apps behind one source); null: show the source's. */
+  icon_url: string | null
 }
 
 export type TextSegment = { key: string; args: Record<string, string | number> } | { text: string }
@@ -146,6 +160,8 @@ export interface RuleActions {
   title_template?: string
   resolves?: string
   push?: PushMode
+  /** A logo of the collections or an own address, for the lines this rule matches. */
+  icon?: string
   drop?: boolean
 }
 

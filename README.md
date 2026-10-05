@@ -71,10 +71,14 @@ a Gotify server, an ntfy server, a Discord webhook, a mail server, a syslog serv
   off. Messages are encrypted for the device; they travel through the browser maker's push service, so this way
   out is only used once you sign a device up, and can be paused for all of them. The first critical message of a subject goes out at once; more of the same are
   counted and summed up once at the end of the window. The all-clear follows quietly.
+- **An icon per source**, from the dashboard-icons and selfh.st collections or an address of your own. It shows
+  in the inbox and goes along with pushes to ntfy and to the device, so a notification tells where it comes from
+  at a glance. The known senders come with their logo; a rule can give one app behind a shared source its own,
+  and an icon the sender sends itself (ntfy's `Icon` header) wins.
 - **Storm guard:** when many things fail at once, such as a power cut, the phone gets one summary instead of
   twenty pushes. A source that floods (more than 30 messages a minute by default) is counted, not stored.
 - **Rules** with conditions on title and text (whole word, contains, regular expression) and effects: level,
-  bundling key, bundle title, all-clear, push behaviour, or drop. All matching rules apply, top to bottom.
+  bundling key, bundle title, all-clear, push behaviour, icon, or drop. All matching rules apply, top to bottom.
 - **A live inbox** with search, unread, archive and keyboard shortcuts (`?` shows them).
 - **One operator account** with a password, optionally OpenID Connect; for authentik there is a one-button setup.
   The account at the provider is linked once, signed in, under Settings, Sign-in; from then on exactly that one

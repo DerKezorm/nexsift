@@ -71,13 +71,17 @@ def ntfy(body: bytes, headers: dict[str, str], query: dict[str, str], content_ty
         priority = ntfy_priority(data.get("priority", 3))
         click = str(data.get("click", "") or "")
         tags = data.get("tags") or []
+        icon = str(data.get("icon", "") or "")
     else:
         message = _text(body)
         title = pick("X-Title", "Title", "t")
         priority = ntfy_priority(pick("X-Priority", "Priority", "prio", "p") or 3)
         click = pick("X-Click", "Click")
         tags = [tag.strip() for tag in pick("X-Tags", "Tags", "ta").split(",") if tag.strip()]
+        icon = pick("X-Icon", "Icon")
         payload = {"message": message, "title": title, "priority": priority, "click": click, "tags": tags}
+        if icon:
+            payload["icon"] = icon
     # ntfy clients send tags like "warning" or "rotating_light"; one of those lifts an unspecified priority.
     tag_words = {str(tag).lower() for tag in tags} if isinstance(tags, list) else set()
     if priority == INFO and tag_words & {"rotating_light", "skull", "x", "no_entry", "sos"}:
@@ -95,6 +99,7 @@ def ntfy(body: bytes, headers: dict[str, str], query: dict[str, str], content_ty
         raw=_text(body)
         if data is not None
         else json.dumps({"headers": _visible(headers), "body": message}, ensure_ascii=False),
+        icon=icon,
     )
     return incoming, payload
 
@@ -104,7 +109,7 @@ def _visible(headers: dict[str, str]) -> dict[str, str]:
     return {
         key: value
         for key, value in headers.items()
-        if key.startswith("x-") or key in ("title", "priority", "tags", "click")
+        if key.startswith("x-") or key in ("title", "priority", "tags", "click", "icon")
     }
 
 
@@ -200,6 +205,7 @@ def webhook(body: bytes, content_type: str) -> tuple[Incoming, Payload]:
         priority=priority,
         links=links,
         raw=_text(body),
+        icon=first("icon"),
     )
     return incoming, payload
 

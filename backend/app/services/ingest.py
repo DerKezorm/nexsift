@@ -31,7 +31,7 @@ from sqlalchemy.orm import Session
 from ..adapters.base import Incoming
 from ..adapters.kinds import refine, shape
 from ..models import ARCHIVED, CRIT, INFO, RANK, ROUTINE_KEY, UNREAD, Event, Source, Thread, utcnow
-from . import bus, push, rules, settings_service
+from . import bus, icons, push, rules, settings_service
 
 logger = logging.getLogger("nexsift.ingest")
 #: What a message said; written at the level ``trace`` only (see ``services/logs.py``).
@@ -147,6 +147,9 @@ def _store(db: Session, source: Source, item: Incoming) -> int | None:
     actions = outcome.actions
     if actions.get("drop"):
         return None
+    # The sender's own icon first, then the rule's (several apps behind one source), then the source's in push.py.
+    if actions.get("icon") and not item.icon:
+        item.icon = icons.public_url(str(actions["icon"]))
     priority = actions.get("priority") or item.priority
     if actions.get("group_key"):
         group_key = rules.fill(actions["group_key"], item.fields)
@@ -207,6 +210,7 @@ def _store(db: Session, source: Source, item: Incoming) -> int | None:
             last_at=now,
             push_mode=str(actions.get("push", "")),
             rule_names=list(outcome.matched),
+            icon=str(actions.get("icon", "")),
         )
         db.add(thread)
         db.flush()
@@ -217,6 +221,8 @@ def _store(db: Session, source: Source, item: Incoming) -> int | None:
             thread.title_template = str(actions["title_template"])
         if actions.get("push"):
             thread.push_mode = str(actions["push"])
+        if actions.get("icon"):
+            thread.icon = str(actions["icon"])
         thread.rule_names = _merge_names(thread.rule_names, outcome.matched)
         # New news: back to unread, so it is not missed under a line that was already read.
         if thread.state != UNREAD:
@@ -243,6 +249,7 @@ def _add_event(db: Session, thread: Thread, item: Incoming, priority: str) -> Ev
         raw=item.raw,
         recognized=item.recognized,
         texts=item.texts or None,
+        icon=item.icon,
     )
     db.add(event)
     thread.event_count += 1

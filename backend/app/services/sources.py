@@ -18,7 +18,7 @@ from sqlalchemy.orm import Session
 from .. import crypto
 from ..config import get_settings
 from ..models import Source, utcnow
-from . import presets, settings_service
+from . import icons, presets, settings_service
 
 TOKEN_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789"
 HOSTNAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
@@ -61,7 +61,7 @@ def create(db: Session, preset: str, name: str, hostname: str = "", key: str = "
         raise SourceError("unknown_preset", "Unknown kind of source.")
     info = presets.PRESETS[preset]
     name = " ".join(name.split())[:80] or info["name"]
-    source = Source(name=name, kind=info["kind"], protocol=info["protocol"])
+    source = Source(name=name, kind=info["kind"], protocol=info["protocol"], icon=info.get("icon", ""))
     protocol = info["protocol"]
     if protocol in ("gotify", "webhook", "discord"):
         token = _token_for(protocol)
@@ -219,4 +219,7 @@ def view(db: Session, source: Source) -> dict[str, Any]:
         "muted_until": source.muted_until.isoformat() if is_muted(source) and source.muted_until else None,
         "unrecognized_streak": source.unrecognized_streak,
         "last_unrecognized_at": source.last_unrecognized_at.isoformat() if source.last_unrecognized_at else None,
+        "icon": source.icon,
+        # The interface loads the picture from nexsift; the version makes a changed icon load anew.
+        "icon_url": f"/api/sources/{source.id}/icon?v={icons.version(source.icon)}" if source.icon else None,
     }

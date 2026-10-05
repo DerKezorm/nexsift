@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Response
 from pydantic import BaseModel, Field
 
 from ..deps import CurrentAccount, DbSession
 from ..meldungen import fehler
 from ..models import THREAD_STATES, Thread, utcnow
-from ..services import bus
+from ..services import bus, icons
 from ..services import threads as threads_service
 
 router = APIRouter(prefix="/api/threads", tags=["threads"])
@@ -58,6 +58,15 @@ def counts(account: CurrentAccount, db: DbSession, source_id: int | None = None)
 @router.get("/{thread_id}", summary="One thread with its events and pushes")
 def read(thread_id: int, account: CurrentAccount, db: DbSession) -> dict[str, Any]:
     return threads_service.detail(db, _get(db, thread_id))
+
+
+@router.get("/{thread_id}/icon", summary="The icon a rule gave this line", response_class=Response)
+async def icon(thread_id: int, account: CurrentAccount, db: DbSession) -> Response:
+    found = await icons.fetch(_get(db, thread_id).icon)
+    if found is None:
+        raise fehler("icon_unavailable", "The icon could not be loaded.", 404)
+    data, kind = found
+    return Response(data, media_type=kind, headers={"Cache-Control": "private, max-age=86400"})
 
 
 @router.post("/state", summary="Mark read, unread or archived")

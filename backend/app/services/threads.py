@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql import Select
 
 from ..models import ARCHIVED, CRIT, READ, ROUTINE_KEY, UNREAD, Delivery, Event, Source, Target, Thread, utcnow
+from . import icons
 
 VIEWS = ("inbox", "unread", "crit", "archived")
 PAGE = 100
@@ -117,6 +118,8 @@ def summary(thread: Thread, latest: Event | None, pushed: bool) -> dict[str, Any
         # from that event (a rule's bundle title did not).
         "texts": latest.texts if latest is not None and latest.texts else None,
         "title_from_texts": bool(latest is not None and latest.texts and thread.title == latest.title),
+        # A rule's icon for this line; without one the interface shows the source's.
+        "icon_url": f"/api/threads/{thread.id}/icon?v={icons.version(thread.icon)}" if thread.icon else None,
     }
 
 

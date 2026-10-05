@@ -15,15 +15,38 @@ from sqlalchemy.orm import Session
 from ..models import CRIT, WARN, Rule
 from . import settings_service
 
+#: ``icon``: the logo a new source starts with, from dashboard-icons (``services/icons.py``). Senders that come
+#: through a door (the plain Gotify, ntfy, Discord, webhook and mail sources) have none: the door is not the
+#: sender, and its logo would say the wrong thing.
 PRESETS: dict[str, dict[str, str]] = {
-    "watchtower": {"kind": "watchtower", "protocol": "gotify", "name": "Watchtower"},
-    "proxmox": {"kind": "proxmox", "protocol": "webhook", "name": "Proxmox VE"},
-    "uptimekuma": {"kind": "uptimekuma", "protocol": "webhook", "name": "Uptime Kuma"},
-    "homeassistant": {"kind": "homeassistant", "protocol": "ntfy", "name": "Home Assistant"},
-    "synology": {"kind": "synology", "protocol": "webhook", "name": "Synology"},
-    "paperless": {"kind": "paperless", "protocol": "webhook", "name": "Paperless-ngx"},
+    "watchtower": {
+        "kind": "watchtower",
+        "protocol": "gotify",
+        "name": "Watchtower",
+        "icon": "dashboard-icons/watchtower",
+    },
+    "proxmox": {"kind": "proxmox", "protocol": "webhook", "name": "Proxmox VE", "icon": "dashboard-icons/proxmox"},
+    "uptimekuma": {
+        "kind": "uptimekuma",
+        "protocol": "webhook",
+        "name": "Uptime Kuma",
+        "icon": "dashboard-icons/uptime-kuma",
+    },
+    "homeassistant": {
+        "kind": "homeassistant",
+        "protocol": "ntfy",
+        "name": "Home Assistant",
+        "icon": "dashboard-icons/home-assistant",
+    },
+    "synology": {"kind": "synology", "protocol": "webhook", "name": "Synology", "icon": "dashboard-icons/synology"},
+    "paperless": {
+        "kind": "paperless",
+        "protocol": "webhook",
+        "name": "Paperless-ngx",
+        "icon": "dashboard-icons/paperless-ngx",
+    },
     "ups": {"kind": "ups", "protocol": "smtp", "name": "UPS"},
-    "syslog": {"kind": "syslog", "protocol": "syslog", "name": "Router"},
+    "syslog": {"kind": "syslog", "protocol": "syslog", "name": "Router", "icon": "dashboard-icons/router"},
     "gotify": {"kind": "generic", "protocol": "gotify", "name": "Gotify sender"},
     "ntfy": {"kind": "generic", "protocol": "ntfy", "name": "ntfy sender"},
     "discord": {"kind": "generic", "protocol": "discord", "name": "Discord sender"},

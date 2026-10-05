@@ -116,6 +116,8 @@ class Source(Base):
     #: Messages in a row the adapter did not understand. Shown on the source, so a changed format is noticed.
     unrecognized_streak: Mapped[int] = mapped_column(Integer, default=0)
     last_unrecognized_at: Mapped[datetime | None] = mapped_column(UtcDateTime, nullable=True)
+    #: ``dashboard-icons/<name>``, ``selfhst/<name>`` or an own address; empty: two letters (``services/icons.py``).
+    icon: Mapped[str] = mapped_column(String(500), default="")
 
 
 class Thread(Base):
@@ -146,6 +148,8 @@ class Thread(Base):
     pushed: Mapped[bool] = mapped_column(Boolean, default=False)
     #: Soft delete, so "undo" works; really removed a few minutes later.
     deleted_at: Mapped[datetime | None] = mapped_column(UtcDateTime, nullable=True)
+    #: The icon a rule gave this line (several apps behind one source); empty: the source's.
+    icon: Mapped[str] = mapped_column(String(500), default="")
 
 
 class Event(Base):
@@ -165,6 +169,8 @@ class Event(Base):
     #: Title and body as text keys when nexsift worded the message itself (``services/texts.py``); the interface
     #: and the pushes show them in their language. Empty for words that came from the sender.
     texts: Mapped[Any] = mapped_column(JSON, nullable=True)
+    #: The picture the sender asked for (ntfy's ``Icon``); it goes to the phone instead of the source's.
+    icon: Mapped[str] = mapped_column(String(500), default="")
 
 
 class Rule(Base):
@@ -215,6 +221,8 @@ class Delivery(Base):
     body: Mapped[str] = mapped_column(Text, default="")
     priority: Mapped[str] = mapped_column(String(8), default=CRIT)
     link: Mapped[str] = mapped_column(Text, default="")
+    #: Where the phone loads the picture from; empty: none.
+    icon: Mapped[str] = mapped_column(String(500), default="")
     #: pending, sent, failed
     status: Mapped[str] = mapped_column(String(8), default="pending", index=True)
     attempts: Mapped[int] = mapped_column(Integer, default=0)

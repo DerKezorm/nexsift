@@ -853,7 +853,7 @@ function SourceFilterButton({
       title={active ? t('inbox.showAllSources') : t('inbox.onlyThisSource')}
       className={'flex items-center gap-2.5 rounded-xl px-3 py-1.5 text-left text-sm transition-colors ' + (active ? 'bg-ink-800 text-mist-100' : 'text-mist-400 hover:bg-ink-850 hover:text-mist-100')}
     >
-      <SourceMark kind={source.kind} protocol={source.protocol} className="h-6 w-6 text-[9px]" />
+      <SourceMark kind={source.kind} protocol={source.protocol} src={source.icon_url} className="h-6 w-6 text-[9px]" />
       <span className="min-w-0 flex-1 truncate">{source.name}</span>
       {source.unrecognized_streak > 0 && <Symbol name="warn" className="h-3.5 w-3.5 text-warn-500" />}
       {muted && <Symbol name="mute" className="h-3.5 w-3.5 text-mist-600" />}
@@ -929,7 +929,7 @@ function ThreadRow({
     >
       {selected && <span className="absolute inset-y-0 left-0 w-0.5 bg-accent-500" aria-hidden="true" />}
       <div className="relative self-start">
-        <SourceMark kind={source?.kind} protocol={source?.protocol} />
+        <SourceMark kind={source?.kind} protocol={source?.protocol} src={thread.icon_url ?? source?.icon_url} />
         {/* Like Gmail: under the pointer, or while picking, the source mark turns into a box to tick. */}
         <button
           type="button"

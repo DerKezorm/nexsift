@@ -101,7 +101,9 @@
     "api_key_limit": "There are already 20 keys. Delete one first.",
     "api_key_missing": "This address needs an API key.",
     "api_key_invalid": "This API key is not valid.",
-    "api_keys_off": "API keys are switched off."
+    "api_keys_off": "API keys are switched off.",
+    "icon_invalid": "That does not work as an icon. Pick a logo from the list or enter an address starting with https://.",
+    "icon_unavailable": "The icon could not be loaded."
   },
   "help": {
     "about": "Help on \"{{what}}\"",
@@ -855,7 +857,6 @@
         }
       }
     },
-    "rename": "Rename",
     "renew": "New token",
     "renewConfirm": "The old token stops working at once. Go on?",
     "renewHelp": "In case the token ended up where it does not belong. Then enter the new line in the sender.",
@@ -888,7 +889,9 @@
       "smtp": "via email",
       "syslog": "via syslog",
       "webhook": "via webhook"
-    }
+    },
+    "edit": "Edit",
+    "editTitle": "Edit {{name}}"
   },
   "targets": {
     "add": "Target",
@@ -1271,5 +1274,28 @@
         "upAgain": "Answers normally again."
       }
     }
+  },
+  "icon": {
+    "label": "Icon",
+    "pick": "Pick a logo",
+    "change": "Other logo",
+    "remove": "No icon",
+    "own": "Own picture address",
+    "ownHint": "A PNG or JPEG the phone can load itself. It shows up after saving.",
+    "ownHelp": "For logos no collection has. ntfy shows PNG and JPEG only. The address has to be reachable from the phone, so one in the home network only works while the phone is at home.",
+    "pickTitle": "Logo for {{name}}",
+    "search": "Search logos",
+    "count_one": "{{count}} logo",
+    "count_other": "{{count}} logos",
+    "nothing": "No logo with “{{query}}”.",
+    "failed": "The list of logos did not load. nexsift fetches it from GitHub and needs internet access for that.",
+    "more": "Show {{count}} more",
+    "back": "Back",
+    "sourceHelp": "Shown next to the source in nexsift and on the phone, with ntfy and with “This device”. Gotify, Pushover and Telegram show no picture per message. The logos come from the dashboard-icons and selfh.st collections; the phone loads the picture itself from jsdelivr.net. When a sender sends an icon of its own (ntfy's “Icon” header), that one wins.",
+    "sourceNone": "No icon. nexsift shows two letters, the phone only the text.",
+    "ruleLabel": "Icon",
+    "ruleHelp": "For sources several apps report through: when the rule matches, the line shows this logo instead of the source's, and the push to ntfy or “This device” carries it too. When the sender sends an icon of its own, that one wins.",
+    "ruleNone": "No icon. The line shows the source's.",
+    "chip": "Icon"
   }
 }

@@ -101,7 +101,9 @@
     "api_key_limit": "Es gibt schon 20 Schlüssel. Lösch erst einen.",
     "api_key_missing": "Diese Adresse braucht einen API-Schlüssel.",
     "api_key_invalid": "Dieser API-Schlüssel gilt nicht.",
-    "api_keys_off": "API-Schlüssel sind ausgeschaltet."
+    "api_keys_off": "API-Schlüssel sind ausgeschaltet.",
+    "icon_invalid": "Das passt nicht als Icon. Ein Logo aus der Liste wählen oder eine Adresse mit https:// eintragen.",
+    "icon_unavailable": "Das Icon ließ sich nicht laden."
   },
   "help": {
     "about": "Hilfe zu „{{what}}“",
@@ -855,7 +857,6 @@
         }
       }
     },
-    "rename": "Umbenennen",
     "renew": "Neuer Token",
     "renewConfirm": "Der alte Token hört sofort auf zu gehen. Weiter?",
     "renewHelp": "Falls der Token irgendwo gelandet ist, wo er nicht hingehört. Danach im Absender die neue Zeile eintragen.",
@@ -888,7 +889,9 @@
       "smtp": "über E-Mail",
       "syslog": "über Syslog",
       "webhook": "über Webhook"
-    }
+    },
+    "edit": "Bearbeiten",
+    "editTitle": "{{name}} bearbeiten"
   },
   "targets": {
     "add": "Ziel",
@@ -1271,5 +1274,28 @@
         "upAgain": "Antwortet wieder normal."
       }
     }
+  },
+  "icon": {
+    "label": "Icon",
+    "pick": "Logo wählen",
+    "change": "Anderes Logo",
+    "remove": "Kein Icon",
+    "own": "Eigene Bildadresse",
+    "ownHint": "Ein PNG oder JPEG, das das Handy selbst laden kann. Zu sehen ist es nach dem Speichern.",
+    "ownHelp": "Für Logos, die in keiner Sammlung stehen. ntfy zeigt nur PNG und JPEG. Die Adresse muss vom Handy aus erreichbar sein, eine Adresse im Heimnetz geht also nur, solange das Handy im Heimnetz ist.",
+    "pickTitle": "Logo für {{name}}",
+    "search": "Logo suchen",
+    "count_one": "{{count}} Logo",
+    "count_other": "{{count}} Logos",
+    "nothing": "Kein Logo mit „{{query}}“.",
+    "failed": "Die Liste der Logos ließ sich nicht laden. nexsift holt sie von GitHub und braucht dafür Zugang ins Internet.",
+    "more": "{{count}} weitere zeigen",
+    "back": "Zurück",
+    "sourceHelp": "Erscheint in nexsift neben der Quelle und auf dem Handy, bei ntfy und bei „Dieses Gerät“. Gotify, Pushover und Telegram zeigen kein Bild je Nachricht. Die Logos kommen aus den Sammlungen dashboard-icons und selfh.st; das Handy lädt das Bild selbst von jsdelivr.net. Schickt ein Absender selbst ein Icon mit (bei ntfy der Header „Icon“), hat seins Vorrang.",
+    "sourceNone": "Kein Icon. nexsift zeigt zwei Buchstaben, das Handy nur den Text.",
+    "ruleLabel": "Icon",
+    "ruleHelp": "Für Quellen, über die mehrere Apps melden: passt die Regel, zeigt die Zeile dieses Logo statt dem der Quelle, und der Push an ntfy oder „Dieses Gerät“ trägt es auch. Schickt der Absender selbst ein Icon mit, hat seins Vorrang.",
+    "ruleNone": "Kein Icon. Die Zeile zeigt das der Quelle.",
+    "chip": "Icon"
   }
 }

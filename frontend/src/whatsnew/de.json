@@ -179,6 +179,31 @@
       "small": [
         "Die Schritte der Einrichtung nennen keinen festen Namen mehr, weil Anbieter und Anwendung jetzt auch anders heißen können."
       ]
+    },
+    "0.8.0": {
+      "lead": "Jede Quelle kann jetzt ein eigenes Icon haben, in nexsift und auf dem Handy.",
+      "sections": [
+        {
+          "title": "Ein Icon je Quelle",
+          "body": "Wähle für jede Quelle ein Logo aus den Sammlungen dashboard-icons und selfh.st, mit Suche über mehrere tausend Logos, oder trage eine eigene Bildadresse ein. Das Icon steht in der Liste, im Posteingang und bei den Regeln statt der zwei Buchstaben. Neue Quellen für Proxmox, Uptime Kuma, Home Assistant und die anderen bekannten Absender bringen ihr Logo gleich mit.",
+          "where": "Quellen › Stift an der Quelle › Icon"
+        },
+        {
+          "title": "Ein Icon je App, auch hinter einer Quelle",
+          "body": "Melden mehrere Apps über dieselbe Quelle, etwa Sonarr und Radarr über ein ntfy-Topic, gibt eine Regel jeder ihr Logo: als Bedingung zum Beispiel „Titel enthält Sonarr“, als Wirkung das Icon. Die Zeile im Posteingang und der Push tragen dann dieses Logo statt dem der Quelle.",
+          "where": "Regeln › Regel › Dann › Icon"
+        },
+        {
+          "title": "Das Icon auch auf dem Handy",
+          "body": "Pushes an ntfy und an „Dieses Gerät“ zeigen das Icon der Quelle, so siehst du schon in der Benachrichtigung, woher sie kommt. Schickt ein Absender selbst ein Icon mit, etwa über den ntfy-Header „Icon“, hat seins Vorrang. Gotify, Pushover und Telegram zeigen kein Bild je Nachricht.",
+          "where": "Regeln › Weiterleitung aufs Handy"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Bestehende Quellen bleiben ohne Icon, bis du eins wählst.",
+        "Das Handy lädt das Bild selbst von jsdelivr.net, nexsift muss dafür nicht von draußen erreichbar sein."
+      ]
     }
   }
 }

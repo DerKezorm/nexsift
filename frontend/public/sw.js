@@ -14,7 +14,8 @@ self.addEventListener('push', (event) => {
   const title = data.title || 'nexsift'
   const options = {
     body: data.body || '',
-    icon: '/icon-192.png',
+    // The source's logo when it has one (an address the browser loads itself), else nexsift's own.
+    icon: data.icon || '/icon-192.png',
     badge: '/badge-96.png',
     data: { url: data.url || '/' },
     // One notification per line in the inbox: a follow-up replaces the first instead of stacking up.

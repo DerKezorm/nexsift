@@ -42,6 +42,8 @@ class Incoming:
     #: Title and body as text keys, for adapters that word a message themselves (``services/texts.py``). When set,
     #: title and body are made from them in English.
     texts: dict[str, Any] = field(default_factory=dict)
+    #: A picture the sender asked for (ntfy's ``Icon``, ``icon`` in the webhook); the phone loads it itself.
+    icon: str = ""
 
     def clean(self) -> Incoming:
         if self.texts:
@@ -53,6 +55,7 @@ class Incoming:
         if self.priority not in (INFO, WARN, CRIT):
             self.priority = INFO
         self.links = [link for link in self.links if safe_url(link.get("url", ""))][:5]
+        self.icon = self.icon.strip() if safe_url(self.icon.strip()) and len(self.icon.strip()) <= 500 else ""
         return self
 
 

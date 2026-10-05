@@ -7,11 +7,13 @@ import type { About, Preset, Source, SourceWithConnection, Stranger } from '../a
 import { CopyField } from '../components/CopyField'
 import { Dialog } from '../components/Dialog'
 import { Explainer, Help } from '../components/Help'
+import { IconField, IconPicker } from '../components/IconPicker'
 import { useNotice } from '../components/Notice'
 import { SourceMark } from '../components/SourceMark'
 import { Symbol } from '../components/Symbol'
 import { Badge, Banner, Button, Card, Field, PageHeader, Spinner } from '../components/ui'
 import { isMuted, useSources } from '../lib/data'
+import { iconPreview } from '../lib/icons'
 import { useLiveVersion } from '../lib/live'
 import { presetOf, setupLines } from '../lib/setup'
 import { relative, useNow } from '../lib/time'
@@ -167,7 +169,7 @@ function SourceCard({ source, now, language, onShow }: { source: Source; now: nu
   return (
     <li className="flex flex-col gap-3 rounded-2xl border border-ink-700 bg-ink-850/80 p-4">
       <div className="flex items-start gap-3">
-        <SourceMark kind={source.kind} protocol={source.protocol} className="h-10 w-10 text-xs" />
+        <SourceMark kind={source.kind} protocol={source.protocol} src={source.icon_url} className="h-10 w-10 text-xs" />
         <div className="min-w-0 flex-1">
           <p className="truncate font-semibold text-mist-100">{source.name}</p>
           <p className="text-xs text-mist-500">{t(`sources.preset.${presetOf(source.kind, source.protocol)}.name`)}</p>
@@ -214,7 +216,7 @@ function SourceCard({ source, now, language, onShow }: { source: Source; now: nu
           {muted ? t('sources.unmute') : t('sources.mute')}
         </Button>
         <div className="ml-auto flex">
-          <button type="button" onClick={() => setEditing(true)} className="rounded-full p-2 text-mist-500 hover:bg-ink-800 hover:text-mist-100" title={t('sources.rename')} aria-label={t('sources.rename')}>
+          <button type="button" onClick={() => setEditing(true)} className="rounded-full p-2 text-mist-500 hover:bg-ink-800 hover:text-mist-100" title={t('sources.edit')} aria-label={t('sources.edit')}>
             <Symbol name="pencil" className="h-3.5 w-3.5" />
           </button>
           <button type="button" onClick={() => setDeleting(true)} className="rounded-full p-2 text-mist-500 hover:bg-bad-500/10 hover:text-bad-500" title={t('sources.delete')} aria-label={t('sources.delete')}>
@@ -222,36 +224,67 @@ function SourceCard({ source, now, language, onShow }: { source: Source; now: nu
           </button>
         </div>
       </div>
-      {editing && <RenameDialog source={source} onClose={() => setEditing(false)} />}
+      {editing && <EditDialog source={source} onClose={() => setEditing(false)} />}
       {deleting && <DeleteDialog source={source} onClose={() => setDeleting(false)} />}
     </li>
   )
 }
 
-function RenameDialog({ source, onClose }: { source: Source; onClose: () => void }) {
+/** Name and icon. Picking a logo happens inside the same dialog, so Escape never closes two at once. */
+function EditDialog({ source, onClose }: { source: Source; onClose: () => void }) {
   const { t } = useTranslation()
   const [name, setName] = useState(source.name)
+  const [icon, setIcon] = useState(source.icon)
+  const [picking, setPicking] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   async function save() {
     try {
-      await api.put(`/api/sources/${source.id}`, { name })
+      await api.put(`/api/sources/${source.id}`, { name, icon })
       onClose()
     } catch (caught) {
       setError(errorMessage(caught))
     }
   }
 
+  if (picking) {
+    return (
+      <Dialog title={t('icon.pickTitle', { name: name.trim() || source.name })} onClose={onClose} wide>
+        <IconPicker
+          value={icon}
+          onPick={(picked) => {
+            setIcon(picked)
+            setPicking(false)
+          }}
+          onBack={() => setPicking(false)}
+        />
+      </Dialog>
+    )
+  }
+
   return (
-    <Dialog title={t('sources.rename')} onClose={onClose}>
+    <Dialog title={t('sources.editTitle', { name: source.name })} onClose={onClose}>
       <form
-        className="flex flex-col gap-4"
+        className="flex flex-col gap-5"
         onSubmit={(event) => {
           event.preventDefault()
           void save()
         }}
       >
-        <Field label={t('sources.dialog.name')} value={name} onChange={(event) => setName(event.target.value)} autoFocus error={error} />
+        <Field label={t('sources.dialog.name')} value={name} onChange={(event) => setName(event.target.value)} autoFocus />
+        <IconField
+          value={icon}
+          onChange={setIcon}
+          onBrowse={() => setPicking(true)}
+          // An own address shows only after saving: the page loads no pictures from elsewhere.
+          preview={icon === source.icon ? source.icon_url : iconPreview(icon)}
+          kind={source.kind}
+          protocol={source.protocol}
+          label={t('icon.label')}
+          help={t('icon.sourceHelp')}
+          none={t('icon.sourceNone')}
+        />
+        {error && <Banner tone="bad">{error}</Banner>}
         <div className="flex justify-end gap-2">
           <Button variant="ghost" onClick={onClose}>
             {t('common.cancel')}
@@ -496,7 +529,7 @@ function AddSource({ initial, onClose }: { initial: { preset?: string; key?: str
           }}
           className="flex items-start gap-3 rounded-xl border border-ink-700 bg-ink-900 p-3 text-left transition-colors hover:border-accent-500/50 hover:bg-ink-800"
         >
-          <SourceMark kind={item.kind} protocol={item.protocol} className="h-8 w-8 text-[10px]" />
+          <SourceMark kind={item.kind} protocol={item.protocol} src={iconPreview(item.icon)} className="h-8 w-8 text-[10px]" />
           <span className="min-w-0">
             <span className="flex flex-wrap items-center gap-x-2 text-sm font-medium text-mist-100">
               {t(`sources.preset.${key}.name`)}

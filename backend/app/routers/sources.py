@@ -6,7 +6,7 @@ import logging
 from datetime import timedelta
 from typing import Any
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, Response
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 
@@ -14,7 +14,7 @@ from ..adapters.base import Incoming
 from ..deps import CurrentAccount, DbSession
 from ..meldungen import fehler
 from ..models import Source, utcnow
-from ..services import bus, ingest, presets, strangers
+from ..services import bus, icons, ingest, presets, strangers
 from ..services import sources as sources_service
 
 logger = logging.getLogger("nexsift.sources")
@@ -33,6 +33,8 @@ class SourceIn(BaseModel):
 
 class SourceEdit(BaseModel):
     name: str = Field(min_length=1, max_length=80)
+    #: Left out: the icon stays. Empty: back to the two letters.
+    icon: str | None = Field(default=None, max_length=icons.OWN_MAX)
 
 
 class MuteIn(BaseModel):
@@ -89,14 +91,34 @@ def read(source_id: int, request: Request, account: CurrentAccount, db: DbSessio
     }
 
 
-@router.put("/{source_id}", summary="Rename")
+@router.put("/{source_id}", summary="Rename, pick an icon")
 def rename(source_id: int, payload: SourceEdit, account: CurrentAccount, db: DbSession) -> dict[str, Any]:
     source = _get(db, source_id)
+    if payload.icon is not None:
+        try:
+            source.icon = icons.normalize(payload.icon)
+        except icons.IconError as error:
+            raise fehler("icon_invalid", str(error), 422) from error
     source.name = " ".join(payload.name.split())[:80]
     db.commit()
-    logger.info("Source renamed id=%s name=%s", source.id, source.name)
+    # Not the icon itself: an own address may carry a token.
+    logger.info("Source changed id=%s name=%s icon=%s", source.id, source.name, "yes" if source.icon else "no")
     bus.publish("source", id=source.id)
     return sources_service.view(db, source)
+
+
+@router.get("/{source_id}/icon", summary="The source's icon, fetched by nexsift", response_class=Response)
+async def icon(source_id: int, account: CurrentAccount, db: DbSession) -> Response:
+    source = _get(db, source_id)
+    found = await icons.fetch(source.icon)
+    if found is None:
+        raise fehler("icon_unavailable", "The icon could not be loaded.", 404)
+    data, kind = found
+    return Response(
+        data,
+        media_type=kind,
+        headers={"Cache-Control": "private, max-age=86400"},
+    )
 
 
 @router.post("/{source_id}/mute", summary="Mute for a while: messages arrive, nothing is pushed")

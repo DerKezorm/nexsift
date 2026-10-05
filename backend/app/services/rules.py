@@ -19,11 +19,11 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..models import PRIORITIES, Rule
-from . import settings_service
+from . import icons, settings_service
 
 FIELDS = ("any", "title", "body")
 OPS = ("word", "contains", "regex")
-ACTIONS = ("priority", "group_key", "title_template", "resolves", "push", "drop")
+ACTIONS = ("priority", "group_key", "title_template", "resolves", "push", "icon", "drop")
 VALUE_MAX = 300
 #: What a regex is run against at most. A rule is the operator's own, but a pattern that backtracks badly on a
 #: long message must not stall every door.
@@ -157,6 +157,11 @@ def validate(payload: dict[str, Any]) -> dict[str, Any]:
             raise RuleError("rule_value", "Keep grouping and titles under 200 characters.")
         if value:
             actions[key] = value
+    if raw.get("icon"):
+        try:
+            actions["icon"] = icons.normalize(str(raw["icon"]))
+        except icons.IconError as error:
+            raise RuleError("icon_invalid", str(error)) from error
     if raw.get("drop"):
         actions = {"drop": True}
     if not actions:

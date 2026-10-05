@@ -109,11 +109,13 @@ def subject(db: Session) -> str:
     return "mailto:nexsift@example.com"
 
 
-def payload(title: str, body: str, priority: str, url: str, tag: str) -> bytes:
+def payload(title: str, body: str, priority: str, url: str, tag: str, icon: str = "") -> bytes:
     """What the service worker shows. Short: some push services refuse more than 4 KB after encryption."""
     data: dict[str, Any] = {"title": title[:200], "body": body[:BODY_MAX], "priority": priority, "url": url}
     if tag:
         data["tag"] = tag
+    if icon:
+        data["icon"] = icon[:500]
     return json.dumps(data, ensure_ascii=False).encode("utf-8")
 
 

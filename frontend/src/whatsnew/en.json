@@ -179,6 +179,31 @@
       "small": [
         "The setup steps no longer name a fixed provider and application, since they can now carry other names."
       ]
+    },
+    "0.8.0": {
+      "lead": "Every source can have an icon of its own now, in nexsift and on the phone.",
+      "sections": [
+        {
+          "title": "An icon per source",
+          "body": "Pick a logo for each source from the dashboard-icons and selfh.st collections, with a search across several thousand logos, or enter an own picture address. The icon shows in the list, in the inbox and with the rules instead of the two letters. New sources for Proxmox, Uptime Kuma, Home Assistant and the other known senders come with their logo.",
+          "where": "Sources › pencil on the source › Icon"
+        },
+        {
+          "title": "An icon per app, even behind one source",
+          "body": "When several apps report through the same source, such as Sonarr and Radarr through one ntfy topic, a rule gives each its logo: as the condition for example “title contains Sonarr”, as the effect the icon. The line in the inbox and the push then carry this logo instead of the source's.",
+          "where": "Rules › a rule › Then › Icon"
+        },
+        {
+          "title": "The icon on the phone too",
+          "body": "Pushes to ntfy and to “This device” show the source's icon, so the notification already tells where it comes from. When a sender sends an icon of its own, for example with ntfy's “Icon” header, that one wins. Gotify, Pushover and Telegram show no picture per message.",
+          "where": "Rules › Forwarding to the phone"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "Existing sources stay without an icon until you pick one.",
+        "The phone loads the picture itself from jsdelivr.net; nexsift does not have to be reachable from outside for that."
+      ]
     }
   }
 }

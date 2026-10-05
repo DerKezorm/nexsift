@@ -80,7 +80,7 @@ export function ThreadDetail({
         </div>
 
         <div className="flex items-start gap-3">
-          <SourceMark kind={source?.kind} protocol={source?.protocol} className="h-10 w-10 text-xs" />
+          <SourceMark kind={source?.kind} protocol={source?.protocol} src={thread.icon_url ?? source?.icon_url} className="h-10 w-10 text-xs" />
           <div className="min-w-0 flex-1">
             <h2 className="text-lg leading-snug font-semibold break-words text-mist-100">{threadTitle(thread, t)}</h2>
             <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-mist-500">

@@ -32,7 +32,7 @@ from sqlalchemy.orm import Session
 from .. import crypto
 from ..db import SessionLocal
 from ..models import CRIT, INFO, RANK, WARN, Delivery, Event, Source, Target, Thread, utcnow
-from . import bus, settings_service, texts, webpush
+from . import bus, icons, settings_service, texts, webpush
 from . import sources as sources_service
 
 logger = logging.getLogger("nexsift.push")
@@ -87,6 +87,13 @@ def _link(event: Event | None) -> str:
     return str(event.links[0].get("url", ""))
 
 
+def _icon(source: Source | None, event: Event | None) -> str:
+    """The sender's own picture when it sent one, else the source's."""
+    if event is not None and event.icon:
+        return event.icon
+    return icons.public_url(source.icon) if source is not None else ""
+
+
 def _enqueue(
     db: Session,
     thread: Thread | None,
@@ -97,6 +104,7 @@ def _enqueue(
     link: str = "",
     *,
     send_as: str | None = None,
+    icon: str = "",
 ) -> int:
     """``priority`` decides which targets get it; ``send_as`` how loud it arrives there (default: the same).
     Quiet hours hold back everything below critical, and all-clears too: good news does not wake anybody."""
@@ -113,6 +121,7 @@ def _enqueue(
                 body=body[:2000],
                 priority=send_as or priority,
                 link=link,
+                icon=icon,
             )
         )
         count += 1
@@ -171,7 +180,10 @@ def _first(db: Session, source: Source, thread: Thread, event: Event) -> None:
         thread.pushed = True
         thread.since_push = 0
         return
-    if _enqueue(db, thread, "first", f"{source.name}: {title}", _event_body(db, event), thread.priority, _link(event)):
+    body = _event_body(db, event)
+    if _enqueue(
+        db, thread, "first", f"{source.name}: {title}", body, thread.priority, _link(event), icon=_icon(source, event)
+    ):
         thread.pushed = True
         thread.since_push = 0
 
@@ -192,6 +204,7 @@ def on_event(db: Session, source: Source, thread: Thread, event: Event, *, is_ne
             _event_body(db, event),
             event.priority,
             _link(event),
+            icon=_icon(source, event),
         )
         thread.pushed = True
         return
@@ -232,6 +245,7 @@ def on_resolved(db: Session, thread: Thread) -> None:
         texts.say("push.resolvedAfter", language, took=took),
         thread.priority,
         send_as=INFO,
+        icon=_icon(source, latest),
     )
     thread.window_until = None
     thread.since_push = 0
@@ -259,13 +273,15 @@ def due_windows(db: Session) -> int:
         mode = _mode(db, thread)
         language = _language(db)
         if thread.since_push > 0 and not thread.resolved_at:
-            title = f"{name}: {_thread_title(db, thread)}"
+            latest = db.scalar(select(Event).where(Event.thread_id == thread.id).order_by(Event.id.desc()).limit(1))
+            title = f"{name}: {_thread_title(db, thread, latest)}"
+            icon = _icon(source, latest)
             if mode == "window" and not thread.pushed:
                 body = texts.say("push.messages", language, count=thread.since_push)
-                count += _enqueue(db, thread, "first", title, body, thread.priority)
+                count += _enqueue(db, thread, "first", title, body, thread.priority, icon=icon)
             elif mode == "immediate":
                 body = texts.say("push.more", language, count=thread.since_push)
-                count += _enqueue(db, thread, "followup", title, body, thread.priority)
+                count += _enqueue(db, thread, "followup", title, body, thread.priority, icon=icon)
             thread.pushed = True
         thread.since_push = 0
         thread.window_until = None
@@ -307,12 +323,20 @@ PUSHOVER_URL = "https://api.pushover.net/1/messages.json"
 
 
 async def send(
-    target: Target, title: str, body: str, priority: str, link: str = "", kind: str = "", thread_id: int | None = None
+    target: Target,
+    title: str,
+    body: str,
+    priority: str,
+    link: str = "",
+    kind: str = "",
+    thread_id: int | None = None,
+    icon: str = "",
 ) -> None:
-    """One message to one target. Raises ``PushError`` with a short, readable reason."""
+    """One message to one target. Raises ``PushError`` with a short, readable reason. ``icon`` reaches ntfy and web
+    push; Gotify, Telegram and Pushover have no picture per message."""
     config = target_config(target)
     if target.kind == "webpush":
-        await _send_webpush(config, title, body, priority, kind, thread_id)
+        await _send_webpush(config, title, body, priority, kind, thread_id, icon)
         return
     url = str(config.get("url", "")).strip()
     token = str(config.get("token", "")).strip()
@@ -326,6 +350,8 @@ async def send(
                     headers["Tags"] = "white_check_mark,nexsift"
                 if link:
                     headers["Click"] = link
+                if icon:
+                    headers["Icon"] = _header(icon)
                 if token:
                     headers["Authorization"] = f"Bearer {token}"
                 response = await client.post(url, content=(body or title).encode("utf-8"), headers=headers)
@@ -412,7 +438,7 @@ URGENCY = {CRIT: "high", WARN: "normal"}
 
 
 async def _send_webpush(
-    config: dict[str, Any], title: str, body: str, priority: str, kind: str, thread_id: int | None
+    config: dict[str, Any], title: str, body: str, priority: str, kind: str, thread_id: int | None, icon: str = ""
 ) -> None:
     with SessionLocal() as db:
         if not settings_service.get(db, "webpush_enabled"):
@@ -422,7 +448,7 @@ async def _send_webpush(
     endpoint = str(config.get("url", ""))
     url = f"/?thread={thread_id}" if thread_id else "/"
     tag = f"thread-{thread_id}" if thread_id else ""
-    data = webpush.payload(title, body or ("Resolved" if kind == "allclear" else ""), priority, url, tag)
+    data = webpush.payload(title, body or ("Resolved" if kind == "allclear" else ""), priority, url, tag, icon)
     content = webpush.encrypt(data, str(config.get("p256dh", "")), str(config.get("auth", "")))
     headers = {
         "Authorization": webpush.vapid_header(key, endpoint, subject),
@@ -473,6 +499,7 @@ async def deliver_due() -> int:
                     delivery.link,
                     delivery.kind,
                     delivery.thread_id,
+                    delivery.icon,
                 )
             except PushGone as error:
                 # Nothing to try again: the device left. The target goes off and says why.

@@ -197,12 +197,19 @@
           "title": "Das Icon auch auf dem Handy",
           "body": "Pushes an ntfy und an „Dieses Gerät“ zeigen das Icon der Quelle, so siehst du schon in der Benachrichtigung, woher sie kommt. Schickt ein Absender selbst ein Icon mit, etwa über den ntfy-Header „Icon“, hat seins Vorrang. Gotify, Pushover und Telegram zeigen kein Bild je Nachricht.",
           "where": "Regeln › Weiterleitung aufs Handy"
+        },
+        {
+          "title": "Über nexsift, neu aufgebaut",
+          "body": "Die Seite „Über nexsift“ sieht nach, ob eine neuere Version erschienen ist (einmal am Tag, abschaltbar, oder per Knopf), und nennt jede Verbindung nach außen: die Frage an GitHub, die Logos und was das Handy selbst lädt. Das Holen der Logos aus dem Netz lässt sich dort abschalten.",
+          "where": "Über nexsift (unten auf jeder Seite)"
         }
       ],
       "smallTitle": "Außerdem",
       "small": [
         "Bestehende Quellen bleiben ohne Icon, bis du eins wählst.",
-        "Das Handy lädt das Bild selbst von jsdelivr.net, nexsift muss dafür nicht von draußen erreichbar sein."
+        "Das Handy lädt das Bild selbst von GitHub, nexsift muss dafür nicht von draußen erreichbar sein.",
+        "Die Logos der nex-Apps (nexdeck, nexcrate, nexlore und die anderen) bringt nexsift selbst mit.",
+        "Die Logo-Auswahl lädt nur, was zu sehen ist, und alles auf einmal: Speichern wartet nicht mehr auf die Bilder."
       ]
     }
   }

@@ -1,15 +1,24 @@
 """An icon per source: a logo from dashboard-icons or selfh.st, or an address of the operator's own.
 
 Two readers want it. The phone (ntfy, web push) fetches the picture itself, so it gets a public address: the
-collections' PNG on jsdelivr, or the operator's own. ntfy shows PNG and JPEG only, which is why the picker lists
-the PNG folders and nothing else. The interface never talks to a CDN (the content security policy allows images
-from nexsift only); it asks nexsift, which fetches and keeps a copy on disk.
+collections' PNG straight from GitHub (raw.githubusercontent.com), or the operator's own. ntfy shows PNG and JPEG
+only, which is why the picker lists the PNG folders and nothing else. The interface never talks to another server
+(the content security policy allows images from nexsift only); it asks nexsift, which fetches and keeps a copy.
 
-What a source stores: ``""`` (none), ``dashboard-icons/<name>``, ``selfhst/<name>`` or an http(s) address.
+Not jsdelivr, though it is meant for this: measured on 05.10.2026 with 30 logos nobody had asked for, side by side,
+jsdelivr took 20 s with timeouts and wrong "not found" answers, GitHub 1.1 s without a single failure.
+
+The nexapps family is in no collection; its logos ship with nexsift (``bundled_icons``, PNG made from the SVGs
+nexdeck ships). The interface reads them from disk, the phone from nexsift's public repository on GitHub.
+
+What a source stores: ``""`` (none), ``nexapps/<name>``, ``dashboard-icons/<name>``, ``selfhst/<name>`` or an
+http(s) address.
 """
 
 from __future__ import annotations
 
+import asyncio
+import base64
 import hashlib
 import json
 import logging
@@ -23,13 +32,17 @@ from ..config import get_settings
 
 logger = logging.getLogger("nexsift.icons")
 
+#: Logos that ship with nexsift: the nexapps family.
+BUNDLED = Path(__file__).resolve().parent.parent / "bundled_icons"
+BUNDLED_URL = "https://raw.githubusercontent.com/DerKezorm/nexsift/main/backend/app/bundled_icons/{name}.png"
 COLLECTIONS: dict[str, tuple[str, str]] = {
+    "nexapps": (BUNDLED_URL, ""),
     "dashboard-icons": (
-        "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/{name}.png",
+        "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/png/{name}.png",
         "https://api.github.com/repos/homarr-labs/dashboard-icons/git/trees/main?recursive=1",
     ),
     "selfhst": (
-        "https://cdn.jsdelivr.net/gh/selfhst/icons/png/{name}.png",
+        "https://raw.githubusercontent.com/selfhst/icons/main/png/{name}.png",
         "https://api.github.com/repos/selfhst/icons/git/trees/main?recursive=1",
     ),
 }
@@ -44,6 +57,9 @@ INDEX_SECONDS = 86400
 COPY_SECONDS = 14 * 86400
 MISS_SECONDS = 3600
 TIMEOUT = httpx.Timeout(10.0, connect=5.0)
+#: Logos per batch, and how many of them nexsift fetches from GitHub at the same time.
+BATCH_MAX = 60
+BATCH_PARALLEL = 16
 #: Tests set an ``httpx.MockTransport`` here.
 transport_for_tests: httpx.BaseTransport | None = None
 
@@ -65,9 +81,13 @@ def normalize(value: str) -> str:
             raise IconError("This address cannot be an icon.")
         return value
     collection, _, name = value.partition("/")
-    if collection not in COLLECTIONS or not NAME.match(name):
+    if collection not in COLLECTIONS or not NAME.match(name) or (collection == "nexapps" and name not in bundled()):
         raise IconError("Pick a logo from the list or enter an address starting with https://.")
     return f"{collection}/{name}"
+
+
+def bundled() -> list[str]:
+    return sorted(path.stem for path in BUNDLED.glob("*.png")) if BUNDLED.is_dir() else []
 
 
 def public_url(icon: str) -> str:
@@ -119,8 +139,24 @@ async def close() -> None:
     _shared = None
 
 
+def from_web() -> bool:
+    """The operator's switch on the about page: may nexsift fetch logos from GitHub?"""
+    from ..db import SessionLocal
+    from . import settings_service
+
+    with SessionLocal() as db:
+        return bool(settings_service.get(db, "icons_from_web"))
+
+
 async def fetch(icon: str) -> tuple[bytes, str] | None:
-    """The picture for the interface, from the copy on disk or fetched once. None when there is none."""
+    """The picture for the interface, from the copy on disk or fetched once. None when there is none, and for
+    anything but the nexapps logos while fetching from the web is switched off."""
+    collection, _, name = icon.partition("/")
+    if collection == "nexapps":
+        file = BUNDLED / f"{name}.png"
+        return (file.read_bytes(), "image/png") if NAME.match(name) and file.is_file() else None
+    if not from_web():
+        return None
     url = public_url(icon)
     if not url:
         return None
@@ -132,6 +168,8 @@ async def fetch(icon: str) -> tuple[bytes, str] | None:
         return None
     try:
         async with _client().stream("GET", url) as response:
+            if response.status_code == 429 or response.status_code >= 500:
+                raise httpx.HTTPStatusError("busy", request=response.request, response=response)
             kind = response.headers.get("content-type", "").split(";", 1)[0].strip().lower()
             if response.status_code != 200 or kind not in IMAGE_TYPES:
                 raise IconError(f"HTTP {response.status_code}, {kind or 'no type'}")
@@ -143,7 +181,11 @@ async def fetch(icon: str) -> tuple[bytes, str] | None:
     except (httpx.HTTPError, httpx.InvalidURL, IconError) as error:
         # The address may carry a token of the operator's; the log says what failed, not where.
         logger.info("Icon not loaded: %s", error if isinstance(error, IconError) else type(error).__name__)
-        _remember_miss(key)
+        # Remembered only when the answer was clear (not there, no picture, too large). A timeout or a busy server
+        # says nothing about the logo: on 05.10.2026 jsdelivr timed out under load, and every logo it was slow on
+        # stayed missing for an hour.
+        if isinstance(error, IconError | httpx.InvalidURL):
+            _remember_miss(key)
         return None
     if not data:
         _remember_miss(key)
@@ -151,6 +193,30 @@ async def fetch(icon: str) -> tuple[bytes, str] | None:
     copy.write_bytes(data)
     kind_file.write_text(kind, encoding="ascii")
     return data, kind
+
+
+async def fetch_many(wanted: list[str]) -> dict[str, str]:
+    """Several logos of the collections at once, as data addresses the page can show (``img-src data:``)."""
+    checked: list[str] = []
+    for icon in dict.fromkeys(wanted[:BATCH_MAX]):
+        try:
+            value = normalize(icon)
+        except IconError:
+            continue
+        if value and not value.lower().startswith(("https://", "http://")):
+            checked.append(value)
+    gate = asyncio.Semaphore(BATCH_PARALLEL)
+
+    async def one(icon: str) -> tuple[str, tuple[bytes, str] | None]:
+        async with gate:
+            return icon, await fetch(icon)
+
+    found: dict[str, str] = {}
+    for icon, result in await asyncio.gather(*(one(icon) for icon in checked)):
+        if result is not None:
+            data, kind = result
+            found[icon] = f"data:{kind};base64,{base64.b64encode(data).decode('ascii')}"
+    return found
 
 
 def _remember_miss(key: str) -> None:
@@ -194,14 +260,17 @@ async def _names(collection: str) -> list[str]:
 
 async def all_names() -> list[dict[str, str]]:
     """Every logo of both collections, each name once (dashboard-icons first), sorted: the picker browses this."""
-    results: list[dict[str, str]] = []
-    seen: set[str] = set()
-    for collection in COLLECTIONS:
+    results: list[dict[str, str]] = [{"name": name, "icon": f"nexapps/{name}"} for name in bundled()]
+    seen: set[str] = {entry["name"] for entry in results}
+    for collection in COLLECTIONS if from_web() else ():
+        if collection == "nexapps":
+            continue
         for name in await _names(collection):
             if name not in seen:
                 seen.add(name)
                 results.append({"name": name, "icon": f"{collection}/{name}"})
-    results.sort(key=lambda entry: entry["name"])
+    # The nexapps family first: it is in no collection, and somebody running nexsift likely runs some of it.
+    results.sort(key=lambda entry: (not entry["icon"].startswith("nexapps/"), entry["name"]))
     return results
 
 

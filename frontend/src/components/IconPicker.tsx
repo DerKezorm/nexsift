@@ -1,9 +1,9 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { api } from '../api/client'
 import type { IconName, Protocol } from '../api/types'
-import { iconPreview, isOwnIcon } from '../lib/icons'
+import { isOwnIcon } from '../lib/icons'
 import { useLoad } from '../lib/useLoad'
 import { Help } from './Help'
 import { SourceMark } from './SourceMark'
@@ -79,6 +79,85 @@ export function IconField({
 /** Tiles per page: enough to browse, few enough to stay quick while typing. */
 const PAGE = 120
 
+/** Logos per request; the server takes up to 60. */
+const BATCH = 48
+/** Pictures already here, as data addresses; null: nexsift could not get this one. Kept while the page lives. */
+const pictures = new Map<string, string | null>()
+/** Tiles waiting for their picture, by logo. */
+const wanting = new Map<string, Set<(src: string | null) => void>>()
+/** Logos in a request on its way, so the second request does not ask for them again. */
+const asked = new Set<string>()
+let timer: number | undefined
+/** Requests on their way; two, so typing does not wait for the tiles of the last search. */
+let inFlight = 0
+
+/**
+ * Tiles ask here, and every few milliseconds the ones in view go to nexsift in one request.
+ *
+ * ⚠️ One request per tile was the first way, and it was slow twice over: a browser sends six requests to one server
+ * at a time, and nexsift fetches each logo from GitHub the first time. "Save" waited 2.9 s behind 100 tiles, and
+ * with only the visible 42 in three slots, the first look still took 12 s (05.10.2026). One request lets nexsift
+ * fetch them side by side, and leaves the browser's other connections free.
+ */
+function wantPicture(icon: string, show: (src: string | null) => void): () => void {
+  if (pictures.has(icon)) {
+    show(pictures.get(icon) ?? null)
+    return () => undefined
+  }
+  const waiting = wanting.get(icon) ?? new Set()
+  waiting.add(show)
+  wanting.set(icon, waiting)
+  schedule()
+  // A tile that went away (the search changed, the picker closed) asks for nothing more.
+  return () => {
+    waiting.delete(show)
+    if (waiting.size === 0) wanting.delete(icon)
+  }
+}
+
+function schedule() {
+  if (timer === undefined && inFlight < 2) timer = window.setTimeout(send, 30)
+}
+
+async function send() {
+  timer = undefined
+  const batch = [...wanting.keys()].filter((icon) => !asked.has(icon)).slice(0, BATCH)
+  if (batch.length === 0) return
+  inFlight += 1
+  for (const icon of batch) asked.add(icon)
+  let found: Record<string, string> = {}
+  try {
+    found = await api.get<Record<string, string>>('/api/icons/batch?' + new URLSearchParams(batch.map((icon) => ['icon', icon])).toString())
+  } catch {
+    // Offline or signed out: these tiles stay empty, and the next look asks again.
+  }
+  for (const icon of batch) {
+    const src = found[icon] ?? null
+    if (src) pictures.set(icon, src)
+    for (const show of wanting.get(icon) ?? []) show(src)
+    wanting.delete(icon)
+    asked.delete(icon)
+  }
+  inFlight -= 1
+  if (wanting.size > 0) schedule()
+}
+
+/** A tile's picture, asked for once the tile scrolls into the grid's view. Not `loading="lazy"`: Chromium loads
+ * far ahead with it, and the picker asked for all 100 tiles at once. */
+function TilePicture({ icon, root }: { icon: string; root: HTMLElement | null }) {
+  const [box, setBox] = useState<HTMLSpanElement | null>(null)
+  const [seen, setSeen] = useState(false)
+  const [src, setSrc] = useState<string | null>(null)
+  useEffect(() => {
+    if (!box || !root || seen) return
+    const observer = new IntersectionObserver((entries) => entries.some((entry) => entry.isIntersecting) && setSeen(true), { root, rootMargin: '40px 0px' })
+    observer.observe(box)
+    return () => observer.disconnect()
+  }, [box, root, seen])
+  useEffect(() => (seen ? wantPicture(icon, setSrc) : undefined), [seen, icon])
+  return <span ref={setBox} className="flex h-8 w-8 items-center justify-center">{src && <img src={src} alt="" decoding="async" className="h-8 w-8 object-contain" />}</span>
+}
+
 /** Every logo of both collections, filtered as you type. The list comes from nexsift once; filtering stays here. */
 export function IconPicker({ value, onPick, onBack }: { value: string; onPick: (icon: string) => void; onBack: () => void }) {
   const { t } = useTranslation()
@@ -94,6 +173,7 @@ export function IconPicker({ value, onPick, onBack }: { value: string; onPick: (
       .sort((a, b) => Number(!a.name.startsWith(needle)) - Number(!b.name.startsWith(needle)) || a.name.length - b.name.length)
   }, [names.data, needle])
   const failed = Boolean(names.error) || names.data?.length === 0
+  const [grid, setGrid] = useState<HTMLDivElement | null>(null)
 
   return (
     <div className="flex flex-col gap-4">
@@ -118,7 +198,7 @@ export function IconPicker({ value, onPick, onBack }: { value: string; onPick: (
           {logos.length === 0 ? t('icon.nothing', { query: needle }) : t('icon.count', { count: logos.length })}
         </p>
       )}
-      <div className="grid max-h-[55vh] grid-cols-3 gap-1.5 overflow-y-auto sm:grid-cols-6">
+      <div ref={setGrid} className="grid max-h-[55vh] grid-cols-3 gap-1.5 overflow-y-auto sm:grid-cols-6">
         {logos.slice(0, shown).map((entry) => (
           <button
             key={entry.icon}
@@ -131,7 +211,7 @@ export function IconPicker({ value, onPick, onBack }: { value: string; onPick: (
               (value === entry.icon ? 'border-accent-500 bg-accent-500/10' : 'border-ink-700 hover:bg-ink-800')
             }
           >
-            <img src={iconPreview(entry.icon) ?? undefined} alt="" loading="lazy" decoding="async" className="h-8 w-8 object-contain" />
+            <TilePicture icon={entry.icon} root={grid} />
             <span className="max-w-full truncate text-[10px] text-mist-400">{entry.name}</span>
           </button>
         ))}

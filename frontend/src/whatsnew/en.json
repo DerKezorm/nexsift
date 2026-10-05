@@ -197,12 +197,19 @@
           "title": "The icon on the phone too",
           "body": "Pushes to ntfy and to “This device” show the source's icon, so the notification already tells where it comes from. When a sender sends an icon of its own, for example with ntfy's “Icon” header, that one wins. Gotify, Pushover and Telegram show no picture per message.",
           "where": "Rules › Forwarding to the phone"
+        },
+        {
+          "title": "About nexsift, rebuilt",
+          "body": "The About page looks whether a newer version is out (once a day, can be switched off, or with a button) and names every connection to the outside: the question to GitHub, the logos, and what the phone loads itself. Fetching logos from the web can be switched off there.",
+          "where": "About nexsift (at the foot of every page)"
         }
       ],
       "smallTitle": "Also",
       "small": [
         "Existing sources stay without an icon until you pick one.",
-        "The phone loads the picture itself from jsdelivr.net; nexsift does not have to be reachable from outside for that."
+        "The phone loads the picture itself from GitHub; nexsift does not have to be reachable from outside for that.",
+        "nexsift ships the logos of the nex apps (nexdeck, nexcrate, nexlore and the others) itself.",
+        "The logo picker loads only what is in view, all at once: saving no longer waits for the pictures."
       ]
     }
   }

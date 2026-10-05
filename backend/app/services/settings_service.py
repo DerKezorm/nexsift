@@ -56,6 +56,11 @@ DEFAULTS: dict[str, Any] = {
     "backup_keep": 7,
     #: Read-only API keys for dashboards like nexdeck; closed until the operator opens it.
     "api_keys_allowed": False,
+    #: Once a day ask GitHub whether a newer nexsift is out (``services/updates.py``).
+    "update_check": True,
+    #: Fetch logos from dashboard-icons and selfh.st (from GitHub). Off: only the nexapps logos that ship with
+    #: nexsift; what the phone loads itself is the phone's.
+    "icons_from_web": True,
 }
 
 #: What the frontend may read and the operator may change through PUT /api/settings.
@@ -77,6 +82,7 @@ PUBLIC_KEYS = (
     "backup_schedule",
     "backup_keep",
     "api_keys_allowed",
+    "icons_from_web",
 )
 
 #: Lower and upper bound for every number the operator can set. Outside: refused, not clamped silently.

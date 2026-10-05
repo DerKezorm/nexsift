@@ -215,6 +215,8 @@ export interface Settings {
   backup_schedule: BackupSchedule
   backup_keep: number
   api_keys_allowed: boolean
+  /** May nexsift fetch logos from dashboard-icons and selfh.st (from GitHub)? */
+  icons_from_web: boolean
 }
 
 export type BackupSchedule = 'off' | 'daily' | 'weekly' | 'monthly'
@@ -296,6 +298,21 @@ export interface ApiKeyCreated extends ApiKey {
 
 export interface About {
   version: string
+  license: string
+  repo_url: string
+  releases_url: string
+  /** Empty while nexsift has no project page. */
+  project_url: string
   ports: Record<string, number>
   doors: Record<string, boolean>
+}
+
+/** Whether a newer nexsift is out; asked once a day unless switched off. */
+export interface Updates {
+  update_check: boolean
+  checked: boolean
+  latest: string | null
+  newer: boolean
+  checked_at: string | null
+  release_url: string | null
 }

@@ -58,6 +58,8 @@ class Settings(BaseSettings):
     #: What the setup hints show as ports, when compose maps the doors to other ones outside. Empty: the inner
     #: ones. Format: "web=8490,gotify=8491,ntfy=8492,smtp=25,syslog=514".
     public_ports: str = ""
+    #: Where the update check asks; empty: GitHub's newest release of nexsift. Tests point it at a port that refuses.
+    update_url: str = ""
 
     _remembered_key: str | None = PrivateAttr(default=None)
 

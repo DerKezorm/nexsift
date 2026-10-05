@@ -15,6 +15,8 @@ os.environ["NEXSIFT_ARGON2_PARALLELISM"] = "1"
 os.environ["NEXSIFT_FRONTEND_DIST"] = os.path.join(_DATA, "no-frontend")
 os.environ["NEXSIFT_COOKIE_SECURE"] = "off"
 os.environ["NEXSIFT_PUBLIC_PORTS"] = "web=8490,gotify=8491,ntfy=8492,smtp=25,syslog=514"
+# No test reaches GitHub: the update check asks a port that refuses.
+os.environ["NEXSIFT_UPDATE_URL"] = "http://127.0.0.1:9/releases/latest"
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
@@ -36,7 +38,7 @@ from app.models import (  # noqa: E402
     Thread,
 )
 from app.security import brake  # noqa: E402
-from app.services import ingest, push, strangers  # noqa: E402
+from app.services import ingest, push, strangers, updates  # noqa: E402
 
 UI = {"X-Requested-By": "nexsift"}
 PASSWORD = "correct-horse-battery"
@@ -52,6 +54,7 @@ def clean_db() -> Iterator[None]:
     brake._fails.clear()
     ingest.counter.clear()
     push.reset_for_tests()
+    updates.forget()
     push.transport_for_tests = None
     strangers.clear()
     yield

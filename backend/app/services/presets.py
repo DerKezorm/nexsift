@@ -38,7 +38,7 @@ PRESETS: dict[str, dict[str, str]] = {
         "name": "Home Assistant",
         "icon": "dashboard-icons/home-assistant",
     },
-    "synology": {"kind": "synology", "protocol": "webhook", "name": "Synology", "icon": "dashboard-icons/synology"},
+    "synology": {"kind": "synology", "protocol": "webhook", "name": "Synology", "icon": "dashboard-icons/synology-dsm"},
     "paperless": {
         "kind": "paperless",
         "protocol": "webhook",

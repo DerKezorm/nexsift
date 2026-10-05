@@ -24,6 +24,7 @@ from .db import SessionLocal, init_db
 from .meldungen import meldung
 from .middleware import RequestContextMiddleware, unhandled_error
 from .routers import (
+    about,
     api_keys,
     api_v1,
     auth,
@@ -172,7 +173,22 @@ async def _http_error(request: Request, exc: StarletteHTTPException) -> JSONResp
 
 app.add_exception_handler(Exception, unhandled_error)
 
-for module in (system, auth, oidc, sources, icons, threads, rules, targets, ingress, backups, logs, api_keys, api_v1):
+for module in (
+    system,
+    about,
+    auth,
+    oidc,
+    sources,
+    icons,
+    threads,
+    rules,
+    targets,
+    ingress,
+    backups,
+    logs,
+    api_keys,
+    api_v1,
+):
     app.include_router(module.router)
 
 

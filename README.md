@@ -94,6 +94,9 @@ a Gotify server, an ntfy server, a Discord webhook, a mail server, a syslog serv
   `GET /api/v1/status` (unread, open critical, messages today, …) and `GET /api/v1/threads` (newest lines, titles
   only), with `Authorization: Bearer nxs_…`.
 - **What's new** after every update, once, with where to find each change; all of them on the About page.
+- **An About page that says what goes out:** once a day nexsift asks api.github.com whether a newer version is out
+  (can be switched off), and it fetches logos from GitHub for the picker (can be switched off too; the
+  logos of the nex apps ship with nexsift). The page names both, and what the phone loads itself.
 - **Housekeeping:** archived lines go after 30 days, all others after 90, what senders sent verbatim after 7. All
   three are settings.
 - German and English. Another language can be uploaded as one JSON file under Settings; for now it is kept in

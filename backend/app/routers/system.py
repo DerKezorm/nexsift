@@ -15,7 +15,7 @@ from .. import __version__
 from ..config import get_settings
 from ..deps import CurrentAccount, DbSession
 from ..meldungen import fehler
-from ..services import bus, settings_service, texts
+from ..services import bus, settings_service, texts, updates
 
 logger = logging.getLogger("nexsift.settings")
 
@@ -30,11 +30,15 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
-@router.get("/about", summary="Version and which doors are open")
+@router.get("/about", summary="Version, licence, where it comes from, and which doors are open")
 def about(account: CurrentAccount) -> dict[str, Any]:
     settings = get_settings()
     return {
         "version": __version__,
+        "license": "AGPL-3.0",
+        "repo_url": updates.REPO_URL,
+        "releases_url": updates.RELEASES_URL,
+        "project_url": updates.PROJECT_URL,
         "ports": settings.outside_ports(),
         "doors": {
             "gotify": settings.gotify_port > 0,

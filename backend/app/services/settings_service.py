@@ -61,6 +61,8 @@ DEFAULTS: dict[str, Any] = {
     #: Fetch logos from dashboard-icons and selfh.st (from GitHub). Off: only the nexapps logos that ship with
     #: nexsift; what the phone loads itself is the phone's.
     "icons_from_web": True,
+    #: Pushes to ntfy carry the source's logo instead of nexsift's. Off out of the box: a push shows nexsift's logo.
+    "push_source_icons": False,
 }
 
 #: What the frontend may read and the operator may change through PUT /api/settings.
@@ -83,6 +85,7 @@ PUBLIC_KEYS = (
     "backup_keep",
     "api_keys_allowed",
     "icons_from_web",
+    "push_source_icons",
 )
 
 #: Lower and upper bound for every number the operator can set. Outside: refused, not clamped silently.

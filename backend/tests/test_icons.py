@@ -34,11 +34,14 @@ def _record(request: httpx.Request) -> httpx.Response:
     return httpx.Response(200, json={})
 
 
-def _phone(client: TestClient) -> None:
+def _phone(client: TestClient, source_icons: bool = True) -> None:
+    """An ntfy target; with the switch for the source's logo on, unless a test asks for nexsift's."""
     SENT.clear()
     push.transport_for_tests = httpx.MockTransport(_record)
     body = {"kind": "ntfy", "name": "Phone", "url": "https://ntfy.example.com/alerts", "min_priority": "crit"}
     assert client.post("/api/targets", json=body, headers=UI).status_code == 201
+    values = {"push_source_icons": source_icons}
+    assert client.put("/api/settings", json={"values": values}, headers=UI).status_code == 200
 
 
 def _run() -> None:
@@ -91,13 +94,33 @@ def test_ntfy_gets_the_logo_of_the_source(client: TestClient, operator: dict) ->
     assert SENT[0]["headers"]["icon"] == DASHBOARD_PROXMOX
 
 
-def test_without_an_icon_ntfy_gets_none(client: TestClient, operator: dict) -> None:
+def test_without_an_icon_ntfy_gets_nexsifts(client: TestClient, operator: dict) -> None:
     _phone(client)
     source = add_source(client, "webhook", "Server")
     client.post("/api/v1/hook/" + source["connection"]["token"], json={"title": "Down", "priority": "critical"})
     _run()
     assert len(SENT) == 1
-    assert "icon" not in SENT[0]["headers"]
+    assert SENT[0]["headers"]["icon"] == icons.NEXSIFT_LOGO
+
+
+def test_out_of_the_box_every_push_shows_nexsifts_logo(
+    client: TestClient, ntfy_client: TestClient, operator: dict
+) -> None:
+    """The source's logo goes to ntfy only with the switch on; even the sender's own icon stays out."""
+    assert client.get("/api/settings").json()["push_source_icons"] is False
+    SENT.clear()
+    push.transport_for_tests = httpx.MockTransport(_record)
+    body = {"kind": "ntfy", "name": "Phone", "url": "https://ntfy.example.com/alerts", "min_priority": "crit"}
+    assert client.post("/api/targets", json=body, headers=UI).status_code == 201
+    proxmox = add_source(client, "proxmox")
+    client.post("/api/v1/hook/" + proxmox["connection"]["token"], json={"title": "Down", "priority": "critical"})
+    topic = add_source(client, "homeassistant")["connection"]["topic"]
+    ntfy_client.post(
+        f"/{topic}", content=b"x", headers={"Title": "Washer", "Priority": "5", "Icon": "https://example.com/w.png"}
+    )
+    _run()
+    assert len(SENT) == 2
+    assert [sent["headers"]["icon"] for sent in SENT] == [icons.NEXSIFT_LOGO, icons.NEXSIFT_LOGO]
 
 
 def test_the_senders_own_icon_wins(client: TestClient, ntfy_client: TestClient, operator: dict) -> None:
@@ -137,9 +160,8 @@ def test_the_all_clear_carries_the_icon_too(client: TestClient, operator: dict) 
     assert [sent["headers"].get("icon") for sent in SENT] == [expected, expected]
 
 
-def test_web_push_carries_the_icon() -> None:
-    data = json.loads(webpush.payload("t", "b", "crit", "/", "", DASHBOARD_PROXMOX))
-    assert data["icon"] == DASHBOARD_PROXMOX
+def test_web_push_carries_no_icon() -> None:
+    """Web push always shows nexsift's logo; the service worker may not load one from GitHub."""
     assert "icon" not in json.loads(webpush.payload("t", "b", "crit", "/", ""))
 
 

@@ -181,3 +181,20 @@ def test_several_devices_are_several_targets_and_the_same_one_twice_is_one(clien
     assert again["id"] == phone["id"] and again["name"] == "Phone, again"
     with SessionLocal() as db:
         assert db.query(Target).count() == 2
+
+
+def test_the_device_always_shows_nexsifts_logo(client: TestClient, operator: dict) -> None:
+    """In 0.8.0 the source's logo went along, from GitHub; the service worker may load pictures from nexsift only, and
+    Chrome showed the notification with no picture at all."""
+    _switch(client, True)
+    _device(client)
+    source = add_source(client, "proxmox", "PVE")
+    client.post("/api/v1/hook/" + source["connection"]["token"], json={"title": "Down", "priority": "critical"})
+    asyncio.run(push.deliver_due())
+    plain = http_ece.decrypt(
+        SENT[-1].content,
+        private_key=_private(RFC_UA_PRIVATE),
+        auth_secret=webpush.unb64url(RFC_AUTH),
+        version="aes128gcm",
+    )
+    assert "icon" not in json.loads(plain)

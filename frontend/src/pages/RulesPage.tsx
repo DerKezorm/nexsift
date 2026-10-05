@@ -346,6 +346,13 @@ function Defaults() {
           </option>
         ))}
       </SelectField>
+      <Switch
+        label={t('rules.defaults.sourceIcons')}
+        hint={t('rules.defaults.sourceIconsHint')}
+        help={t('rules.defaults.sourceIconsHelp')}
+        checked={draft.push_source_icons}
+        onChange={(value) => setDraft({ ...draft, push_source_icons: value })}
+      />
       <div className="grid grid-cols-2 gap-3">
         <Field label={t('rules.defaults.window')} help={t('rules.defaults.windowHelp')} {...number('bundle_minutes')} />
         <Field label={t('rules.defaults.throttle')} help={t('rules.defaults.throttleHelp')} {...number('throttle_per_minute')} />

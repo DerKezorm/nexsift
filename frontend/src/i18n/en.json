@@ -29,7 +29,7 @@
     },
     "whatsNewLabel": "What's new",
     "logos": "Logos",
-    "logosText": "The logos for sources come from these collections; nexsift ships those of the nex apps. For the picker, nexsift fetches the list from api.github.com and the pictures from raw.githubusercontent.com and keeps them, the list for a day, each picture for 14 days; your browser asks no other server. A push to ntfy or to “This device” names the icon's address, and the phone loads the picture itself.",
+    "logosText": "The logos for sources come from these collections; nexsift ships those of the nex apps. For the picker, nexsift fetches the list from api.github.com and the pictures from raw.githubusercontent.com and keeps them, the list for a day, each picture for 14 days; your browser asks no other server. A push to ntfy names the address of a logo (nexsift's out of the box), and the phone loads the picture itself from GitHub.",
     "logosSwitch": "Fetch logos from the web",
     "logosSwitchHint": "Off: nexsift does not ask GitHub. The picker then offers only the logos of the nex apps."
   },
@@ -414,7 +414,10 @@
       "throttleHelp": "When a source sends more than this many messages per minute, nexsift only counts the rest. Protects against endless loops.",
       "title": "Defaults",
       "window": "Bundle window (minutes)",
-      "windowHelp": "What arrives within this time shares a line: all info messages of a source together as routine, warnings and critical ones per subject. An open critical problem stays one line until it is resolved."
+      "windowHelp": "What arrives within this time shares a line: all info messages of a source together as routine, warnings and critical ones per subject. An open critical problem stays one line until it is resolved.",
+      "sourceIcons": "Send the source's logo to ntfy",
+      "sourceIconsHint": "Off: every push shows the nexsift logo.",
+      "sourceIconsHelp": "On: pushes to ntfy carry the source's logo (or a rule's, or the one the sender sends itself), so the notification already tells where it comes from. The phone then loads the picture itself from GitHub. Gotify, Pushover and Telegram show no picture per message, “This device” always shows the nexsift logo."
     },
     "down": "Move down",
     "drop": "Drop",
@@ -1313,10 +1316,10 @@
     "failed": "The list of logos did not load. nexsift fetches it from GitHub and needs internet access for that.",
     "more": "Show {{count}} more",
     "back": "Back",
-    "sourceHelp": "Shown next to the source in nexsift and on the phone, with ntfy and with “This device”. Gotify, Pushover and Telegram show no picture per message. The logos come from the dashboard-icons and selfh.st collections; the phone loads the picture itself from GitHub (raw.githubusercontent.com). When a sender sends an icon of its own (ntfy's “Icon” header), that one wins.",
+    "sourceHelp": "Shown next to the source in nexsift, in the inbox and with the rules. Pushes to ntfy can carry it too (Rules › Defaults). The logos come from the dashboard-icons and selfh.st collections.",
     "sourceNone": "No icon. nexsift shows two letters, the phone only the text.",
     "ruleLabel": "Icon",
-    "ruleHelp": "For sources several apps report through: when the rule matches, the line shows this logo instead of the source's, and the push to ntfy or “This device” carries it too. When the sender sends an icon of its own, that one wins.",
+    "ruleHelp": "For sources several apps report through: when the rule matches, the line shows this logo instead of the source's. The push to ntfy can carry it too (Rules › Defaults).",
     "ruleNone": "No icon. The line shows the source's.",
     "chip": "Icon"
   }

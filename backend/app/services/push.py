@@ -87,8 +87,11 @@ def _link(event: Event | None) -> str:
     return str(event.links[0].get("url", ""))
 
 
-def _icon(source: Source | None, event: Event | None) -> str:
-    """The sender's own picture when it sent one, else the source's."""
+def _icon(db: Session, source: Source | None, event: Event | None) -> str:
+    """The sender's own picture when it sent one, else the source's; "" while pushes carry nexsift's logo (the
+    switch under Rules, Defaults, off out of the box)."""
+    if not settings_service.get(db, "push_source_icons"):
+        return ""
     if event is not None and event.icon:
         return event.icon
     return icons.public_url(source.icon) if source is not None else ""
@@ -182,7 +185,14 @@ def _first(db: Session, source: Source, thread: Thread, event: Event) -> None:
         return
     body = _event_body(db, event)
     if _enqueue(
-        db, thread, "first", f"{source.name}: {title}", body, thread.priority, _link(event), icon=_icon(source, event)
+        db,
+        thread,
+        "first",
+        f"{source.name}: {title}",
+        body,
+        thread.priority,
+        _link(event),
+        icon=_icon(db, source, event),
     ):
         thread.pushed = True
         thread.since_push = 0
@@ -204,7 +214,7 @@ def on_event(db: Session, source: Source, thread: Thread, event: Event, *, is_ne
             _event_body(db, event),
             event.priority,
             _link(event),
-            icon=_icon(source, event),
+            icon=_icon(db, source, event),
         )
         thread.pushed = True
         return
@@ -245,7 +255,7 @@ def on_resolved(db: Session, thread: Thread) -> None:
         texts.say("push.resolvedAfter", language, took=took),
         thread.priority,
         send_as=INFO,
-        icon=_icon(source, latest),
+        icon=_icon(db, source, latest),
     )
     thread.window_until = None
     thread.since_push = 0
@@ -275,7 +285,7 @@ def due_windows(db: Session) -> int:
         if thread.since_push > 0 and not thread.resolved_at:
             latest = db.scalar(select(Event).where(Event.thread_id == thread.id).order_by(Event.id.desc()).limit(1))
             title = f"{name}: {_thread_title(db, thread, latest)}"
-            icon = _icon(source, latest)
+            icon = _icon(db, source, latest)
             if mode == "window" and not thread.pushed:
                 body = texts.say("push.messages", language, count=thread.since_push)
                 count += _enqueue(db, thread, "first", title, body, thread.priority, icon=icon)
@@ -332,11 +342,13 @@ async def send(
     thread_id: int | None = None,
     icon: str = "",
 ) -> None:
-    """One message to one target. Raises ``PushError`` with a short, readable reason. ``icon`` reaches ntfy and web
-    push; Gotify, Telegram and Pushover have no picture per message."""
+    """One message to one target. Raises ``PushError`` with a short, readable reason. ``icon`` reaches ntfy only,
+    and only with the switch on; otherwise ntfy gets nexsift's logo. Gotify, Telegram and Pushover have no picture
+    per message, and web push always shows nexsift's own logo. In 0.8.0 web push carried the source's too; the
+    service worker may load pictures from nexsift only, and Chrome showed no picture at all."""
     config = target_config(target)
     if target.kind == "webpush":
-        await _send_webpush(config, title, body, priority, kind, thread_id, icon)
+        await _send_webpush(config, title, body, priority, kind, thread_id)
         return
     url = str(config.get("url", "")).strip()
     token = str(config.get("token", "")).strip()
@@ -350,8 +362,8 @@ async def send(
                     headers["Tags"] = "white_check_mark,nexsift"
                 if link:
                     headers["Click"] = link
-                if icon:
-                    headers["Icon"] = _header(icon)
+                # The source's logo when the switch says so, else nexsift's own: every push shows a logo.
+                headers["Icon"] = _header(icon or icons.NEXSIFT_LOGO)
                 if token:
                     headers["Authorization"] = f"Bearer {token}"
                 response = await client.post(url, content=(body or title).encode("utf-8"), headers=headers)
@@ -438,7 +450,7 @@ URGENCY = {CRIT: "high", WARN: "normal"}
 
 
 async def _send_webpush(
-    config: dict[str, Any], title: str, body: str, priority: str, kind: str, thread_id: int | None, icon: str = ""
+    config: dict[str, Any], title: str, body: str, priority: str, kind: str, thread_id: int | None
 ) -> None:
     with SessionLocal() as db:
         if not settings_service.get(db, "webpush_enabled"):
@@ -448,7 +460,7 @@ async def _send_webpush(
     endpoint = str(config.get("url", ""))
     url = f"/?thread={thread_id}" if thread_id else "/"
     tag = f"thread-{thread_id}" if thread_id else ""
-    data = webpush.payload(title, body or ("Resolved" if kind == "allclear" else ""), priority, url, tag, icon)
+    data = webpush.payload(title, body or ("Resolved" if kind == "allclear" else ""), priority, url, tag)
     content = webpush.encrypt(data, str(config.get("p256dh", "")), str(config.get("auth", "")))
     headers = {
         "Authorization": webpush.vapid_header(key, endpoint, subject),

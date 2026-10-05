@@ -29,7 +29,7 @@
     },
     "whatsNewLabel": "Was ist neu",
     "logos": "Logos",
-    "logosText": "Die Logos der Quellen stammen aus diesen Sammlungen, die der nex-Apps bringt nexsift mit. Für die Auswahl holt nexsift die Liste von api.github.com und die Bilder von raw.githubusercontent.com und bewahrt sie auf, die Liste einen Tag, jedes Bild 14 Tage; dein Browser fragt keinen anderen Server. Ein Push an ntfy oder an „Dieses Gerät“ nennt die Adresse des Icons, das Bild lädt das Handy selbst.",
+    "logosText": "Die Logos der Quellen stammen aus diesen Sammlungen, die der nex-Apps bringt nexsift mit. Für die Auswahl holt nexsift die Liste von api.github.com und die Bilder von raw.githubusercontent.com und bewahrt sie auf, die Liste einen Tag, jedes Bild 14 Tage; dein Browser fragt keinen anderen Server. Ein Push an ntfy nennt die Adresse eines Logos (ab Werk das von nexsift), das Bild lädt das Handy selbst von GitHub.",
     "logosSwitch": "Logos aus dem Netz holen",
     "logosSwitchHint": "Aus: nexsift fragt GitHub nicht. Zur Auswahl stehen dann nur die Logos der nex-Apps."
   },
@@ -414,7 +414,10 @@
       "throttleHelp": "Schickt eine Quelle mehr als so viele Meldungen pro Minute, zählt nexsift den Rest nur noch. Schützt vor Endlosschleifen.",
       "title": "Standard",
       "window": "Bündelfenster (Minuten)",
-      "windowHelp": "Was innerhalb dieser Zeit kommt, landet in einer Zeile: alle Info-Meldungen einer Quelle zusammen als Routine, Warnungen und Kritisches je Thema. Ein offenes kritisches Problem bleibt eine Zeile, bis es erledigt ist."
+      "windowHelp": "Was innerhalb dieser Zeit kommt, landet in einer Zeile: alle Info-Meldungen einer Quelle zusammen als Routine, Warnungen und Kritisches je Thema. Ein offenes kritisches Problem bleibt eine Zeile, bis es erledigt ist.",
+      "sourceIcons": "Logo der Quelle an ntfy schicken",
+      "sourceIconsHint": "Aus: jeder Push zeigt das nexsift-Logo.",
+      "sourceIconsHelp": "An: Pushes an ntfy tragen das Logo der Quelle (oder einer Regel, oder das, das der Absender selbst mitschickt), so siehst du schon in der Mitteilung, woher sie kommt. Das Handy lädt das Bild dann selbst von GitHub. Gotify, Pushover und Telegram zeigen kein Bild je Nachricht, „Dieses Gerät“ zeigt immer das nexsift-Logo."
     },
     "down": "Nach unten",
     "drop": "Verwerfen",
@@ -1313,10 +1316,10 @@
     "failed": "Die Liste der Logos ließ sich nicht laden. nexsift holt sie von GitHub und braucht dafür Zugang ins Internet.",
     "more": "{{count}} weitere zeigen",
     "back": "Zurück",
-    "sourceHelp": "Erscheint in nexsift neben der Quelle und auf dem Handy, bei ntfy und bei „Dieses Gerät“. Gotify, Pushover und Telegram zeigen kein Bild je Nachricht. Die Logos kommen aus den Sammlungen dashboard-icons und selfh.st; das Handy lädt das Bild selbst von GitHub (raw.githubusercontent.com). Schickt ein Absender selbst ein Icon mit (bei ntfy der Header „Icon“), hat seins Vorrang.",
+    "sourceHelp": "Erscheint in nexsift neben der Quelle, im Posteingang und bei den Regeln. Auf Wunsch tragen es auch die Pushes an ntfy (Regeln › Standard). Die Logos kommen aus den Sammlungen dashboard-icons und selfh.st.",
     "sourceNone": "Kein Icon. nexsift zeigt zwei Buchstaben, das Handy nur den Text.",
     "ruleLabel": "Icon",
-    "ruleHelp": "Für Quellen, über die mehrere Apps melden: passt die Regel, zeigt die Zeile dieses Logo statt dem der Quelle, und der Push an ntfy oder „Dieses Gerät“ trägt es auch. Schickt der Absender selbst ein Icon mit, hat seins Vorrang.",
+    "ruleHelp": "Für Quellen, über die mehrere Apps melden: passt die Regel, zeigt die Zeile dieses Logo statt dem der Quelle. Auf Wunsch trägt es auch der Push an ntfy (Regeln › Standard).",
     "ruleNone": "Kein Icon. Die Zeile zeigt das der Quelle.",
     "chip": "Icon"
   }

@@ -211,6 +211,23 @@
         "nexsift ships the logos of the nex apps (nexdeck, nexcrate, nexlore and the others) itself.",
         "The logo picker loads only what is in view, all at once: saving no longer waits for the pictures."
       ]
+    },
+    "0.8.1": {
+      "lead": "Pushes show the nexsift logo again.",
+      "sections": [
+        {
+          "title": "The nexsift logo on every push",
+          "body": "Since 0.8.0, pushes carried the source's logo, and with “This device” Chrome then showed the notification with no picture at all. Every push now shows the nexsift logo, ntfy too. The sources' icons stay in nexsift: in the list, the inbox and the rules.",
+          "where": "Rules › Forwarding to the phone"
+        },
+        {
+          "title": "The source's logo to ntfy, if you like",
+          "body": "If you want ntfy to show at a glance where a notification comes from, switch on the source's logo for ntfy. “This device” always shows the nexsift logo.",
+          "where": "Rules › Defaults › Send the source's logo to ntfy"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": []
     }
   }
 }

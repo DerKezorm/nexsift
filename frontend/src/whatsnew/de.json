@@ -211,6 +211,23 @@
         "Die Logos der nex-Apps (nexdeck, nexcrate, nexlore und die anderen) bringt nexsift selbst mit.",
         "Die Logo-Auswahl lädt nur, was zu sehen ist, und alles auf einmal: Speichern wartet nicht mehr auf die Bilder."
       ]
+    },
+    "0.8.1": {
+      "lead": "Pushes zeigen wieder das nexsift-Logo.",
+      "sections": [
+        {
+          "title": "Das nexsift-Logo auf jedem Push",
+          "body": "Seit 0.8.0 trugen Pushes das Logo der Quelle, und bei „Dieses Gerät“ zeigte Chrome die Mitteilung dann ganz ohne Bild. Jetzt zeigt jeder Push das nexsift-Logo, auch bei ntfy. Die Icons der Quellen bleiben in nexsift: in der Liste, im Posteingang und bei den Regeln.",
+          "where": "Regeln › Weiterleitung aufs Handy"
+        },
+        {
+          "title": "Logo der Quelle an ntfy, wenn du willst",
+          "body": "Wer bei ntfy auf einen Blick sehen will, woher eine Mitteilung kommt, schaltet das Logo der Quelle für ntfy ein. „Dieses Gerät“ zeigt immer das nexsift-Logo.",
+          "where": "Regeln › Standard › Logo der Quelle an ntfy schicken"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": []
     }
   }
 }

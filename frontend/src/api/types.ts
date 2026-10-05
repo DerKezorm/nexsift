@@ -217,6 +217,8 @@ export interface Settings {
   api_keys_allowed: boolean
   /** May nexsift fetch logos from dashboard-icons and selfh.st (from GitHub)? */
   icons_from_web: boolean
+  /** Pushes to ntfy carry the source's logo instead of nexsift's. */
+  push_source_icons: boolean
 }
 
 export type BackupSchedule = 'off' | 'daily' | 'weekly' | 'monthly'

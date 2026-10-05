@@ -35,6 +35,8 @@ logger = logging.getLogger("nexsift.icons")
 #: Logos that ship with nexsift: the nexapps family.
 BUNDLED = Path(__file__).resolve().parent.parent / "bundled_icons"
 BUNDLED_URL = "https://raw.githubusercontent.com/DerKezorm/nexsift/main/backend/app/bundled_icons/{name}.png"
+#: nexsift's own logo, for pushes to ntfy when they do not carry the source's.
+NEXSIFT_LOGO = "https://raw.githubusercontent.com/DerKezorm/nexsift/main/frontend/public/icon-192.png"
 COLLECTIONS: dict[str, tuple[str, str]] = {
     "nexapps": (BUNDLED_URL, ""),
     "dashboard-icons": (

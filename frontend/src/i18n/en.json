@@ -1,11 +1,6 @@
 {
   "about": {
-    "historyLead": "What came with each version, as it was shown after the update.",
-    "historyTitle": "All versions",
-    "read": "Read",
     "releases": "Releases",
-    "reset": "Without a provider set up, run this on the server, then set a new password:",
-    "resetTitle": "Forgot the password?",
     "tagline": "One inbox for everything your homelab has to say.",
     "title": "About nexsift",
     "whatsNew": "What's new in {{version}}",
@@ -18,7 +13,6 @@
     "report": "Found a bug?",
     "reportLink": "Report it on GitHub",
     "builtWith": "Built with",
-    "logosFrom": "The logos for sources come from these collections; nexsift ships the logos of the nex apps itself:",
     "updates": {
       "title": "Updates",
       "text": "Whether a newer version of nexsift is out.",
@@ -33,20 +27,11 @@
       "checkedAt": "last looked {{when}}",
       "whatGoesOut": "Only the question goes out: a request to api.github.com for the newest release of nexsift, with no names, messages or settings."
     },
-    "outside": {
-      "title": "Connections to the outside",
-      "text": "When nexsift or your phone asks another server. Everything else stays with you.",
-      "updatesTitle": "Asking for updates",
-      "updates": "Once a day a question to api.github.com, see above. Its switch is there.",
-      "logosTitle": "Logos for the sources",
-      "logos": "For the picker, nexsift fetches the list of logos from api.github.com and the pictures from raw.githubusercontent.com, and keeps both: the list for a day, each picture for 14 days. An own picture address is fetched from wherever it points. Your browser asks none of these servers; it gets everything from nexsift.",
-      "logosSwitch": "Fetch logos from the web",
-      "logosSwitchHint": "Off: nexsift does not ask GitHub. The picker then offers only the logos of the nex apps that ship with nexsift.",
-      "phoneTitle": "The icon on the phone",
-      "phone": "A push to ntfy or to “This device” names the icon's address, and the phone loads the picture itself, from raw.githubusercontent.com or from your own address. Without an icon it loads nothing.",
-      "pushTitle": "Pushes",
-      "push": "Messages go only to the targets you set up under Rules. “This device” goes through the browser maker's push service and is off out of the box."
-    }
+    "whatsNewLabel": "What's new",
+    "logos": "Logos",
+    "logosText": "The logos for sources come from these collections; nexsift ships those of the nex apps. For the picker, nexsift fetches the list from api.github.com and the pictures from raw.githubusercontent.com and keeps them, the list for a day, each picture for 14 days; your browser asks no other server. A push to ntfy or to “This device” names the icon's address, and the phone loads the picture itself.",
+    "logosSwitch": "Fetch logos from the web",
+    "logosSwitchHint": "Off: nexsift does not ask GitHub. The picker then offers only the logos of the nex apps."
   },
   "common": {
     "back": "Back",

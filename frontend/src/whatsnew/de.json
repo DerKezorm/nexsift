@@ -200,7 +200,7 @@
         },
         {
           "title": "Über nexsift, neu aufgebaut",
-          "body": "Die Seite „Über nexsift“ sieht nach, ob eine neuere Version erschienen ist (einmal am Tag, abschaltbar, oder per Knopf), und nennt jede Verbindung nach außen: die Frage an GitHub, die Logos und was das Handy selbst lädt. Das Holen der Logos aus dem Netz lässt sich dort abschalten.",
+          "body": "Die Seite „Über nexsift“ ist aufgebaut wie bei den anderen nex-Apps. Sie sieht nach, ob eine neuere Version erschienen ist (einmal am Tag, abschaltbar, oder per Knopf), und sagt, woher die Logos kommen und was das Handy selbst lädt. Das Holen der Logos aus dem Netz lässt sich dort abschalten.",
           "where": "Über nexsift (unten auf jeder Seite)"
         }
       ],

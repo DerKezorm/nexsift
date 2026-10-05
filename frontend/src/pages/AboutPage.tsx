@@ -1,7 +1,7 @@
 /**
- * About nexsift, built like nexlore's: version, licence, where it comes from, whether a newer one is out, what goes
- * out to other servers, and what it is built with. nexsift's own additions: every "What's new" so far, and the way
- * back in without a password.
+ * About nexsift, built like nexlore's: version, "What's new", licence, where it comes from, whether a newer one is
+ * out, and what it is built with. Where nexlore names its fonts, nexsift names its logos: where they come from, what
+ * the phone loads itself, and the switch for fetching them.
  *
  * The switches for the two calls nexsift makes by itself stand here, next to the sentence that says what goes out:
  * the daily question to GitHub, and fetching logos.
@@ -11,7 +11,6 @@ import { useTranslation } from 'react-i18next'
 
 import { api, errorMessage } from '../api/client'
 import type { About, Settings, Updates } from '../api/types'
-import { Explainer } from '../components/Help'
 import { Logo } from '../components/Logo'
 import { Symbol, type SymbolName } from '../components/Symbol'
 import { WhatsNewDialog } from '../components/WhatsNewDialog'
@@ -75,7 +74,7 @@ export function AboutPage() {
   // A side matter: when the answer does not come, the page simply shows none.
   const updates = useLoad(() => api.get<Updates>('/api/about/updates').catch(() => null), [])
   const settings = useLoad(() => api.get<Settings>('/api/settings'), [])
-  const [reading, setReading] = useState<string | null>(null)
+  const [reading, setReading] = useState(false)
   const [busy, setBusy] = useState(false)
   const [problem, setProblem] = useState<string | null>(null)
 
@@ -113,11 +112,11 @@ export function AboutPage() {
   const facts = about.data
   const state = updates.data
   const latest = state?.latest?.replace(/^v/, '')
-  const versions = allVersions(facts.version)
-  const entry = reading ? entryFor(reading, i18n.language) : null
+  const shown = allVersions(facts.version)[0]
+  const entry = shown ? entryFor(shown, i18n.language) : null
 
   return (
-    <div className="flex max-w-3xl flex-col gap-6">
+    <div className="flex max-w-2xl flex-col gap-6">
       <div className="flex items-center gap-4">
         <Logo className="h-14 w-14" />
         <div>
@@ -138,13 +137,15 @@ export function AboutPage() {
               {facts.version}
             </span>
             {state?.newer && <span className="rounded-full bg-accent-500/15 px-2 py-0.5 text-xs font-semibold text-accent-400">{t('about.newer', { version: latest })}</span>}
-            {versions[0] && (
-              <Button variant="ghost" size="sm" onClick={() => setReading(versions[0])}>
-                {t('about.whatsNew', { version: versions[0] })}
-              </Button>
-            )}
           </span>
         </Row>
+        {shown && entry && (
+          <Row label={t('about.whatsNewLabel')}>
+            <button type="button" onClick={() => setReading(true)} className="text-accent-400 underline decoration-accent-500/40 underline-offset-4 hover:decoration-accent-400">
+              {t('about.whatsNew', { version: shown })}
+            </button>
+          </Row>
+        )}
         <Row label={t('about.licence')}>
           <Out href="https://www.gnu.org/licenses/agpl-3.0.html">{facts.license}</Out>
         </Row>
@@ -198,50 +199,6 @@ export function AboutPage() {
       </Card>
 
       <Card>
-        <CardTitle symbol="external" title={t('about.outside.title')} text={t('about.outside.text')} />
-        <ul className="flex flex-col divide-y divide-ink-700">
-          <li className="py-3 text-sm">
-            <p className="font-medium text-mist-100">{t('about.outside.updatesTitle')}</p>
-            <p className="mt-0.5 text-mist-500">{t('about.outside.updates')}</p>
-          </li>
-          <li className="flex flex-col gap-3 py-3 text-sm">
-            <div>
-              <p className="font-medium text-mist-100">{t('about.outside.logosTitle')}</p>
-              <p className="mt-0.5 text-mist-500">{t('about.outside.logos')}</p>
-            </div>
-            {settings.data && (
-              <Switch label={t('about.outside.logosSwitch')} hint={t('about.outside.logosSwitchHint')} checked={settings.data.icons_from_web} onChange={(on) => void switchIcons(on)} />
-            )}
-          </li>
-          <li className="py-3 text-sm">
-            <p className="font-medium text-mist-100">{t('about.outside.phoneTitle')}</p>
-            <p className="mt-0.5 text-mist-500">{t('about.outside.phone')}</p>
-          </li>
-          <li className="py-3 text-sm">
-            <p className="font-medium text-mist-100">{t('about.outside.pushTitle')}</p>
-            <p className="mt-0.5 text-mist-500">{t('about.outside.push')}</p>
-          </li>
-        </ul>
-      </Card>
-
-      {versions.length > 1 && (
-        <Card>
-          <CardTitle symbol="info" title={t('about.historyTitle')} text={t('about.historyLead')} />
-          <ul className="flex flex-col divide-y divide-ink-700">
-            {versions.map((version) => (
-              <li key={version} className="flex items-center gap-3 py-2.5">
-                <span className="w-16 font-mono text-sm text-mist-300 tabular-nums">{version}</span>
-                <span className="min-w-0 flex-1 truncate text-sm text-mist-500">{entryFor(version, i18n.language)?.lead}</span>
-                <Button variant="ghost" size="sm" onClick={() => setReading(version)}>
-                  {t('about.read')}
-                </Button>
-              </li>
-            ))}
-          </ul>
-        </Card>
-      )}
-
-      <Card>
         <CardTitle symbol="code" title={t('about.builtWith')} />
         <ul className="flex flex-wrap gap-x-3 gap-y-1.5 text-sm">
           {PARTS.map((part) => (
@@ -251,8 +208,9 @@ export function AboutPage() {
             </li>
           ))}
         </ul>
-        <p className="mt-4 text-sm text-mist-500">{t('about.logosFrom')}</p>
-        <ul className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1.5 text-sm">
+        <h3 className="mt-4 text-xs font-medium tracking-wide text-mist-400 uppercase">{t('about.logos')}</h3>
+        <p className="mt-1 text-xs leading-relaxed text-mist-500">{t('about.logosText')}</p>
+        <ul className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-sm">
           {LOGOS.map((part) => (
             <li key={part.name}>
               <Out href={part.url}>{part.name}</Out>
@@ -260,14 +218,14 @@ export function AboutPage() {
             </li>
           ))}
         </ul>
+        {settings.data && (
+          <div className="mt-4">
+            <Switch label={t('about.logosSwitch')} hint={t('about.logosSwitchHint')} checked={settings.data.icons_from_web} onChange={(on) => void switchIcons(on)} />
+          </div>
+        )}
       </Card>
 
-      <Explainer title={t('about.resetTitle')}>
-        {t('about.reset')}
-        <code className="mt-1 block font-mono text-xs break-all text-mist-200">docker exec -it nexsift python -m app.reset_password</code>
-      </Explainer>
-
-      {reading && entry && <WhatsNewDialog version={reading} entry={entry} onClose={() => setReading(null)} />}
+      {reading && shown && entry && <WhatsNewDialog version={shown} entry={entry} onClose={() => setReading(false)} />}
     </div>
   )
 }

@@ -200,7 +200,7 @@
         },
         {
           "title": "About nexsift, rebuilt",
-          "body": "The About page looks whether a newer version is out (once a day, can be switched off, or with a button) and names every connection to the outside: the question to GitHub, the logos, and what the phone loads itself. Fetching logos from the web can be switched off there.",
+          "body": "The About page is built like in the other nex apps. It looks whether a newer version is out (once a day, can be switched off, or with a button) and says where the logos come from and what the phone loads itself. Fetching logos from the web can be switched off there.",
           "where": "About nexsift (at the foot of every page)"
         }
       ],

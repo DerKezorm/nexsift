@@ -1,11 +1,6 @@
 {
   "about": {
-    "historyLead": "Was mit jeder Version dazukam, so wie es nach dem Update angezeigt wurde.",
-    "historyTitle": "Alle Versionen",
-    "read": "Lesen",
     "releases": "Veröffentlichungen",
-    "reset": "Ohne eingerichteten Anbieter auf dem Server ausführen, dann ein neues Passwort setzen:",
-    "resetTitle": "Passwort vergessen?",
     "tagline": "Eine Inbox für alles, was dein Homelab zu sagen hat.",
     "title": "Über nexsift",
     "whatsNew": "Was ist neu in {{version}}",
@@ -18,7 +13,6 @@
     "report": "Einen Fehler gefunden?",
     "reportLink": "Auf GitHub melden",
     "builtWith": "Gebaut mit",
-    "logosFrom": "Die Logos der Quellen stammen aus diesen Sammlungen, die Logos der nex-Apps bringt nexsift selbst mit:",
     "updates": {
       "title": "Aktualisierungen",
       "text": "Ob es eine neuere Version von nexsift gibt.",
@@ -33,20 +27,11 @@
       "checkedAt": "zuletzt nachgesehen {{when}}",
       "whatGoesOut": "Hinaus geht nur die Frage: eine Anfrage an api.github.com nach der neuesten Veröffentlichung von nexsift, ohne Namen, Meldungen oder Einstellungen."
     },
-    "outside": {
-      "title": "Verbindungen nach außen",
-      "text": "Wann nexsift oder dein Handy einen anderen Server fragt. Alles andere bleibt bei dir.",
-      "updatesTitle": "Nach Aktualisierungen fragen",
-      "updates": "Einmal am Tag eine Frage an api.github.com, siehe oben. Der Schalter steht dort.",
-      "logosTitle": "Logos für die Quellen",
-      "logos": "Für die Auswahl holt nexsift die Liste der Logos von api.github.com und die Bilder von raw.githubusercontent.com und bewahrt beides auf: die Liste einen Tag, jedes Bild 14 Tage. Eine eigene Bildadresse holt nexsift von dort, wo sie hinzeigt. Dein Browser fragt keinen dieser Server, er bekommt alles von nexsift.",
-      "logosSwitch": "Logos aus dem Netz holen",
-      "logosSwitchHint": "Aus: nexsift fragt GitHub nicht. Zur Auswahl stehen dann nur die Logos der nex-Apps, die nexsift mitbringt.",
-      "phoneTitle": "Das Icon auf dem Handy",
-      "phone": "Ein Push an ntfy oder an „Dieses Gerät“ nennt die Adresse des Icons, und das Handy lädt das Bild selbst, von raw.githubusercontent.com oder von deiner eigenen Adresse. Ohne Icon lädt es nichts.",
-      "pushTitle": "Pushes",
-      "push": "Meldungen gehen nur an die Ziele, die du unter Regeln einrichtest. „Dieses Gerät“ läuft über den Push-Dienst des Browserherstellers und ist ab Werk aus."
-    }
+    "whatsNewLabel": "Was ist neu",
+    "logos": "Logos",
+    "logosText": "Die Logos der Quellen stammen aus diesen Sammlungen, die der nex-Apps bringt nexsift mit. Für die Auswahl holt nexsift die Liste von api.github.com und die Bilder von raw.githubusercontent.com und bewahrt sie auf, die Liste einen Tag, jedes Bild 14 Tage; dein Browser fragt keinen anderen Server. Ein Push an ntfy oder an „Dieses Gerät“ nennt die Adresse des Icons, das Bild lädt das Handy selbst.",
+    "logosSwitch": "Logos aus dem Netz holen",
+    "logosSwitchHint": "Aus: nexsift fragt GitHub nicht. Zur Auswahl stehen dann nur die Logos der nex-Apps."
   },
   "common": {
     "back": "Zurück",

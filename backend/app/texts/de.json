@@ -45,6 +45,8 @@
     "minutes": "{{count}} Min.",
     "hours": "{{count}} Std.",
     "days_one": "1 Tag",
-    "days_other": "{{count}} Tage"
+    "days_other": "{{count}} Tage",
+    "openInNexsift": "In nexsift ansehen",
+    "openLink": "Zum Link"
   }
 }

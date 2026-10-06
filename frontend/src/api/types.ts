@@ -34,6 +34,8 @@ export interface Source {
   icon: string
   /** Where the interface loads the icon from (through nexsift); null without one. */
   icon_url: string | null
+  /** What tapping a push to ntfy opens: the message's link, or the line in nexsift. */
+  tap: 'link' | 'nexsift'
 }
 
 export interface Connection {

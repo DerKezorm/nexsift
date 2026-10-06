@@ -118,6 +118,8 @@ class Source(Base):
     last_unrecognized_at: Mapped[datetime | None] = mapped_column(UtcDateTime, nullable=True)
     #: ``dashboard-icons/<name>``, ``selfhst/<name>`` or an own address; empty: two letters (``services/icons.py``).
     icon: Mapped[str] = mapped_column(String(500), default="")
+    #: What tapping a push to ntfy opens: ``link`` (the message's link, as before) or ``nexsift`` (the line).
+    tap: Mapped[str] = mapped_column(String(12), default="link")
 
 
 class Thread(Base):

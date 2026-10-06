@@ -916,7 +916,14 @@
       "webhook": "via webhook"
     },
     "edit": "Edit",
-    "editTitle": "Edit {{name}}"
+    "editTitle": "Edit {{name}}",
+    "tap": {
+      "label": "Tapping a push opens",
+      "help": "What opens when you tap a notification of this source in ntfy. “The message's link”: the link the sender sends along, as before. “The line in nexsift”: the whole line with all its messages, handy when a sender sends many. The other one shows as a button under the notification. “This device” always opens the line in nexsift.",
+      "link": "The message's link",
+      "nexsift": "The line in nexsift",
+      "noAddress": "For this nexsift has to know its public address (Settings › Addresses). Without it, the message's link stays."
+    }
   },
   "targets": {
     "add": "Target",

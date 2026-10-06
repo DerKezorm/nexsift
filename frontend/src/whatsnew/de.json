@@ -228,6 +228,20 @@
       ],
       "smallTitle": "Außerdem",
       "small": []
+    },
+    "0.9.0": {
+      "lead": "Pushes an ntfy öffnen auf Wunsch die Zeile in nexsift.",
+      "sections": [
+        {
+          "title": "Antippen öffnet nexsift",
+          "body": "Je Quelle wählst du, was ein Tipp auf eine Mitteilung bei ntfy öffnet: den Link der Meldung wie bisher oder die ganze Zeile in nexsift, mit allen Meldungen dazu. Das jeweils andere steht als Knopf unter der Mitteilung. Dafür muss nexsift seine öffentliche Adresse kennen.",
+          "where": "Quellen › Stift an der Quelle › Beim Antippen eines Pushes öffnen"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Pushes an ntfy haben jetzt einen Knopf „In nexsift ansehen“, sobald die öffentliche Adresse eingetragen ist."
+      ]
     }
   }
 }

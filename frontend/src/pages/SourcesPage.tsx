@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Link, useSearchParams } from 'react-router-dom'
 
 import { api, errorMessage } from '../api/client'
-import type { About, Preset, Source, SourceWithConnection, Stranger } from '../api/types'
+import type { About, Preset, Settings, Source, SourceWithConnection, Stranger } from '../api/types'
 import { CopyField } from '../components/CopyField'
 import { Dialog } from '../components/Dialog'
 import { Explainer, Help } from '../components/Help'
@@ -11,7 +11,7 @@ import { IconField, IconPicker } from '../components/IconPicker'
 import { useNotice } from '../components/Notice'
 import { SourceMark } from '../components/SourceMark'
 import { Symbol } from '../components/Symbol'
-import { Badge, Banner, Button, Card, Field, PageHeader, Spinner } from '../components/ui'
+import { Badge, Banner, Button, Card, Field, PageHeader, SelectField, Spinner } from '../components/ui'
 import { isMuted, useSources } from '../lib/data'
 import { iconPreview } from '../lib/icons'
 import { useLiveVersion } from '../lib/live'
@@ -230,17 +230,21 @@ function SourceCard({ source, now, language, onShow }: { source: Source; now: nu
   )
 }
 
-/** Name and icon. Picking a logo happens inside the same dialog, so Escape never closes two at once. */
+/** Name, icon and what tapping a push opens. Picking a logo happens inside the same dialog, so Escape never closes
+ * two at once. */
 function EditDialog({ source, onClose }: { source: Source; onClose: () => void }) {
   const { t } = useTranslation()
   const [name, setName] = useState(source.name)
   const [icon, setIcon] = useState(source.icon)
+  const [tap, setTap] = useState<Source['tap']>(source.tap)
   const [picking, setPicking] = useState(false)
+  // Opening nexsift from a push needs the address it is reached by from outside.
+  const settings = useLoad(() => api.get<Settings>('/api/settings'), [])
   const [error, setError] = useState<string | null>(null)
 
   async function save() {
     try {
-      await api.put(`/api/sources/${source.id}`, { name, icon })
+      await api.put(`/api/sources/${source.id}`, { name, icon, tap })
       onClose()
     } catch (caught) {
       setError(errorMessage(caught))
@@ -284,6 +288,11 @@ function EditDialog({ source, onClose }: { source: Source; onClose: () => void }
           help={t('icon.sourceHelp')}
           none={t('icon.sourceNone')}
         />
+        <SelectField label={t('sources.tap.label')} value={tap} onChange={(value) => setTap(value as Source['tap'])} help={t('sources.tap.help')}>
+          <option value="link">{t('sources.tap.link')}</option>
+          <option value="nexsift">{t('sources.tap.nexsift')}</option>
+        </SelectField>
+        {settings.data && !settings.data.public_url && <p className="-mt-3 text-xs text-warn-500">{t('sources.tap.noAddress')}</p>}
         {error && <Banner tone="bad">{error}</Banner>}
         <div className="flex justify-end gap-2">
           <Button variant="ghost" onClick={onClose}>

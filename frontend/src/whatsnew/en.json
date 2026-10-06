@@ -228,6 +228,20 @@
       ],
       "smallTitle": "Also",
       "small": []
+    },
+    "0.9.0": {
+      "lead": "Pushes to ntfy can open the line in nexsift.",
+      "sections": [
+        {
+          "title": "A tap opens nexsift",
+          "body": "Per source you choose what a tap on a notification in ntfy opens: the message's link as before, or the whole line in nexsift with all its messages. The other one shows as a button under the notification. For this nexsift has to know its public address.",
+          "where": "Sources › pencil on the source › Tapping a push opens"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "Pushes to ntfy now have an “Open in nexsift” button once the public address is set."
+      ]
     }
   }
 }

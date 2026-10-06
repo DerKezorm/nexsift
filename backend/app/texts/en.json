@@ -45,6 +45,8 @@
     "minutes": "{{count}} min",
     "hours": "{{count}} h",
     "days_one": "1 day",
-    "days_other": "{{count}} days"
+    "days_other": "{{count}} days",
+    "openInNexsift": "Open in nexsift",
+    "openLink": "Open link"
   }
 }

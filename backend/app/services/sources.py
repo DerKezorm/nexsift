@@ -220,6 +220,7 @@ def view(db: Session, source: Source) -> dict[str, Any]:
         "unrecognized_streak": source.unrecognized_streak,
         "last_unrecognized_at": source.last_unrecognized_at.isoformat() if source.last_unrecognized_at else None,
         "icon": source.icon,
+        "tap": source.tap,
         # The interface loads the picture from nexsift; the version makes a changed icon load anew.
         "icon_url": f"/api/sources/{source.id}/icon?v={icons.version(source.icon)}" if source.icon else None,
     }

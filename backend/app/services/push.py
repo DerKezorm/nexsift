@@ -360,8 +360,11 @@ async def send(
                     headers["Tags"] = "rotating_light,nexsift"
                 elif kind == "allclear":
                     headers["Tags"] = "white_check_mark,nexsift"
-                if link:
-                    headers["Click"] = link
+                click, actions = _ntfy_tap(thread_id, link)
+                if click:
+                    headers["Click"] = click
+                if actions:
+                    headers["Actions"] = actions
                 # The source's logo when the switch says so, else nexsift's own: every push shows a logo.
                 headers["Icon"] = _header(icon or icons.NEXSIFT_LOGO)
                 if token:
@@ -413,6 +416,44 @@ async def send(
             raise PushError(f"not reachable ({type(error).__name__})") from error
     if response.status_code >= 400:
         raise PushError(f"answered HTTP {response.status_code}")
+
+
+def _header_safe(url: str) -> bool:
+    """An address that fits into ntfy's action header: commas and semicolons separate its fields there."""
+    try:
+        url.encode("ascii")
+    except UnicodeEncodeError:
+        return False
+    return bool(url) and not any(char in url for char in ',;"') and len(url) <= 2000
+
+
+def _ntfy_tap(thread_id: int | None, link: str) -> tuple[str, str]:
+    """What tapping a push to ntfy opens, and its buttons (issue #3).
+
+    The source says what a tap opens: the message's link (as before) or the line in nexsift. The other one becomes a
+    button under the notification, so neither is lost. nexsift can only be opened when it knows the address it is
+    reached by from outside (Settings, Addresses); without it, everything stays as before."""
+    page, mode, language = "", "link", texts.FALLBACK
+    if thread_id:
+        with SessionLocal() as db:
+            base = settings_service.public_url(db)
+            thread = db.get(Thread, thread_id)
+            source = db.get(Source, thread.source_id) if thread is not None else None
+            if base and thread is not None:
+                page = f"{base}/?thread={thread_id}"
+            mode = source.tap if source is not None else "link"
+            language = _language(db)
+    buttons: list[tuple[str, str]] = []
+    if mode == "nexsift" and page:
+        click = page
+        if _header_safe(link):
+            buttons.append((texts.say("push.openLink", language), link))
+    else:
+        click = link
+        if page:
+            buttons.append((texts.say("push.openInNexsift", language), page))
+    actions = "; ".join(f"view, {label}, {url}" for label, url in buttons if _header_safe(url))
+    return click, actions
 
 
 def _pushover_reason(response: httpx.Response) -> str:

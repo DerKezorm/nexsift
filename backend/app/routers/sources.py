@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from datetime import timedelta
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import APIRouter, Request, Response
 from pydantic import BaseModel, Field
@@ -35,6 +35,8 @@ class SourceEdit(BaseModel):
     name: str = Field(min_length=1, max_length=80)
     #: Left out: the icon stays. Empty: back to the two letters.
     icon: str | None = Field(default=None, max_length=icons.OWN_MAX)
+    #: Left out: stays. What tapping a push to ntfy opens.
+    tap: Literal["link", "nexsift"] | None = None
 
 
 class MuteIn(BaseModel):
@@ -99,6 +101,8 @@ def rename(source_id: int, payload: SourceEdit, account: CurrentAccount, db: DbS
             source.icon = icons.normalize(payload.icon)
         except icons.IconError as error:
             raise fehler("icon_invalid", str(error), 422) from error
+    if payload.tap is not None:
+        source.tap = payload.tap
     source.name = " ".join(payload.name.split())[:80]
     db.commit()
     # Not the icon itself: an own address may carry a token.

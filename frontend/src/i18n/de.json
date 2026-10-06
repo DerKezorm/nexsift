@@ -916,7 +916,14 @@
       "webhook": "über Webhook"
     },
     "edit": "Bearbeiten",
-    "editTitle": "{{name}} bearbeiten"
+    "editTitle": "{{name}} bearbeiten",
+    "tap": {
+      "label": "Beim Antippen eines Pushes öffnen",
+      "help": "Was sich öffnet, wenn du bei ntfy auf eine Mitteilung dieser Quelle tippst. „Link der Meldung“: der Link, den der Absender mitschickt, wie bisher. „Die Zeile in nexsift“: die ganze Zeile mit allen Meldungen, praktisch, wenn ein Absender viele schickt. Das jeweils andere steht als Knopf unter der Mitteilung. „Dieses Gerät“ öffnet immer die Zeile in nexsift.",
+      "link": "Link der Meldung",
+      "nexsift": "Die Zeile in nexsift",
+      "noAddress": "Dafür muss nexsift seine öffentliche Adresse kennen (Einstellungen › Adressen). Ohne sie bleibt es beim Link der Meldung."
+    }
   },
   "targets": {
     "add": "Ziel",

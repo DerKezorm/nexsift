@@ -120,6 +120,8 @@ class Source(Base):
     icon: Mapped[str] = mapped_column(String(500), default="")
     #: What tapping a push to ntfy opens: ``link`` (the message's link, as before) or ``nexsift`` (the line).
     tap: Mapped[str] = mapped_column(String(12), default="link")
+    #: The target ids its pushes go to; empty or None: every target (``services/push.py``).
+    targets: Mapped[Any] = mapped_column(JSON, nullable=True)
 
 
 class Thread(Base):
@@ -152,6 +154,8 @@ class Thread(Base):
     deleted_at: Mapped[datetime | None] = mapped_column(UtcDateTime, nullable=True)
     #: The icon a rule gave this line (several apps behind one source); empty: the source's.
     icon: Mapped[str] = mapped_column(String(500), default="")
+    #: The target ids a rule sent this line to; empty or None: the source's choice.
+    targets: Mapped[Any] = mapped_column(JSON, nullable=True)
 
 
 class Event(Base):

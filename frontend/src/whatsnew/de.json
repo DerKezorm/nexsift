@@ -242,6 +242,26 @@
       "small": [
         "Pushes an ntfy haben jetzt einen Knopf „In nexsift ansehen“, sobald die öffentliche Adresse eingetragen ist."
       ]
+    },
+    "0.10.0": {
+      "lead": "Jede Quelle kann ihre Pushes an ausgewählte Ziele schicken, und eine Regel kann das für einzelne Meldungen ändern.",
+      "sections": [
+        {
+          "title": "Quellen an bestimmte Ziele",
+          "body": "Ab Werk gehen die Pushes weiter an alle Ziele. Am Stift einer Quelle lässt sich das auf einzelne Ziele beschränken, etwa Backups nur an Telegram und Alarme nur aufs Handy. Mindeststufe und Ruhezeit des Ziels gelten weiter, und die Entwarnung geht dorthin, wohin der Alarm ging.",
+          "where": "Quellen › Stift an der Quelle › Pushes gehen an"
+        },
+        {
+          "title": "Regeln wählen mit",
+          "body": "Melden mehrere Apps über eine Quelle, wählt eine Regel für ihre Meldungen eigene Ziele. Die Wahl der Regel geht vor der Wahl der Quelle.",
+          "where": "Regeln › Regel › Dann › Pushes gehen an"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Wird ein gewähltes Ziel gelöscht, fällt es aus der Auswahl. War es das einzige, gehen die Pushes wieder an alle Ziele, statt still zu bleiben.",
+        "Die Sammelmeldung des Sturmschutzes nennt je Ziel nur, was auch dorthin gegangen wäre."
+      ]
     }
   }
 }

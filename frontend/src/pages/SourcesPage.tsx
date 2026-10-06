@@ -8,11 +8,12 @@ import { CopyField } from '../components/CopyField'
 import { Dialog } from '../components/Dialog'
 import { Explainer, Help } from '../components/Help'
 import { IconField, IconPicker } from '../components/IconPicker'
+import { TargetChoice } from '../components/rules/TargetChoice'
 import { useNotice } from '../components/Notice'
 import { SourceMark } from '../components/SourceMark'
 import { Symbol } from '../components/Symbol'
 import { Badge, Banner, Button, Card, Field, PageHeader, SelectField, Spinner } from '../components/ui'
-import { isMuted, useSources } from '../lib/data'
+import { isMuted, useSources, useTargets } from '../lib/data'
 import { iconPreview } from '../lib/icons'
 import { useLiveVersion } from '../lib/live'
 import { presetOf, setupLines } from '../lib/setup'
@@ -27,6 +28,7 @@ const WAYS = ['webhook', 'email', 'syslog', 'ntfy', 'gotify', 'discord']
 export function SourcesPage() {
   const { t, i18n } = useTranslation()
   const sources = useSources()
+  const targets = useTargets()
   const now = useNow()
   const [params, setParams] = useSearchParams()
   const [adding, setAdding] = useState<{ preset?: string; key?: string; hostname?: string } | null>(params.get('add') ? {} : null)
@@ -108,7 +110,14 @@ export function SourcesPage() {
 
           <ul className="grid content-start gap-3 sm:grid-cols-2">
             {sources.data?.map((source) => (
-              <SourceCard key={source.id} source={source} now={now} language={i18n.language} onShow={() => setShowing(source.id)} />
+              <SourceCard
+                key={source.id}
+                source={source}
+                now={now}
+                language={i18n.language}
+                targetNames={(targets.data ?? []).filter((target) => source.targets.includes(target.id)).map((target) => target.name)}
+                onShow={() => setShowing(source.id)}
+              />
             ))}
           </ul>
         </div>
@@ -142,7 +151,7 @@ export function SourcesPage() {
   )
 }
 
-function SourceCard({ source, now, language, onShow }: { source: Source; now: number; language: string; onShow: () => void }) {
+function SourceCard({ source, now, language, targetNames, onShow }: { source: Source; now: number; language: string; targetNames: string[]; onShow: () => void }) {
   const { t } = useTranslation()
   const notify = useNotice()
   const muted = isMuted(source, now)
@@ -195,6 +204,13 @@ function SourceCard({ source, now, language, onShow }: { source: Source; now: nu
         </dl>
       )}
 
+      {targetNames.length > 0 && (
+        <p className="flex items-start gap-2 text-xs text-mist-400">
+          <Symbol name="phone" className="mt-px h-3.5 w-3.5 shrink-0" />
+          {t('sources.onlyTo', { names: targetNames.join(', ') })}
+        </p>
+      )}
+
       {source.unrecognized_streak > 0 && (
         <Banner tone="warn">
           {t('sources.unrecognized', { count: source.unrecognized_streak })}{' '}
@@ -230,13 +246,14 @@ function SourceCard({ source, now, language, onShow }: { source: Source; now: nu
   )
 }
 
-/** Name, icon and what tapping a push opens. Picking a logo happens inside the same dialog, so Escape never closes
+/** Name, icon, where its pushes go and what tapping one opens. Picking a logo happens inside the same dialog, so Escape never closes
  * two at once. */
 function EditDialog({ source, onClose }: { source: Source; onClose: () => void }) {
   const { t } = useTranslation()
   const [name, setName] = useState(source.name)
   const [icon, setIcon] = useState(source.icon)
   const [tap, setTap] = useState<Source['tap']>(source.tap)
+  const [targets, setTargets] = useState<number[]>(source.targets)
   const [picking, setPicking] = useState(false)
   // Opening nexsift from a push needs the address it is reached by from outside.
   const settings = useLoad(() => api.get<Settings>('/api/settings'), [])
@@ -244,7 +261,7 @@ function EditDialog({ source, onClose }: { source: Source; onClose: () => void }
 
   async function save() {
     try {
-      await api.put(`/api/sources/${source.id}`, { name, icon, tap })
+      await api.put(`/api/sources/${source.id}`, { name, icon, tap, targets })
       onClose()
     } catch (caught) {
       setError(errorMessage(caught))
@@ -288,6 +305,7 @@ function EditDialog({ source, onClose }: { source: Source; onClose: () => void }
           help={t('icon.sourceHelp')}
           none={t('icon.sourceNone')}
         />
+        <TargetChoice value={targets} onChange={setTargets} scope="source" />
         <SelectField label={t('sources.tap.label')} value={tap} onChange={(value) => setTap(value as Source['tap'])} help={t('sources.tap.help')}>
           <option value="link">{t('sources.tap.link')}</option>
           <option value="nexsift">{t('sources.tap.nexsift')}</option>

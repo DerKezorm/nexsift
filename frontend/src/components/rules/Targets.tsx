@@ -7,6 +7,7 @@ import { useTargets } from '../../lib/data'
 import { deviceName } from '../../lib/device'
 import { forgetThisDevice, thisDevice } from '../../lib/thisDevice'
 import { PRIORITY_CHIP } from '../../lib/priority'
+import { ruleName } from '../../lib/ruleNames'
 import { relative } from '../../lib/time'
 import { useLoad } from '../../lib/useLoad'
 import { Dialog } from '../Dialog'
@@ -35,6 +36,7 @@ interface Draft {
   enabled: boolean
   has_token?: boolean
   device?: string
+  chosen_by?: Target['chosen_by']
 }
 
 const EMPTY: Draft = { kind: 'webpush', name: deviceName(), url: '', token: '', chat_id: '', user: '', p256dh: '', auth: '', min_priority: 'crit', quiet_from: '', quiet_to: '', enabled: true }
@@ -202,6 +204,8 @@ function TargetEditor({ draft: initial, own, onClose, onSaved }: { draft: Draft;
   }
 
   const webpush = draft.kind === 'webpush'
+  // Sources and rules that send here: deleting the target takes it out of their choice.
+  const chosen = [...(initial.chosen_by?.sources ?? []), ...(initial.chosen_by?.rules ?? []).map((name) => t('targets.choice.rule', { name: ruleName(t, name) }))]
   // A new device, or one signing up again: the sign-up button is the way to save.
   const signingUp = webpush && (!draft.id || signedUp !== null)
   const needsUrl = draft.kind !== 'telegram' && draft.kind !== 'pushover' && !webpush
@@ -272,6 +276,7 @@ function TargetEditor({ draft: initial, own, onClose, onSaved }: { draft: Draft;
           />
         )}
         {error && <Banner tone="bad">{error}</Banner>}
+        {confirmDelete && chosen.length > 0 && <Banner tone="warn">{t('targets.choice.deleteHint', { names: chosen.join(', ') })}</Banner>}
         <div className="flex flex-wrap items-center justify-between gap-2">
           {draft.id ? (
             confirmDelete ? (

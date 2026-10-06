@@ -13,8 +13,11 @@ Push behaviour per thread (from a rule, else the setting):
 * ``never``: stays in the inbox.
 
 A target takes a push when the priority reaches its minimum. Quiet hours hold back everything below critical.
+A source can send to some targets only, and a rule can choose for the lines it matches; the rule's choice comes
+first. A choice whose targets are all gone counts as none, so a deleted target never silences a source.
 The storm guard counts first pushes across all sources: from N within M minutes on, the rest of that stretch
-becomes one summary per target, so a power cut is one message and not twenty.
+becomes one summary per target, so a power cut is one message and not twenty. Each summary names only what
+would have gone to that target.
 """
 
 from __future__ import annotations
@@ -31,7 +34,7 @@ from sqlalchemy.orm import Session
 
 from .. import crypto
 from ..db import SessionLocal
-from ..models import CRIT, INFO, RANK, WARN, Delivery, Event, Source, Target, Thread, utcnow
+from ..models import CRIT, INFO, RANK, WARN, Delivery, Event, Rule, Source, Target, Thread, utcnow
 from . import bus, icons, settings_service, texts, webpush
 from . import sources as sources_service
 
@@ -44,9 +47,9 @@ TIMEOUT = httpx.Timeout(10.0, connect=5.0)
 #: Tests set an ``httpx.MockTransport`` here.
 transport_for_tests: httpx.BaseTransport | None = None
 
-# The storm guard in memory: when the current storm ends and what it swallowed.
+# The storm guard in memory: when the current storm ends and what it swallowed (source, title, where it was routed).
 _storm_until: datetime | None = None
-_storm_swallowed: list[tuple[str, str]] = []
+_storm_swallowed: list[tuple[str, str, frozenset[int] | None]] = []
 
 
 def reset_for_tests() -> None:
@@ -59,11 +62,77 @@ def _mode(db: Session, thread: Thread) -> str:
     return thread.push_mode or str(settings_service.get(db, "push_mode"))
 
 
-def _targets(db: Session, priority: str) -> list[Target]:
+def routed(db: Session, thread: Thread | None) -> frozenset[int] | None:
+    """The targets a line may go to: a rule's choice, else its source's. None: all of them."""
+    if thread is None:
+        return None
+    source = db.get(Source, thread.source_id)
+    # Targets deleted since are left out; when none of a choice is left, the next one counts, and in the end all.
+    for chosen in (thread.targets, source.targets if source is not None else None):
+        if chosen:
+            wanted = {int(value) for value in chosen}
+            existing = frozenset(db.scalars(select(Target.id).where(Target.id.in_(wanted))))
+            if existing:
+                return existing
+    return None
+
+
+#: How many targets a source or rule can choose; more than anyone has.
+CHOICE_MAX = 50
+
+
+def choice(db: Session, ids: list[int] | None) -> list[int] | None:
+    """A source's or rule's choice of targets as stored: known ids, each once. Empty: None (all of them).
+    Raises ``LookupError`` for an id that is no target."""
+    if not ids:
+        return None
+    wanted = list(dict.fromkeys(int(value) for value in ids))[:CHOICE_MAX]
+    known = set(db.scalars(select(Target.id).where(Target.id.in_(wanted))))
+    if len(known) != len(wanted):
+        raise LookupError("unknown target")
+    return wanted
+
+
+def chosen_by(db: Session, target_id: int) -> dict[str, list[str]]:
+    """The sources and rules that send to this target alone or among a few, by name."""
+    return {
+        "sources": [s.name for s in db.scalars(select(Source).order_by(Source.name)) if target_id in (s.targets or [])],
+        "rules": [
+            r.name
+            for r in db.scalars(select(Rule).order_by(Rule.position, Rule.id))
+            if target_id in ((r.actions or {}).get("targets") or [])
+        ],
+    }
+
+
+def forget_target(db: Session, target_id: int) -> list[int]:
+    """A deleted target leaves every choice. A choice left empty means all targets again, never none.
+    Returns the sources that changed."""
+    changed = []
+    for source in db.scalars(select(Source)):
+        if target_id in (source.targets or []):
+            source.targets = [value for value in source.targets if value != target_id] or None
+            changed.append(source.id)
+    for rule in db.scalars(select(Rule)):
+        actions = dict(rule.actions or {})
+        if target_id in (actions.get("targets") or []):
+            rest = [value for value in actions["targets"] if value != target_id]
+            if rest:
+                actions["targets"] = rest
+            else:
+                actions.pop("targets")
+            rule.actions = actions
+    for thread in db.scalars(select(Thread).where(Thread.targets.is_not(None))):
+        if target_id in (thread.targets or []):
+            thread.targets = [value for value in thread.targets if value != target_id] or None
+    return changed
+
+
+def _targets(db: Session, priority: str, only: frozenset[int] | None = None) -> list[Target]:
     return [
         target
         for target in db.scalars(select(Target).where(Target.enabled.is_(True)))
-        if RANK[priority] >= RANK[target.min_priority]
+        if RANK[priority] >= RANK[target.min_priority] and (only is None or target.id in only)
     ]
 
 
@@ -108,11 +177,15 @@ def _enqueue(
     *,
     send_as: str | None = None,
     icon: str = "",
+    only: frozenset[int] | None = None,
 ) -> int:
     """``priority`` decides which targets get it; ``send_as`` how loud it arrives there (default: the same).
+    A line goes where its rule or source routes it; ``only`` narrows a message without a line.
     Quiet hours hold back everything below critical, and all-clears too: good news does not wake anybody."""
     count = 0
-    for target in _targets(db, priority):
+    if thread is not None:
+        only = routed(db, thread)
+    for target in _targets(db, priority, only):
         if (priority != CRIT or kind == "allclear") and _in_quiet_hours(target):
             continue
         db.add(
@@ -179,7 +252,7 @@ def _first(db: Session, source: Source, thread: Thread, event: Event) -> None:
     now = utcnow()
     title = _thread_title(db, thread, event)
     if _storming(db, now):
-        _storm_swallowed.append((source.name, title))
+        _storm_swallowed.append((source.name, title, routed(db, thread)))
         thread.pushed = True
         thread.since_push = 0
         return
@@ -202,7 +275,7 @@ def on_event(db: Session, source: Source, thread: Thread, event: Event, *, is_ne
     if sources_service.is_muted(source):
         return
     mode = _mode(db, thread)
-    if mode == "never" or not _targets(db, thread.priority):
+    if mode == "never" or not _targets(db, thread.priority, routed(db, thread)):
         return
     window = timedelta(minutes=int(settings_service.get(db, "bundle_minutes")))
     if mode == "single":
@@ -297,12 +370,16 @@ def due_windows(db: Session) -> int:
         thread.window_until = None
     global _storm_until
     if _storm_until is not None and now >= _storm_until:
-        if _storm_swallowed:
-            sources_hit = sorted({name for name, _ in _storm_swallowed})
-            lines = "\n".join(f"{name}: {title}" for name, title in _storm_swallowed[:15])
-            title = texts.say("push.storm", _language(db), count=len(_storm_swallowed), sources=len(sources_hit))
-            count += _enqueue(db, None, "storm", title, lines, CRIT)
-            _storm_swallowed.clear()
+        # One summary per target, naming only what would have gone there.
+        for target in _targets(db, CRIT) if _storm_swallowed else []:
+            mine = [(name, title) for name, title, only in _storm_swallowed if only is None or target.id in only]
+            if not mine:
+                continue
+            sources_hit = {name for name, _ in mine}
+            lines = "\n".join(f"{name}: {title}" for name, title in mine[:15])
+            title = texts.say("push.storm", _language(db), count=len(mine), sources=len(sources_hit))
+            count += _enqueue(db, None, "storm", title, lines, CRIT, only=frozenset({target.id}))
+        _storm_swallowed.clear()
         _storm_until = None
     db.commit()
     return count

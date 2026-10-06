@@ -14,7 +14,7 @@ from ..adapters.base import Incoming
 from ..deps import CurrentAccount, DbSession
 from ..meldungen import fehler
 from ..models import Source, utcnow
-from ..services import bus, icons, ingest, presets, strangers
+from ..services import bus, icons, ingest, presets, push, strangers
 from ..services import sources as sources_service
 
 logger = logging.getLogger("nexsift.sources")
@@ -37,6 +37,8 @@ class SourceEdit(BaseModel):
     icon: str | None = Field(default=None, max_length=icons.OWN_MAX)
     #: Left out: stays. What tapping a push to ntfy opens.
     tap: Literal["link", "nexsift"] | None = None
+    #: Left out: stays. The targets its pushes go to; empty: all of them.
+    targets: list[int] | None = Field(default=None, max_length=push.CHOICE_MAX)
 
 
 class MuteIn(BaseModel):
@@ -103,10 +105,21 @@ def rename(source_id: int, payload: SourceEdit, account: CurrentAccount, db: DbS
             raise fehler("icon_invalid", str(error), 422) from error
     if payload.tap is not None:
         source.tap = payload.tap
+    if payload.targets is not None:
+        try:
+            source.targets = push.choice(db, payload.targets)
+        except LookupError as error:
+            raise fehler("target_unknown", "One of the chosen targets does not exist (any more).", 422) from error
     source.name = " ".join(payload.name.split())[:80]
     db.commit()
     # Not the icon itself: an own address may carry a token.
-    logger.info("Source changed id=%s name=%s icon=%s", source.id, source.name, "yes" if source.icon else "no")
+    logger.info(
+        "Source changed id=%s name=%s icon=%s targets=%s",
+        source.id,
+        source.name,
+        "yes" if source.icon else "no",
+        ",".join(str(value) for value in source.targets or []) or "all",
+    )
     bus.publish("source", id=source.id)
     return sources_service.view(db, source)
 

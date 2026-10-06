@@ -125,7 +125,9 @@
     "api_key_invalid": "This API key is not valid.",
     "api_keys_off": "API keys are switched off.",
     "icon_invalid": "That does not work as an icon. Pick a logo from the list or enter an address starting with https://.",
-    "icon_unavailable": "The icon could not be loaded."
+    "icon_unavailable": "The icon could not be loaded.",
+    "target_unknown": "One of the chosen targets no longer exists. Please check the choice.",
+    "rule_targets": "Please choose targets from the list."
   },
   "help": {
     "about": "Help on \"{{what}}\"",
@@ -506,7 +508,8 @@
     "title": "Rules",
     "titleAs": "title",
     "up": "Move up",
-    "when": "When"
+    "when": "When",
+    "onlyTo": "only to {{names}}"
   },
   "settings": {
     "about": {
@@ -923,7 +926,8 @@
       "link": "The message's link",
       "nexsift": "The line in nexsift",
       "noAddress": "For this nexsift has to know its public address (Settings › Addresses). Without it, the message's link stays."
-    }
+    },
+    "onlyTo": "Pushes only to {{names}}"
   },
   "targets": {
     "add": "Target",
@@ -1037,6 +1041,20 @@
       "thisDevice": "this device",
       "unsupported": "This browser cannot receive notifications. Use Chrome, Edge, Firefox, or on the iPhone the app from the home screen.",
       "wayOut": "By signing up you allow nexsift to send notifications through the browser maker's service (Google, Apple or Mozilla). The content is encrypted; they only see that something arrives."
+    },
+    "choice": {
+      "label": "Pushes go to",
+      "sourceHelp": "Out of the box, every source's pushes go to all targets. Here you can limit that to some of them, say backups to Telegram only. The target's minimum level and quiet hours still apply: a target that wants critical messages only gets only critical ones from this source too. A rule can choose other targets for single messages.",
+      "ruleHelp": "For sources that several apps report through: when the rule matches, the pushes of this line go to the chosen targets only, whatever the source is set to. The target's minimum level and quiet hours still apply.",
+      "sourceAll": "All targets",
+      "ruleAll": "As set on the source",
+      "only": "Only these",
+      "noTargets": "No targets yet. They are under Rules › Forwarding to the phone.",
+      "off": "(switched off)",
+      "sourceNoneTicked": "Nothing ticked: the pushes then go to all targets.",
+      "ruleNoneTicked": "Nothing ticked: the source's setting then applies.",
+      "deleteHint": "Chosen by: {{names}}. This target drops out there. Where it was the only one, the pushes go to all targets again.",
+      "rule": "rule “{{name}}”"
     }
   },
   "theme": {

@@ -17,7 +17,7 @@ from .. import crypto
 from ..deps import CurrentAccount, DbSession
 from ..meldungen import fehler
 from ..models import CRIT, PRIORITIES, Target
-from ..services import push, webpush
+from ..services import bus, push, webpush
 
 logger = logging.getLogger("nexsift.targets")
 
@@ -134,7 +134,11 @@ def _get(db: DbSession, target_id: int) -> Target:
 
 @router.get("", summary="All targets")
 def listing(account: CurrentAccount, db: DbSession) -> list[dict[str, Any]]:
-    return [_view(row) for row in db.scalars(select(Target).order_by(Target.id))]
+    # Which sources and rules chose a target, so deleting it can say what changes.
+    return [
+        {**_view(row), "chosen_by": push.chosen_by(db, row.id)}
+        for row in db.scalars(select(Target).order_by(Target.id))
+    ]
 
 
 @router.post("", status_code=201, summary="New target")
@@ -188,8 +192,11 @@ async def test(target_id: int, account: CurrentAccount, db: DbSession) -> dict[s
 def delete(target_id: int, account: CurrentAccount, db: DbSession) -> None:
     target = _get(db, target_id)
     name = target.name
+    changed = push.forget_target(db, target_id)
     db.delete(target)
     db.commit()
+    for source_id in changed:
+        bus.publish("source", id=source_id)
     logger.info("Target deleted id=%s name=%s", target_id, name)
 
 

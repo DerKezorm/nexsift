@@ -36,6 +36,8 @@ export interface Source {
   icon_url: string | null
   /** What tapping a push to ntfy opens: the message's link, or the line in nexsift. */
   tap: 'link' | 'nexsift'
+  /** The targets its pushes go to; empty: all of them. */
+  targets: number[]
 }
 
 export interface Connection {
@@ -164,6 +166,8 @@ export interface RuleActions {
   push?: PushMode
   /** A logo of the collections or an own address, for the lines this rule matches. */
   icon?: string
+  /** The targets the lines this rule matches go to, before the source's choice. */
+  targets?: number[]
   drop?: boolean
 }
 
@@ -197,6 +201,8 @@ export interface Target {
   enabled: boolean
   last_ok_at: string | null
   last_error: string
+  /** The sources and rules that chose this target, by name (in the list only). */
+  chosen_by?: { sources: string[]; rules: string[] }
 }
 
 export interface Settings {

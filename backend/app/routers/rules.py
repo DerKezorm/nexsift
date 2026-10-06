@@ -12,7 +12,7 @@ from sqlalchemy import func, select
 from ..deps import CurrentAccount, DbSession
 from ..meldungen import fehler
 from ..models import Rule, Source
-from ..services import presets, rules
+from ..services import presets, push, rules
 
 logger = logging.getLogger("nexsift.rules")
 
@@ -44,6 +44,11 @@ def _clean(db: DbSession, payload: RuleIn) -> dict[str, Any]:
         raise fehler(error.code, str(error), 422) from error
     if data["source_id"] is not None and db.get(Source, data["source_id"]) is None:
         raise fehler("not_found", "Source not found.", 404)
+    if data["actions"].get("targets"):
+        try:
+            data["actions"]["targets"] = push.choice(db, data["actions"]["targets"])
+        except LookupError as error:
+            raise fehler("target_unknown", "One of the chosen targets does not exist (any more).", 422) from error
     return data
 
 

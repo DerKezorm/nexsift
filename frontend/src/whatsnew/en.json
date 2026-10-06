@@ -242,6 +242,26 @@
       "small": [
         "Pushes to ntfy now have an “Open in nexsift” button once the public address is set."
       ]
+    },
+    "0.10.0": {
+      "lead": "Every source can send its pushes to chosen targets, and a rule can change that for single messages.",
+      "sections": [
+        {
+          "title": "Sources to specific targets",
+          "body": "Out of the box, pushes still go to all targets. With the pencil on a source you can limit that to some of them, say backups to Telegram only and alarms to the phone only. The target's minimum level and quiet hours still apply, and the all-clear goes where the alarm went.",
+          "where": "Sources › pencil on the source › Pushes go to"
+        },
+        {
+          "title": "Rules choose too",
+          "body": "When several apps report through one source, a rule chooses targets of its own for their messages. The rule's choice comes before the source's.",
+          "where": "Rules › a rule › Then › Pushes go to"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "When a chosen target is deleted, it drops out of the choice. Where it was the only one, the pushes go to all targets again instead of nowhere.",
+        "The storm guard's summary names per target only what would have gone there."
+      ]
     }
   }
 }

@@ -125,7 +125,9 @@
     "api_key_invalid": "Dieser API-Schlüssel gilt nicht.",
     "api_keys_off": "API-Schlüssel sind ausgeschaltet.",
     "icon_invalid": "Das passt nicht als Icon. Ein Logo aus der Liste wählen oder eine Adresse mit https:// eintragen.",
-    "icon_unavailable": "Das Icon ließ sich nicht laden."
+    "icon_unavailable": "Das Icon ließ sich nicht laden.",
+    "target_unknown": "Eines der gewählten Ziele gibt es nicht mehr. Bitte die Auswahl prüfen.",
+    "rule_targets": "Bitte Ziele aus der Liste wählen."
   },
   "help": {
     "about": "Hilfe zu „{{what}}“",
@@ -506,7 +508,8 @@
     "title": "Regeln",
     "titleAs": "Titel",
     "up": "Nach oben",
-    "when": "Wenn"
+    "when": "Wenn",
+    "onlyTo": "nur an {{names}}"
   },
   "settings": {
     "about": {
@@ -923,7 +926,8 @@
       "link": "Link der Meldung",
       "nexsift": "Die Zeile in nexsift",
       "noAddress": "Dafür muss nexsift seine öffentliche Adresse kennen (Einstellungen › Adressen). Ohne sie bleibt es beim Link der Meldung."
-    }
+    },
+    "onlyTo": "Pushes nur an {{names}}"
   },
   "targets": {
     "add": "Ziel",
@@ -1037,6 +1041,20 @@
       "thisDevice": "dieses Gerät",
       "unsupported": "Dieser Browser kann keine Benachrichtigungen empfangen. Nimm Chrome, Edge, Firefox oder auf dem iPhone die App vom Home-Bildschirm.",
       "wayOut": "Mit der Anmeldung erlaubst du nexsift, Benachrichtigungen über den Dienst des Browserherstellers zu schicken (Google, Apple oder Mozilla). Der Inhalt ist verschlüsselt, die sehen nur, dass etwas kommt."
+    },
+    "choice": {
+      "label": "Pushes gehen an",
+      "sourceHelp": "Ab Werk gehen die Pushes jeder Quelle an alle Ziele. Hier lässt sich das auf einzelne Ziele beschränken, etwa Backups nur an Telegram. Die Mindeststufe und die Ruhezeit des Ziels gelten weiter: Ein Ziel, das nur Kritisches will, bekommt auch von dieser Quelle nur Kritisches. Eine Regel kann für einzelne Meldungen andere Ziele wählen.",
+      "ruleHelp": "Für Quellen, über die mehrere Apps melden: Passt die Regel, gehen die Pushes dieser Zeile nur an die gewählten Ziele, egal was an der Quelle eingestellt ist. Die Mindeststufe und die Ruhezeit des Ziels gelten weiter.",
+      "sourceAll": "Alle Ziele",
+      "ruleAll": "Wie an der Quelle eingestellt",
+      "only": "Nur an diese",
+      "noTargets": "Noch keine Ziele angelegt. Die stehen unter Regeln › Weiterleitung aufs Handy.",
+      "off": "(ausgeschaltet)",
+      "sourceNoneTicked": "Kein Haken gesetzt: Die Pushes gehen dann an alle Ziele.",
+      "ruleNoneTicked": "Kein Haken gesetzt: Es gilt dann die Einstellung der Quelle.",
+      "deleteHint": "Gewählt bei: {{names}}. Dort fällt dieses Ziel heraus. War es das einzige, gehen die Pushes wieder an alle Ziele.",
+      "rule": "Regel „{{name}}“"
     }
   },
   "theme": {

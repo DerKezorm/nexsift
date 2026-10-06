@@ -11,9 +11,10 @@ import { useNotice } from '../components/Notice'
 import { SourceMark } from '../components/SourceMark'
 import { Symbol } from '../components/Symbol'
 import { Badge, Banner, Button, Field, INPUT_CLASS, PageHeader, Section, SelectField, Switch } from '../components/ui'
+import { TargetChoice } from '../components/rules/TargetChoice'
 import { Targets } from '../components/rules/Targets'
 import { LANGUAGES } from '../i18n'
-import { useSources } from '../lib/data'
+import { useSources, useTargets } from '../lib/data'
 import { iconPreview } from '../lib/icons'
 import { PRIORITY_CHIP } from '../lib/priority'
 import { ruleName } from '../lib/ruleNames'
@@ -31,8 +32,10 @@ export function RulesPage() {
   const notify = useNotice()
   const rules = useLoad(() => api.get<Rule[]>('/api/rules'), [])
   const sources = useSources()
+  const targets = useTargets()
   const [editing, setEditing] = useState<Draft | null>(null)
   const location = useLocation()
+  const targetNames = new Map((targets.data ?? []).map((target) => [target.id, target.name]))
 
   // "/rules#targets" from the inbox lands on the targets.
   useEffect(() => {
@@ -86,6 +89,7 @@ export function RulesPage() {
                   index={index}
                   last={index === list.length - 1}
                   source={sources.data?.find((source) => source.id === rule.source_id)}
+                  targetNames={targetNames}
                   onToggle={(enabled) => void toggle(rule, enabled)}
                   onMove={(step) => void move(index, step)}
                   onEdit={() => setEditing(rule)}
@@ -125,6 +129,7 @@ function RuleRow({
   index,
   last,
   source,
+  targetNames,
   onToggle,
   onMove,
   onEdit,
@@ -133,6 +138,7 @@ function RuleRow({
   index: number
   last: boolean
   source?: Source
+  targetNames: Map<number, string>
   onToggle: (enabled: boolean) => void
   onMove: (step: number) => void
   onEdit: () => void
@@ -164,7 +170,7 @@ function RuleRow({
         </p>
         <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs text-mist-500">
           <span>{t('rules.then')}</span>
-          <ThenChips actions={rule.actions} />
+          <ThenChips actions={rule.actions} targetNames={targetNames} />
         </p>
       </button>
       <div className="flex shrink-0 flex-col items-end gap-2">
@@ -182,7 +188,7 @@ function RuleRow({
   )
 }
 
-function ThenChips({ actions }: { actions: RuleActions }) {
+function ThenChips({ actions, targetNames }: { actions: RuleActions; targetNames: Map<number, string> }) {
   const { t } = useTranslation()
   return (
     <>
@@ -209,6 +215,12 @@ function ThenChips({ actions }: { actions: RuleActions }) {
         <span className="inline-flex items-center gap-1 rounded-md bg-accent-500/10 px-1.5 py-0.5 text-accent-400">
           <Symbol name="phone" className="h-3 w-3" />
           {t(`push.${actions.push}`)}
+        </span>
+      )}
+      {actions.targets && actions.targets.length > 0 && (
+        <span className="inline-flex items-center gap-1 rounded-md bg-accent-500/10 px-1.5 py-0.5 text-accent-400">
+          <Symbol name="phone" className="h-3 w-3" />
+          {t('rules.onlyTo', { names: actions.targets.map((id) => targetNames.get(id) ?? '?').join(', ') })}
         </span>
       )}
     </>
@@ -520,6 +532,7 @@ function RuleEditor({ rule, sources, onSaved, onClose }: { rule: Draft; sources:
                   help={t('icon.ruleHelp')}
                   none={t('icon.ruleNone')}
                 />
+                <TargetChoice value={draft.actions.targets ?? []} onChange={(targets) => setActions({ targets: targets.length ? targets : undefined })} scope="rule" />
               </div>
             </div>
           )}

@@ -23,7 +23,7 @@ from . import icons, settings_service
 
 FIELDS = ("any", "title", "body")
 OPS = ("word", "contains", "regex")
-ACTIONS = ("priority", "group_key", "title_template", "resolves", "push", "icon", "drop")
+ACTIONS = ("priority", "group_key", "title_template", "resolves", "push", "icon", "targets", "drop")
 VALUE_MAX = 300
 #: What a regex is run against at most. A rule is the operator's own, but a pattern that backtracks badly on a
 #: long message must not stall every door.
@@ -162,6 +162,11 @@ def validate(payload: dict[str, Any]) -> dict[str, Any]:
             actions["icon"] = icons.normalize(str(raw["icon"]))
         except icons.IconError as error:
             raise RuleError("icon_invalid", str(error)) from error
+    if raw.get("targets"):
+        targets = raw["targets"]
+        if not isinstance(targets, list) or not all(isinstance(value, int) and value > 0 for value in targets):
+            raise RuleError("rule_targets", "Choose targets from the list.")
+        actions["targets"] = list(dict.fromkeys(targets))
     if raw.get("drop"):
         actions = {"drop": True}
     if not actions:

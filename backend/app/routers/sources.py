@@ -39,6 +39,8 @@ class SourceEdit(BaseModel):
     tap: Literal["link", "nexsift"] | None = None
     #: Left out: stays. The targets its pushes go to; empty: all of them.
     targets: list[int] | None = Field(default=None, max_length=push.CHOICE_MAX)
+    #: Left out: stays. The lowest priority pushed from this source; "": as each target says.
+    min_priority: Literal["", "info", "warn", "crit"] | None = None
 
 
 class MuteIn(BaseModel):
@@ -110,15 +112,18 @@ def rename(source_id: int, payload: SourceEdit, account: CurrentAccount, db: DbS
             source.targets = push.choice(db, payload.targets)
         except LookupError as error:
             raise fehler("target_unknown", "One of the chosen targets does not exist (any more).", 422) from error
+    if payload.min_priority is not None:
+        source.min_priority = payload.min_priority
     source.name = " ".join(payload.name.split())[:80]
     db.commit()
     # Not the icon itself: an own address may carry a token.
     logger.info(
-        "Source changed id=%s name=%s icon=%s targets=%s",
+        "Source changed id=%s name=%s icon=%s targets=%s level=%s",
         source.id,
         source.name,
         "yes" if source.icon else "no",
         ",".join(str(value) for value in source.targets or []) or "all",
+        source.min_priority or "targets",
     )
     bus.publish("source", id=source.id)
     return sources_service.view(db, source)

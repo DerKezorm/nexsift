@@ -968,7 +968,7 @@
     "lastError": "Zuletzt fehlgeschlagen: {{error}}",
     "lastOk": "Zuletzt angekommen {{when}}",
     "minPriority": "Was soll ankommen?",
-    "minPriorityHelp": "Für fast alle richtig: nur Kritisches. Warnungen landen dann nur im Posteingang.",
+    "minPriorityHelp": "Für fast alle richtig: nur Kritisches. Warnungen landen dann nur im Posteingang. Eine Quelle oder Regel kann stattdessen eine eigene Stufe setzen.",
     "name": "Name",
     "nameHelp": "Frei wählbar, etwa „Handy“ oder „Familiengruppe“.",
     "namePlaceholder": "Handy",
@@ -1044,8 +1044,8 @@
     },
     "choice": {
       "label": "Pushes gehen an",
-      "sourceHelp": "Ab Werk gehen die Pushes jeder Quelle an alle Ziele. Hier lässt sich das auf einzelne Ziele beschränken, etwa Backups nur an Telegram. Die Mindeststufe und die Ruhezeit des Ziels gelten weiter: Ein Ziel, das nur Kritisches will, bekommt auch von dieser Quelle nur Kritisches. Eine Regel kann für einzelne Meldungen andere Ziele wählen.",
-      "ruleHelp": "Für Quellen, über die mehrere Apps melden: Passt die Regel, gehen die Pushes dieser Zeile nur an die gewählten Ziele, egal was an der Quelle eingestellt ist. Die Mindeststufe und die Ruhezeit des Ziels gelten weiter.",
+      "sourceHelp": "Ab Werk gehen die Pushes jeder Quelle an alle Ziele. Hier lässt sich das auf einzelne Ziele beschränken, etwa Backups nur an Telegram. Die Ruhezeit des Ziels gilt weiter, seine Mindeststufe auch, solange die Quelle darunter keine eigene Stufe setzt. Eine Regel kann für einzelne Meldungen andere Ziele wählen.",
+      "ruleHelp": "Für Quellen, über die mehrere Apps melden: Passt die Regel, gehen die Pushes dieser Zeile nur an die gewählten Ziele, egal was an der Quelle eingestellt ist. Die Ruhezeit des Ziels gilt weiter, ebenso die Stufe, die Regel, Quelle oder Ziel setzen.",
       "sourceAll": "Alle Ziele",
       "ruleAll": "Wie an der Quelle eingestellt",
       "only": "Nur an diese",
@@ -1347,5 +1347,31 @@
     "ruleHelp": "Für Quellen, über die mehrere Apps melden: passt die Regel, zeigt die Zeile dieses Logo statt dem der Quelle. Auf Wunsch trägt es auch der Push an ntfy (Regeln › Standard).",
     "ruleNone": "Kein Icon. Die Zeile zeigt das der Quelle.",
     "chip": "Icon"
+  },
+  "levels": {
+    "sourceLabel": "Was soll von dieser Quelle ankommen?",
+    "ruleLabel": "Was soll gepusht werden?",
+    "sourceDefault": "Wie es jedes Ziel einstellt",
+    "ruleDefault": "Wie an der Quelle eingestellt",
+    "info": "Alles, auch Info",
+    "warn": "Warnungen und Kritisches",
+    "crit": "Nur Kritisches",
+    "sourceHelp": "Ab Werk entscheidet jedes Ziel mit seiner Mindeststufe, was bei ihm ankommt. Hier entscheidet stattdessen die Quelle, in beide Richtungen: Eine Quelle, die nur Info schickt, etwa ein Release- oder Änderungswächter, erreicht so auch ein Ziel, das auf Kritisches steht, und eine gesprächige Quelle lässt sich auf Kritisches beschränken. Ruhezeiten halten weiter alles unter Kritisch zurück. Wiederholungen werden weiter gebündelt: Der erste Push geht sofort raus, danach einer mit der Anzahl. Regeln, die Meldungen im Posteingang halten, gehen weiter vor, und eine Regel kann für einzelne Meldungen eine eigene Stufe setzen.",
+    "ruleHelp": "Für Quellen, über die mehrere Apps melden: Passt die Regel, gilt diese Stufe für die Zeile statt der Stufe der Quelle und der Mindeststufe der Ziele. Ruhezeiten und Bündelung bleiben, wie sie sind.",
+    "reachTitle": "So eingestellt gehen Pushes an",
+    "nowhere": "nirgends, nur Posteingang",
+    "quiet": "Die Ruhezeit eines Ziels hält weiter alles unter Kritisch zurück.",
+    "kept": "Passende Meldungen bleiben im Posteingang, egal was hier steht: {{names}}.",
+    "keptRule": "„{{name}}“",
+    "line": {
+      "info": "Pusht alles, auch Info",
+      "warn": "Pusht Warnungen und Kritisches",
+      "crit": "Pusht nur Kritisches"
+    },
+    "chip": {
+      "info": "pusht alles",
+      "warn": "pusht Warnungen und Kritisches",
+      "crit": "pusht nur Kritisches"
+    }
   }
 }

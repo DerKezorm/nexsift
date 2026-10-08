@@ -38,6 +38,8 @@ export interface Source {
   tap: 'link' | 'nexsift'
   /** The targets its pushes go to; empty: all of them. */
   targets: number[]
+  /** The lowest priority pushed from it, in place of each target's minimum; empty: as each target says. */
+  min_priority: Priority | ''
 }
 
 export interface Connection {
@@ -168,6 +170,8 @@ export interface RuleActions {
   icon?: string
   /** The targets the lines this rule matches go to, before the source's choice. */
   targets?: number[]
+  /** The lowest priority pushed for these lines, before the source's level and the targets' minimum. */
+  min_priority?: Priority
   drop?: boolean
 }
 

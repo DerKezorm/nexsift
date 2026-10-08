@@ -11,6 +11,7 @@ import { useNotice } from '../components/Notice'
 import { SourceMark } from '../components/SourceMark'
 import { Symbol } from '../components/Symbol'
 import { Badge, Banner, Button, Field, INPUT_CLASS, PageHeader, Section, SelectField, Switch } from '../components/ui'
+import { LevelChoice } from '../components/rules/LevelChoice'
 import { TargetChoice } from '../components/rules/TargetChoice'
 import { Targets } from '../components/rules/Targets'
 import { LANGUAGES } from '../i18n'
@@ -221,6 +222,12 @@ function ThenChips({ actions, targetNames }: { actions: RuleActions; targetNames
         <span className="inline-flex items-center gap-1 rounded-md bg-accent-500/10 px-1.5 py-0.5 text-accent-400">
           <Symbol name="phone" className="h-3 w-3" />
           {t('rules.onlyTo', { names: actions.targets.map((id) => targetNames.get(id) ?? '?').join(', ') })}
+        </span>
+      )}
+      {actions.min_priority && (
+        <span className="inline-flex items-center gap-1 rounded-md bg-accent-500/10 px-1.5 py-0.5 text-accent-400">
+          <Symbol name="phone" className="h-3 w-3" />
+          {t(`levels.chip.${actions.min_priority}`)}
         </span>
       )}
     </>
@@ -533,6 +540,7 @@ function RuleEditor({ rule, sources, onSaved, onClose }: { rule: Draft; sources:
                   none={t('icon.ruleNone')}
                 />
                 <TargetChoice value={draft.actions.targets ?? []} onChange={(targets) => setActions({ targets: targets.length ? targets : undefined })} scope="rule" />
+                <LevelChoice value={draft.actions.min_priority ?? ''} onChange={(level) => setActions({ min_priority: level || undefined })} scope="rule" />
               </div>
             </div>
           )}

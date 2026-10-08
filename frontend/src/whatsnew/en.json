@@ -262,6 +262,27 @@
         "When a chosen target is deleted, it drops out of the choice. Where it was the only one, the pushes go to all targets again instead of nowhere.",
         "The storm guard's summary names per target only what would have gone there."
       ]
+    },
+    "0.11.0": {
+      "lead": "Every source can now decide what of it arrives, instead of each target.",
+      "sections": [
+        {
+          "title": "What arrives, per source",
+          "body": "Out of the box, each target still decides with its own minimum level. With the pencil on a source you can set a level of its own in place of that, in both directions: info from a release or change watcher reaches a target set to critical, and a chatty source stays at critical only. Below the choice, the dialog shows which targets each priority reaches.",
+          "where": "Sources › pencil on the source › What should arrive from this source?"
+        },
+        {
+          "title": "Rules set a level too",
+          "body": "When several apps report through one source, a rule sets the level for their messages. The rule comes first, then the source, then the target.",
+          "where": "Rules › a rule › Then › What should be pushed?"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "Quiet hours, bundling and the all-clear stay as they are: a source with info turned on sends the first push at once and then one follow-up with the count.",
+        "Rules that keep messages in the inbox, like the ones for Watchtower and Paperless, still win. The dialog names them.",
+        "The storm guard's summary now names per target only what that target would have taken by its level as well."
+      ]
     }
   }
 }

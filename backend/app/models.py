@@ -122,6 +122,8 @@ class Source(Base):
     tap: Mapped[str] = mapped_column(String(12), default="link")
     #: The target ids its pushes go to; empty or None: every target (``services/push.py``).
     targets: Mapped[Any] = mapped_column(JSON, nullable=True)
+    #: The lowest priority pushed from this source, in place of each target's own minimum; empty: the targets'.
+    min_priority: Mapped[str] = mapped_column(String(8), default="")
 
 
 class Thread(Base):
@@ -156,6 +158,8 @@ class Thread(Base):
     icon: Mapped[str] = mapped_column(String(500), default="")
     #: The target ids a rule sent this line to; empty or None: the source's choice.
     targets: Mapped[Any] = mapped_column(JSON, nullable=True)
+    #: The lowest priority a rule lets through for this line, before the source's; empty: the source's.
+    min_priority: Mapped[str] = mapped_column(String(8), default="")
 
 
 class Event(Base):

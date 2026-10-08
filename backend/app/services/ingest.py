@@ -212,6 +212,7 @@ def _store(db: Session, source: Source, item: Incoming) -> int | None:
             rule_names=list(outcome.matched),
             icon=str(actions.get("icon", "")),
             targets=list(actions["targets"]) if actions.get("targets") else None,
+            min_priority=str(actions.get("min_priority", "")),
         )
         db.add(thread)
         db.flush()
@@ -226,6 +227,8 @@ def _store(db: Session, source: Source, item: Incoming) -> int | None:
             thread.icon = str(actions["icon"])
         if actions.get("targets"):
             thread.targets = list(actions["targets"])
+        if actions.get("min_priority"):
+            thread.min_priority = str(actions["min_priority"])
         thread.rule_names = _merge_names(thread.rule_names, outcome.matched)
         # New news: back to unread, so it is not missed under a line that was already read.
         if thread.state != UNREAD:

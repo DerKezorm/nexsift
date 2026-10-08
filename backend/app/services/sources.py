@@ -222,6 +222,7 @@ def view(db: Session, source: Source) -> dict[str, Any]:
         "icon": source.icon,
         "tap": source.tap,
         "targets": list(source.targets or []),
+        "min_priority": source.min_priority,
         # The interface loads the picture from nexsift; the version makes a changed icon load anew.
         "icon_url": f"/api/sources/{source.id}/icon?v={icons.version(source.icon)}" if source.icon else None,
     }

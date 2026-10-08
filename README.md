@@ -65,6 +65,8 @@ a Gotify server, an ntfy server, a Discord webhook, a mail server, a syslog serv
   after a failed one, or anything a rule says.
 - **Push to the phone** through ntfy, Gotify, Telegram, Pushover, Apprise or a webhook, each with a minimum level
   (critical by default) and quiet hours.
+  Per source, or per rule for apps that share one, you choose which targets get its pushes and what should
+  arrive: as each target says, everything, warnings and critical, or only critical.
   A tap on a push in ntfy opens the message's link or, per source, the line in nexsift; the other one is a button.
 - **Or straight to the device, no extra app (Web Push):** open nexsift over https, add it to the home screen, tap
   "Sign this device up and save". Works with Chrome, Edge and Firefox, and on the iPhone from the home screen app

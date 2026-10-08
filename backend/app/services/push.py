@@ -15,9 +15,11 @@ Push behaviour per thread (from a rule, else the setting):
 A target takes a push when the priority reaches its minimum. Quiet hours hold back everything below critical.
 A source can send to some targets only, and a rule can choose for the lines it matches; the rule's choice comes
 first. A choice whose targets are all gone counts as none, so a deleted target never silences a source.
+What reaches a target works the same way: a rule, else the source, can set the lowest priority that is pushed,
+in place of each target's own minimum, both up and down. Empty: the target decides.
 The storm guard counts first pushes across all sources: from N within M minutes on, the rest of that stretch
 becomes one summary per target, so a power cut is one message and not twenty. Each summary names only what
-would have gone to that target.
+would have gone to that target, by route and by level.
 """
 
 from __future__ import annotations
@@ -47,9 +49,10 @@ TIMEOUT = httpx.Timeout(10.0, connect=5.0)
 #: Tests set an ``httpx.MockTransport`` here.
 transport_for_tests: httpx.BaseTransport | None = None
 
-# The storm guard in memory: when the current storm ends and what it swallowed (source, title, where it was routed).
+# The storm guard in memory: when the current storm ends and what it swallowed (source, title, where it was routed,
+# its priority and the level its rule or source set).
 _storm_until: datetime | None = None
-_storm_swallowed: list[tuple[str, str, frozenset[int] | None]] = []
+_storm_swallowed: list[tuple[str, str, frozenset[int] | None, str, str]] = []
 
 
 def reset_for_tests() -> None:
@@ -75,6 +78,23 @@ def routed(db: Session, thread: Thread | None) -> frozenset[int] | None:
             if existing:
                 return existing
     return None
+
+
+def level(db: Session, thread: Thread | None) -> str:
+    """The lowest priority pushed for a line: a rule's, else its source's. "": each target's own minimum."""
+    if thread is None:
+        return ""
+    if thread.min_priority in RANK:
+        return thread.min_priority
+    source = db.get(Source, thread.source_id)
+    if source is not None and source.min_priority in RANK:
+        return source.min_priority
+    return ""
+
+
+def _takes(target: Target, priority: str, floor: str = "") -> bool:
+    """Whether a target takes this priority: from the level a rule or source set, else from its own minimum."""
+    return RANK[priority] >= RANK[floor if floor in RANK else target.min_priority]
 
 
 #: How many targets a source or rule can choose; more than anyone has.
@@ -128,11 +148,11 @@ def forget_target(db: Session, target_id: int) -> list[int]:
     return changed
 
 
-def _targets(db: Session, priority: str, only: frozenset[int] | None = None) -> list[Target]:
+def _targets(db: Session, priority: str, only: frozenset[int] | None = None, floor: str = "") -> list[Target]:
     return [
         target
         for target in db.scalars(select(Target).where(Target.enabled.is_(True)))
-        if RANK[priority] >= RANK[target.min_priority] and (only is None or target.id in only)
+        if _takes(target, priority, floor) and (only is None or target.id in only)
     ]
 
 
@@ -180,12 +200,14 @@ def _enqueue(
     only: frozenset[int] | None = None,
 ) -> int:
     """``priority`` decides which targets get it; ``send_as`` how loud it arrives there (default: the same).
-    A line goes where its rule or source routes it; ``only`` narrows a message without a line.
-    Quiet hours hold back everything below critical, and all-clears too: good news does not wake anybody."""
+    A line goes where its rule or source routes it, from the level they set; ``only`` narrows a message without
+    a line. Quiet hours hold back everything below critical, and all-clears too: good news does not wake anybody."""
     count = 0
+    floor = ""
     if thread is not None:
         only = routed(db, thread)
-    for target in _targets(db, priority, only):
+        floor = level(db, thread)
+    for target in _targets(db, priority, only, floor):
         if (priority != CRIT or kind == "allclear") and _in_quiet_hours(target):
             continue
         db.add(
@@ -252,7 +274,7 @@ def _first(db: Session, source: Source, thread: Thread, event: Event) -> None:
     now = utcnow()
     title = _thread_title(db, thread, event)
     if _storming(db, now):
-        _storm_swallowed.append((source.name, title, routed(db, thread)))
+        _storm_swallowed.append((source.name, title, routed(db, thread), thread.priority, level(db, thread)))
         thread.pushed = True
         thread.since_push = 0
         return
@@ -275,7 +297,7 @@ def on_event(db: Session, source: Source, thread: Thread, event: Event, *, is_ne
     if sources_service.is_muted(source):
         return
     mode = _mode(db, thread)
-    if mode == "never" or not _targets(db, thread.priority, routed(db, thread)):
+    if mode == "never" or not _targets(db, thread.priority, routed(db, thread), level(db, thread)):
         return
     window = timedelta(minutes=int(settings_service.get(db, "bundle_minutes")))
     if mode == "single":
@@ -370,9 +392,13 @@ def due_windows(db: Session) -> int:
         thread.window_until = None
     global _storm_until
     if _storm_until is not None and now >= _storm_until:
-        # One summary per target, naming only what would have gone there.
+        # One summary per target, naming only what would have gone there: on its route and from its level.
         for target in _targets(db, CRIT) if _storm_swallowed else []:
-            mine = [(name, title) for name, title, only in _storm_swallowed if only is None or target.id in only]
+            mine = [
+                (name, title)
+                for name, title, only, priority, floor in _storm_swallowed
+                if (only is None or target.id in only) and _takes(target, priority, floor)
+            ]
             if not mine:
                 continue
             sources_hit = {name for name, _ in mine}

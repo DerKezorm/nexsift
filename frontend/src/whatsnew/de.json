@@ -262,6 +262,27 @@
         "Wird ein gewähltes Ziel gelöscht, fällt es aus der Auswahl. War es das einzige, gehen die Pushes wieder an alle Ziele, statt still zu bleiben.",
         "Die Sammelmeldung des Sturmschutzes nennt je Ziel nur, was auch dorthin gegangen wäre."
       ]
+    },
+    "0.11.0": {
+      "lead": "Jede Quelle kann jetzt selbst festlegen, was von ihr ankommt, statt jedes Ziel.",
+      "sections": [
+        {
+          "title": "Was ankommt, je Quelle",
+          "body": "Ab Werk entscheidet weiter jedes Ziel mit seiner Mindeststufe. Am Stift einer Quelle lässt sich stattdessen eine eigene Stufe setzen, in beide Richtungen: Info von einem Release- oder Änderungswächter erreicht auch ein Ziel, das auf Kritisches steht, und eine gesprächige Quelle bleibt bei Kritischem. Unter der Wahl zeigt der Dialog, welche Ziele jede Stufe erreicht.",
+          "where": "Quellen › Stift an der Quelle › Was soll von dieser Quelle ankommen?"
+        },
+        {
+          "title": "Regeln setzen mit",
+          "body": "Melden mehrere Apps über eine Quelle, setzt eine Regel die Stufe für ihre Meldungen. Zuerst gilt die Regel, dann die Quelle, dann das Ziel.",
+          "where": "Regeln › Regel › Dann › Was soll gepusht werden?"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Ruhezeiten, Bündelung und Entwarnung bleiben, wie sie sind: Eine Quelle mit Info schickt den ersten Push sofort und danach einen mit der Anzahl.",
+        "Regeln, die Meldungen im Posteingang halten, etwa die für Watchtower und Paperless, gehen weiter vor. Der Dialog nennt sie.",
+        "Die Sammelmeldung des Sturmschutzes nennt je Ziel nur noch, was dieses Ziel auch nach seiner Stufe bekommen hätte."
+      ]
     }
   }
 }

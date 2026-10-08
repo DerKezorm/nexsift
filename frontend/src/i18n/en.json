@@ -968,7 +968,7 @@
     "lastError": "Last failed: {{error}}",
     "lastOk": "Last delivered {{when}}",
     "minPriority": "What should arrive?",
-    "minPriorityHelp": "Right for nearly everyone: only critical. Warnings then only land in the inbox.",
+    "minPriorityHelp": "Right for nearly everyone: only critical. Warnings then only land in the inbox. A source or a rule can set a level of its own instead.",
     "name": "Name",
     "nameHelp": "Free to choose, like \"Phone\" or \"Family group\".",
     "namePlaceholder": "Phone",
@@ -1044,8 +1044,8 @@
     },
     "choice": {
       "label": "Pushes go to",
-      "sourceHelp": "Out of the box, every source's pushes go to all targets. Here you can limit that to some of them, say backups to Telegram only. The target's minimum level and quiet hours still apply: a target that wants critical messages only gets only critical ones from this source too. A rule can choose other targets for single messages.",
-      "ruleHelp": "For sources that several apps report through: when the rule matches, the pushes of this line go to the chosen targets only, whatever the source is set to. The target's minimum level and quiet hours still apply.",
+      "sourceHelp": "Out of the box, every source's pushes go to all targets. Here you can limit that to some of them, say backups to Telegram only. The target's quiet hours still apply, and so does its minimum level, unless the source sets a level of its own below. A rule can choose other targets for single messages.",
+      "ruleHelp": "For sources that several apps report through: when the rule matches, the pushes of this line go to the chosen targets only, whatever the source is set to. The targets' quiet hours still apply, and so does the level that the rule, the source or the target sets.",
       "sourceAll": "All targets",
       "ruleAll": "As set on the source",
       "only": "Only these",
@@ -1347,5 +1347,31 @@
     "ruleHelp": "For sources several apps report through: when the rule matches, the line shows this logo instead of the source's. The push to ntfy can carry it too (Rules › Defaults).",
     "ruleNone": "No icon. The line shows the source's.",
     "chip": "Icon"
+  },
+  "levels": {
+    "sourceLabel": "What should arrive from this source?",
+    "ruleLabel": "What should be pushed?",
+    "sourceDefault": "As each target says",
+    "ruleDefault": "As set on the source",
+    "info": "Everything, info too",
+    "warn": "Warnings and critical",
+    "crit": "Only critical",
+    "sourceHelp": "Out of the box, each target decides with its own minimum level what reaches it. Here the source decides instead, in both directions: a source that only sends info, like a release or change watcher, can reach a target set to critical, and a chatty one can be held to critical only. Quiet hours still hold back everything below critical. Repeats are still bundled: the first push goes out at once, then one follow-up with the count. Rules that keep messages in the inbox still win, and a rule can set a level of its own for single messages.",
+    "ruleHelp": "For sources that several apps report through: when the rule matches, this level counts for the line instead of the source's level and the targets' own minimum. Quiet hours and bundling stay as they are.",
+    "reachTitle": "As set here, pushes go to",
+    "nowhere": "nowhere, inbox only",
+    "quiet": "A target's quiet hours still hold back everything below critical.",
+    "kept": "Matching messages stay in the inbox, whatever you pick here: {{names}}.",
+    "keptRule": "“{{name}}”",
+    "line": {
+      "info": "Pushes everything, info too",
+      "warn": "Pushes warnings and critical",
+      "crit": "Pushes only critical"
+    },
+    "chip": {
+      "info": "pushes everything",
+      "warn": "pushes warnings and critical",
+      "crit": "pushes only critical"
+    }
   }
 }

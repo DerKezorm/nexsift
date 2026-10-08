@@ -3,11 +3,12 @@ import { useTranslation } from 'react-i18next'
 import { Link, useSearchParams } from 'react-router-dom'
 
 import { api, errorMessage } from '../api/client'
-import type { About, Preset, Settings, Source, SourceWithConnection, Stranger } from '../api/types'
+import type { About, Preset, Priority, Rule, Settings, Source, SourceWithConnection, Stranger } from '../api/types'
 import { CopyField } from '../components/CopyField'
 import { Dialog } from '../components/Dialog'
 import { Explainer, Help } from '../components/Help'
 import { IconField, IconPicker } from '../components/IconPicker'
+import { LevelChoice, LevelReach } from '../components/rules/LevelChoice'
 import { TargetChoice } from '../components/rules/TargetChoice'
 import { useNotice } from '../components/Notice'
 import { SourceMark } from '../components/SourceMark'
@@ -210,6 +211,12 @@ function SourceCard({ source, now, language, targetNames, onShow }: { source: So
           {t('sources.onlyTo', { names: targetNames.join(', ') })}
         </p>
       )}
+      {source.min_priority && (
+        <p className="flex items-start gap-2 text-xs text-mist-400">
+          <Symbol name="phone" className="mt-px h-3.5 w-3.5 shrink-0" />
+          {t(`levels.line.${source.min_priority}`)}
+        </p>
+      )}
 
       {source.unrecognized_streak > 0 && (
         <Banner tone="warn">
@@ -254,14 +261,18 @@ function EditDialog({ source, onClose }: { source: Source; onClose: () => void }
   const [icon, setIcon] = useState(source.icon)
   const [tap, setTap] = useState<Source['tap']>(source.tap)
   const [targets, setTargets] = useState<number[]>(source.targets)
+  const [level, setLevel] = useState<Priority | ''>(source.min_priority)
   const [picking, setPicking] = useState(false)
+  // For the preview under the level: where each priority goes, and which rules keep messages in the inbox anyway.
+  const known = useTargets()
+  const rules = useLoad(() => api.get<Rule[]>('/api/rules'), [])
   // Opening nexsift from a push needs the address it is reached by from outside.
   const settings = useLoad(() => api.get<Settings>('/api/settings'), [])
   const [error, setError] = useState<string | null>(null)
 
   async function save() {
     try {
-      await api.put(`/api/sources/${source.id}`, { name, icon, tap, targets })
+      await api.put(`/api/sources/${source.id}`, { name, icon, tap, targets, min_priority: level })
       onClose()
     } catch (caught) {
       setError(errorMessage(caught))
@@ -306,6 +317,8 @@ function EditDialog({ source, onClose }: { source: Source; onClose: () => void }
           none={t('icon.sourceNone')}
         />
         <TargetChoice value={targets} onChange={setTargets} scope="source" />
+        <LevelChoice value={level} onChange={setLevel} scope="source" />
+        {known.data && <LevelReach targets={known.data} chosen={targets} level={level} rules={rules.data ?? []} sourceId={source.id} />}
         <SelectField label={t('sources.tap.label')} value={tap} onChange={(value) => setTap(value as Source['tap'])} help={t('sources.tap.help')}>
           <option value="link">{t('sources.tap.link')}</option>
           <option value="nexsift">{t('sources.tap.nexsift')}</option>

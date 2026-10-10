@@ -43,8 +43,6 @@ export interface ProviderButton {
 /** What the sign-in page needs before anybody is signed in. */
 export interface SignInState {
   password_login: boolean
-  /** With the password off, may the operator still use it? nexsift: no (the way back is a command). */
-  operator_password: boolean
   providers: ProviderButton[]
 }
 

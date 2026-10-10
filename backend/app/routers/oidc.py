@@ -146,8 +146,7 @@ def state() -> dict[str, Any]:
             bool(settings_service.get(s.db, "password_login")) or operator is None or not way_in(s.db, operator.id)
         )
         return {
-            "password_login": allowed or settings_service.PASSWORD_ALWAYS_FOR_OPERATOR,
-            "operator_password": settings_service.PASSWORD_ALWAYS_FOR_OPERATOR,
+            "password_login": allowed,
             "providers": listed,
         }
 

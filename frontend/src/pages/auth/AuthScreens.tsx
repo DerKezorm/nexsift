@@ -101,7 +101,8 @@ export function SetupScreen() {
 
 /**
  * Sign-in, as the shared sign-in blueprint lays it out (part 04): the password form, below it "or" and a button per
- * active provider in the order of the list. With the password sign-in off only the buttons. An error from the
+ * active provider in the order of the list. With the password sign-in off only the buttons: off means off in nexsift
+ * (one account, blueprint 06), so there is no "Sign in as the operator"; the way back is the command below. An error from the
  * provider (`?error=<code>`) shows above, in the module's words; an unknown code shows nothing.
  */
 export function LoginScreen() {
@@ -112,15 +113,13 @@ export function LoginScreen() {
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [state, setState] = useState<SignInState | null>(null)
-  // Only where the app lets the operator keep the password (settings_service.PASSWORD_ALWAYS_FOR_OPERATOR).
-  const [asOperator, setAsOperator] = useState(false)
   const fromProvider = oidcErrorKey(new URLSearchParams(window.location.search).get('error'))
 
   useEffect(() => {
     oidcApi
       .state()
       .then(setState)
-      .catch(() => setState({ password_login: true, operator_password: false, providers: [] }))
+      .catch(() => setState({ password_login: true, providers: [] }))
   }, [])
 
   async function submit(event: FormEvent) {
@@ -138,7 +137,7 @@ export function LoginScreen() {
   }
 
   const buttons = state?.providers ?? []
-  const passwordShown = !state || state.password_login || asOperator
+  const passwordShown = !state || state.password_login
   return (
     <Frame>
       <h1 className="text-2xl font-bold tracking-tight">{t('login.title')}</h1>
@@ -174,11 +173,6 @@ export function LoginScreen() {
             </Button>
           ))}
         </div>
-      )}
-      {state && !passwordShown && state.operator_password && (
-        <button type="button" className="mt-4 text-xs text-mist-500 underline hover:text-mist-200" onClick={() => setAsOperator(true)}>
-          {t('oidc.login.operator')}
-        </button>
       )}
       <p className="mt-6 text-xs text-mist-600">
         {t('login.forgot')} <code className="font-mono whitespace-nowrap text-mist-400">python -m app.reset_password</code>

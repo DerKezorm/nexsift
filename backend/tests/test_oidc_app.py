@@ -20,7 +20,7 @@ from app import crypto
 from app.db import SessionLocal
 from app.models import Account, OidcLink, OidcProvider
 from app.services import oidc_store, settings_service
-from app.vendor.nexoidc import secret_context
+from app.vendor.nexoidc import ProviderValues, secret_context
 from tests.conftest import PASSWORD, UI
 from tests.oidc_helpers import (
     FakeProvider,
@@ -86,22 +86,11 @@ def test_with_the_password_off_only_the_provider_lets_the_operator_in(
     state = browser().get("/api/oidc/state").json()
     assert state == {
         "password_login": False,
-        "operator_password": False,
         "providers": [{"slug": "sso", "label": "SSO"}],
     }
     visitor = browser()
     assert location(sign_in_via_oidc(visitor, provider)) == "/"
     assert visitor.get("/api/auth/me").json()["name"] == "admin"
-
-
-def test_the_operator_keeps_the_password_when_the_app_says_so(
-    client: TestClient, operator: dict, provider: FakeProvider, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    _linked(client, provider)
-    _password_off(client)
-    monkeypatch.setattr(settings_service, "PASSWORD_ALWAYS_FOR_OPERATOR", True)
-    assert _password_works()
-    assert browser().get("/api/oidc/state").json()["operator_password"] is True
 
 
 @pytest.mark.parametrize("change", ["switched off", "removed", "another issuer"])
@@ -374,3 +363,47 @@ def test_the_same_issuer_written_with_a_slash_keeps_everything(
     )
     assert answer.status_code == 200 and answer.json()["dropped"] == 0
     assert _old()["subject"] == "person-1" and _old()["oidc_issuer"] == provider.issuer + "/"
+
+
+def test_the_operator_unlinks_only_with_the_own_password(
+    client: TestClient, operator: dict, provider: FakeProvider
+) -> None:
+    entry = _linked(client, provider)
+    with SessionLocal() as db:
+        account_id = db.scalars(select(Account.id)).one()
+    path = f"/api/oidc/admin/accounts/{account_id}/links/{entry['id']}"
+    refused = client.request("DELETE", path, json={"password": "not-the-password"}, headers=UI)
+    assert refused.status_code == 401 and refused.json()["detail"]["code"] == "wrong_password"
+    assert client.get("/api/oidc/me").json()[0]["linked"] is True
+    assert client.request("DELETE", path, json={"password": PASSWORD}, headers=UI).status_code == 204
+    assert client.get("/api/oidc/me").json()[0]["linked"] is False
+
+
+def test_a_provider_never_makes_accounts_whatever_is_sent(
+    client: TestClient, operator: dict, provider: FakeProvider
+) -> None:
+    entry = add_provider(client, provider, auto_create=True)
+    assert entry["auto_create"] is False
+    body = {key: entry[key] for key in ("label", "issuer", "client_id", "scopes", "enabled", "trusts_second_factor")}
+    saved = client.put(f"/api/oidc/admin/providers/{entry['id']}", json={**body, "auto_create": True}, headers=UI)
+    assert saved.json()["auto_create"] is False
+    # Not even written straight into the store.
+    with SessionLocal() as db:
+        store = oidc_store.SqlStore(db)
+        made = store.insert_provider(
+            ProviderValues(
+                slug="direct",
+                label="Direct",
+                issuer="https://direct.example.com",
+                client_id="direct",
+                client_secret="",
+                scopes="openid",
+                enabled=True,
+                auto_create=True,
+                trusts_second_factor=True,
+                managed="",
+                position=1,
+            )
+        )
+        store.commit()
+        assert made.auto_create is False

@@ -98,11 +98,13 @@ def account_view(account: Account) -> dict[str, Any]:
 
 
 def password_allowed(db: DbSession) -> bool:
-    """Off only counts while a provider brings the operator in (the switch cannot go off otherwise, and a change of
-    the providers turns it back on); see ``settings_service.PASSWORD_ALWAYS_FOR_OPERATOR``."""
+    """Off means off, for the operator too (blueprint 06, apps with one account): the way back when the provider
+    fails is ``docker exec -it nexsift python -m app.reset_password``, named at the switch. Off only counts while a
+    provider brings the operator in (the switch cannot go off otherwise, and a change of the providers turns it back
+    on)."""
     from ..services.oidc_store import way_in
 
-    if settings_service.get(db, "password_login") or settings_service.PASSWORD_ALWAYS_FOR_OPERATOR:
+    if settings_service.get(db, "password_login"):
         return True
     operator = accounts.operator(db)
     return operator is None or not way_in(db, operator.id)

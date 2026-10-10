@@ -17,12 +17,6 @@ PUSH_MODES = ("immediate", "window", "single", "never")
 #: Mirrors ``backups.SCHEDULES``; kept here so the settings do not import the backup service.
 BACKUP_SCHEDULES = ("off", "daily", "weekly", "monthly")
 
-#: With the password sign-in switched off, may the operator still sign in with the password? nexsift's answer is no:
-#: off means off, and the way back when the provider fails is ``docker exec -it nexsift python -m app.reset_password``
-#: (blueprint 06, apps with one account: the app keeps its own way back and names it where the switch is). True
-#: would make the switch hide the password form only, with "Sign in as the operator with a password" below the buttons.
-PASSWORD_ALWAYS_FOR_OPERATOR = False
-
 DEFAULTS: dict[str, Any] = {
     "password_login": True,
     #: The single provider of nexsift 0.11 and older. Since the provider list (``oidc_providers``) they only mirror the

@@ -38,6 +38,8 @@ const SYMBOLS = {
   expand: [{ d: 'M4.5 9.5v-5h5M19.5 9.5v-5h-5M4.5 14.5v5h5M19.5 14.5v5h-5' }],
   logout: [{ d: 'M14 4.5h5.5v15H14' }, { d: 'M10 8l-4 4 4 4M6 12h9' }],
   close: [{ d: 'M6 6l12 12M18 6 6 18' }],
+  // Six dots: the handle that drags an entry of a list into another place.
+  grip: [{ d: 'M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01' }],
   check: [{ d: 'M5 12.5l4.5 4.5L19 7.5' }],
   info: [{ d: 'M12 20.5a8.5 8.5 0 1 0 0-17 8.5 8.5 0 0 0 0 17Z' }, { d: 'M12 11v5.5M12 7.8v.2' }],
   warn: [{ d: 'M12 4 2.8 19.5h18.4L12 4Z' }, { d: 'M12 10v4.5M12 17v.2' }],

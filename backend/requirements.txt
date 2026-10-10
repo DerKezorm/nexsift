@@ -7,7 +7,7 @@ argon2-cffi==25.1.0
 cryptography==50.0.1
 httpx==0.28.1
 # PyJWT checks the id tokens of the OIDC provider and signs the short-lived sign-in attempt cookie.
-pyjwt==2.15.0
+pyjwt==2.15.1
 # The SMTP entrance for senders that only speak email (UPS, NAS, router).
 aiosmtpd==1.4.6
 # Web Push: encrypts each message for the device (RFC 8291); only needs cryptography.

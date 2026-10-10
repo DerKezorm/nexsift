@@ -8,8 +8,12 @@ import { Badge, Banner, Button, Section } from '../../components/ui'
 import { BUILT_IN_LANGUAGES, changeLanguage, LANGUAGES, refreshCustomLanguage } from '../../i18n'
 import { coverageOf, merge, missingFile, template, validate, type CustomLanguage, type Report } from '../../i18n/custom'
 import { customLanguage, removeLanguage, saveLanguage, useCustomLanguages } from '../../i18n/customStore'
-import english from '../../i18n/en.json'
+import appEnglish from '../../i18n/en.json'
+import oidcEnglish from '../../vendor/nexoidc/oidc.en.json'
 import { APP_VERSION } from '../../lib/version'
+
+/** English as the app has it: its own texts and those of the shared sign-in module. */
+const english = { ...appEnglish, ...oidcEnglish }
 
 function download(name: string, text: string) {
   const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }))

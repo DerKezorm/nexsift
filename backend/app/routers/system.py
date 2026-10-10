@@ -15,7 +15,7 @@ from .. import __version__
 from ..config import get_settings
 from ..deps import CurrentAccount, DbSession
 from ..meldungen import fehler
-from ..services import bus, settings_service, texts, updates
+from ..services import bus, oidc_store, settings_service, texts, updates
 
 logger = logging.getLogger("nexsift.settings")
 
@@ -97,8 +97,7 @@ def write_settings(payload: SettingsIn, account: CurrentAccount, db: DbSession) 
                 raise fehler(
                     "sender_host_invalid", "Use a host name or an IP address, like 192.168.1.10.", 422, field=key
                 ) from error
-        linked = settings_service.get(db, "oidc_issuer") and account.oidc_subject
-        if key == "password_login" and value is False and not linked:
+        if key == "password_login" and value is False and not oidc_store.way_in(db, account.id):
             raise fehler(
                 "password_needed",
                 "Set up a sign-in provider and link it before turning the password off.",

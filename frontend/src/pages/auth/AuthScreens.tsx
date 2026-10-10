@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { api, errorMessage } from '../../api/client'
+import { oidcApi, startAt, type SignInState } from '../../api/oidc'
 import type { Account } from '../../api/types'
 import { useAuth } from '../../auth'
 import { LanguageSwitcher } from '../../components/LanguageSwitcher'
@@ -9,6 +10,7 @@ import { Logo } from '../../components/Logo'
 import { Symbol } from '../../components/Symbol'
 import { ThemeSwitcher } from '../../components/ThemeSwitcher'
 import { Banner, Button, Field } from '../../components/ui'
+import { oidcErrorKey } from '../../vendor/nexoidc/oidc'
 
 function Frame({ children }: { children: ReactNode }) {
   return (
@@ -97,7 +99,11 @@ export function SetupScreen() {
   )
 }
 
-/** Sign-in: the provider button when there is one, the password otherwise (or both). */
+/**
+ * Sign-in, as the shared sign-in blueprint lays it out (part 04): the password form, below it "or" and a button per
+ * active provider in the order of the list. With the password sign-in off only the buttons. An error from the
+ * provider (`?error=<code>`) shows above, in the module's words; an unknown code shows nothing.
+ */
 export function LoginScreen() {
   const { t } = useTranslation()
   const { setAccount } = useAuth()
@@ -105,14 +111,16 @@ export function LoginScreen() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
-  const [oidc, setOidc] = useState<{ enabled: boolean; provider_name: string; password_login: boolean } | null>(null)
-  const fromProvider = new URLSearchParams(window.location.search).get('error')
+  const [state, setState] = useState<SignInState | null>(null)
+  // Only where the app lets the operator keep the password (settings_service.PASSWORD_ALWAYS_FOR_OPERATOR).
+  const [asOperator, setAsOperator] = useState(false)
+  const fromProvider = oidcErrorKey(new URLSearchParams(window.location.search).get('error'))
 
   useEffect(() => {
-    api
-      .get<{ enabled: boolean; provider_name: string; password_login: boolean }>('/api/oidc/state')
-      .then(setOidc)
-      .catch(() => setOidc({ enabled: false, provider_name: '', password_login: true }))
+    oidcApi
+      .state()
+      .then(setState)
+      .catch(() => setState({ password_login: true, operator_password: false, providers: [] }))
   }, [])
 
   async function submit(event: FormEvent) {
@@ -129,31 +137,48 @@ export function LoginScreen() {
     }
   }
 
+  const buttons = state?.providers ?? []
+  const passwordShown = !state || state.password_login || asOperator
   return (
     <Frame>
       <h1 className="text-2xl font-bold tracking-tight">{t('login.title')}</h1>
       <p className="mt-2 text-sm text-mist-400">{t('login.lead')}</p>
       {fromProvider && (
-        <div className="mt-4">
-          <Banner tone="bad">{t(`errors.${fromProvider}`, { defaultValue: t('login.providerFailed') })}</Banner>
+        <div className="mt-4" data-testid="sign-in-error">
+          <Banner tone="bad">{t(fromProvider)}</Banner>
         </div>
       )}
-      {oidc?.enabled && (
-        <a href="/api/oidc/start" className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-accent-500 px-5 py-2.5 text-sm font-semibold text-on-accent hover:bg-accent-400">
-          <Symbol name="shield" />
-          {t('login.withProvider', { name: oidc.provider_name })}
-        </a>
-      )}
-      {oidc?.enabled && oidc.password_login && <p className="my-5 text-center text-xs text-mist-600">{t('login.or')}</p>}
-      {(!oidc || oidc.password_login) && (
-        <form onSubmit={(event) => void submit(event)} className={'flex flex-col gap-4 ' + (oidc?.enabled ? '' : 'mt-6')}>
+      {passwordShown && (
+        <form onSubmit={(event) => void submit(event)} className="mt-6 flex flex-col gap-4">
           <Field label={t('login.name')} value={name} onChange={(event) => setName(event.target.value)} autoComplete="username" required />
           <Field label={t('login.password')} type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" required />
           {error && <Banner tone="bad">{error}</Banner>}
-          <Button type="submit" variant={oidc?.enabled ? 'ghost' : 'primary'} loading={busy} disabled={!name || !password}>
+          <Button type="submit" loading={busy} disabled={!name || !password}>
             {t('login.submit')}
           </Button>
         </form>
+      )}
+      {passwordShown && buttons.length > 0 && (
+        <div className="my-5 flex items-center gap-3 text-xs text-mist-600" aria-hidden="true">
+          <span className="h-px flex-1 bg-ink-700" />
+          {t('oidc.login.or')}
+          <span className="h-px flex-1 bg-ink-700" />
+        </div>
+      )}
+      {buttons.length > 0 && (
+        <div className={'flex flex-col gap-2 ' + (passwordShown ? '' : 'mt-6')} data-testid="provider-buttons">
+          {buttons.map((button) => (
+            <Button key={button.slug} variant={passwordShown ? 'ghost' : 'primary'} onClick={() => startAt(button.slug)}>
+              <Symbol name="shield" />
+              {t('oidc.login.button', { name: button.label })}
+            </Button>
+          ))}
+        </div>
+      )}
+      {state && !passwordShown && state.operator_password && (
+        <button type="button" className="mt-4 text-xs text-mist-500 underline hover:text-mist-200" onClick={() => setAsOperator(true)}>
+          {t('oidc.login.operator')}
+        </button>
       )}
       <p className="mt-6 text-xs text-mist-600">
         {t('login.forgot')} <code className="font-mono whitespace-nowrap text-mist-400">python -m app.reset_password</code>

@@ -1,4 +1,5 @@
 import i18n from '../i18n'
+import { oidcErrorKey, oidcFormErrorKey } from '../vendor/nexoidc/oidc'
 
 /**
  * Talking to the server. Every changing request carries X-Requested-By, which the server demands so that a
@@ -105,7 +106,9 @@ export async function downloadFile(path: string, fallbackName: string, body?: un
  */
 export function errorMessage(error: unknown): string {
   if (error instanceof ApiError) {
-    const text = i18n.t(`errors.${error.code}`, { ...error.details, defaultValue: error.message })
+    // The codes of sign-in through a provider have the shared module's words (namespace oidc), as everywhere.
+    const shared = oidcErrorKey(error.code) ?? oidcFormErrorKey(error.code)
+    const text = shared ? i18n.t(shared, error.details) : i18n.t(`errors.${error.code}`, { ...error.details, defaultValue: error.message })
     const id = error.details.request_id
     return typeof id === 'string' && /^[0-9a-f]{6}$/.test(id) ? `${text} ${i18n.t('errors.requestId', { id })}` : text
   }

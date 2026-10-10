@@ -7,6 +7,7 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException, Request, Response
 from pydantic import BaseModel, Field
+from sqlalchemy import select
 
 from .. import __version__
 from ..config import get_settings
@@ -77,15 +78,34 @@ def _check_password(password: str) -> None:
         raise fehler("password_too_short", f"Use at least {MIN_PASSWORD} characters.", 422, minimum=MIN_PASSWORD)
 
 
+def has_links(account_id: int) -> bool:
+    from ..db import SessionLocal
+    from ..models import OidcLink
+
+    with SessionLocal() as db:
+        return db.scalar(select(OidcLink.id).where(OidcLink.account_id == account_id).limit(1)) is not None
+
+
 def account_view(account: Account) -> dict[str, Any]:
     return {
         "id": account.id,
         "name": account.name,
         "email": account.email,
-        "oidc_linked": bool(account.oidc_subject),
+        "oidc_linked": has_links(account.id),
         "prefs": account.prefs or {},
         "created_at": account.created_at.isoformat(),
     }
+
+
+def password_allowed(db: DbSession) -> bool:
+    """Off only counts while a provider brings the operator in (the switch cannot go off otherwise, and a change of
+    the providers turns it back on); see ``settings_service.PASSWORD_ALWAYS_FOR_OPERATOR``."""
+    from ..services.oidc_store import way_in
+
+    if settings_service.get(db, "password_login") or settings_service.PASSWORD_ALWAYS_FOR_OPERATOR:
+        return True
+    operator = accounts.operator(db)
+    return operator is None or not way_in(db, operator.id)
 
 
 def sign_in_response(db: DbSession, request: Request, response: Response, account: Account) -> dict[str, Any]:
@@ -124,7 +144,7 @@ def login(payload: LoginIn, request: Request, response: Response, db: DbSession)
             detail=meldung("too_many_attempts", "Too many attempts. Try again later.", retry_after=wait),
             headers={"Retry-After": str(wait)},
         )
-    if not settings_service.get(db, "password_login"):
+    if not password_allowed(db):
         raise fehler("password_login_off", "Sign-in with a password is turned off. Use the sign-in provider.", 403)
     try:
         account = accounts.authenticate(db, payload.name, payload.password)

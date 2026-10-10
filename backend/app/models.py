@@ -16,7 +16,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Index, Integer, String, Text
+from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Index, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.types import TypeDecorator
 
@@ -73,8 +73,10 @@ class Account(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String(64), unique=True)
     password_hash: Mapped[str] = mapped_column(Text, default="")
-    #: OIDC comes in when the provider vouches for this address (email_verified).
+    #: The account's own address. Never a way in: sign-in through a provider goes by its link (``OidcLink``) only.
     email: Mapped[str] = mapped_column(String(255), default="")
+    #: The provider identity of nexsift 0.11 and older, kept for one version as the way back: it always says what the
+    #: link to the entry ``oidc`` says, or nothing (``services/oidc_store.mirror_legacy``). Never read for a sign-in.
     oidc_subject: Mapped[str] = mapped_column(String(255), default="")
     prefs: Mapped[Any] = mapped_column(JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(UtcDateTime, default=utcnow)
@@ -252,5 +254,56 @@ class ApiKey(Base):
     #: The first characters, so the operator can tell keys apart without the key.
     prefix: Mapped[str] = mapped_column(String(16))
     token_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    created_at: Mapped[datetime] = mapped_column(UtcDateTime, default=utcnow)
+    last_used_at: Mapped[datetime | None] = mapped_column(UtcDateTime, nullable=True)
+
+
+class OidcProvider(Base):
+    """A sign-in provider (OpenID Connect), one row per entry of the list under Settings, Sign-in. The columns are
+    those of the shared sign-in blueprint (part 01); the module ``vendor/nexoidc`` reads and writes them through
+    ``services/oidc_store.SqlStore``."""
+
+    __tablename__ = "oidc_providers"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    #: Part of the callback address ``/api/oidc/<slug>/callback``; fixed once made. The entry from the settings of
+    #: nexsift 0.11 is ``oidc`` and keeps ``/api/oidc/callback``.
+    slug: Mapped[str] = mapped_column(String(40), unique=True)
+    label: Mapped[str] = mapped_column(String(200))
+    #: Stored without spaces and without a slash at the end.
+    issuer: Mapped[str] = mapped_column(String(500))
+    client_id: Mapped[str] = mapped_column(String(255))
+    #: Encrypted with the server secret under the context ``oidc-provider:<id>``; never sent to a browser.
+    client_secret_enc: Mapped[str] = mapped_column(Text, default="")
+    scopes: Mapped[str] = mapped_column(String(500), default="openid profile email")
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    #: Always off in nexsift (one account): a provider never makes an account here.
+    auto_create: Mapped[bool] = mapped_column(Boolean, default=False)
+    #: nexsift has no second factor of its own; kept as the blueprint has it.
+    trusts_second_factor: Mapped[bool] = mapped_column(Boolean, default=True)
+    #: "" by hand, "authentik" when the authentik button made it (only that entry is the button's).
+    managed: Mapped[str] = mapped_column(String(20), default="")
+    position: Mapped[int] = mapped_column(Integer, default=0)
+    #: The callback path the provider knows when it is not the standard one; set by a migration only.
+    redirect_path: Mapped[str] = mapped_column(String(300), default="")
+    created_at: Mapped[datetime] = mapped_column(UtcDateTime, default=utcnow)
+
+
+class OidcLink(Base):
+    """One identity at one provider, bound to the account. ``email`` is for display, never for finding anybody."""
+
+    __tablename__ = "oidc_links"
+    __table_args__ = (
+        UniqueConstraint("provider_id", "subject", name="oidc_links_subject"),
+        UniqueConstraint("provider_id", "account_id", name="oidc_links_account"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    provider_id: Mapped[int] = mapped_column(ForeignKey("oidc_providers.id", ondelete="CASCADE"), index=True)
+    subject: Mapped[str] = mapped_column(String(255))
+    account_id: Mapped[int] = mapped_column(ForeignKey("accounts.id", ondelete="CASCADE"), index=True)
+    #: The ``iss`` of the token that made the link (with Entra ``common`` the real tenant).
+    issuer: Mapped[str] = mapped_column(String(500))
+    email: Mapped[str | None] = mapped_column(String(320), nullable=True)
     created_at: Mapped[datetime] = mapped_column(UtcDateTime, default=utcnow)
     last_used_at: Mapped[datetime | None] = mapped_column(UtcDateTime, nullable=True)

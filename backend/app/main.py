@@ -40,9 +40,10 @@ from .routers import (
     threads,
 )
 from .services import backups as backup_service
-from .services import bus, presets, push, settings_service
+from .services import bus, oidc_store, presets, push, settings_service
 from .services import icons as icon_service
 from .services import logs as log_service
+from .vendor import nexoidc
 
 logger = logging.getLogger("nexsift")
 
@@ -85,6 +86,13 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
             db.commit()
         backup_service.restored_at_start = False
         logger.info("Backup restored at start, all browser sessions ended")
+    # nexsift 0.11 kept one provider in its settings: once, after the backup, it becomes the entry "oidc".
+    try:
+        oidc_store.migrate_settings()
+    except Exception:
+        logger.exception("Moving the sign-in provider into the list failed; it is tried again at the next start")
+    # The TLS context for the sign-in calls, read once in a worker thread, not at the first sign-in.
+    await nexoidc.warm()
     with SessionLocal() as db:
         from .services import accounts
 
@@ -129,6 +137,9 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
             except Exception:  # shutting down, the process ends anyway
                 logger.debug("Closing a door failed", exc_info=True)
 
+
+# The shared sign-in module learns who it runs in before the first request.
+oidc_store.configure()
 
 app = FastAPI(
     title="nexsift",

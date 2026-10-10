@@ -1,4 +1,4 @@
-import { Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 
 import { useAuth } from './auth'
 import { AppShell } from './components/AppShell'
@@ -30,8 +30,26 @@ export default function App() {
         <Route path="rules" element={<RulesPage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="about" element={<AboutPage />} />
+        <Route path="account" element={<ToAccount />} />
+        <Route path="login" element={<Navigate to="/" replace />} />
         <Route path="*" element={<InboxPage />} />
       </Route>
     </Routes>
   )
+}
+
+/**
+ * `/account`: where the shared sign-in module ends a linking (`?linked=<slug>` or `?error=<code>`). nexsift has no page
+ * of its own for the one account; its part is Settings, Account.
+ */
+function ToAccount() {
+  const { search } = useLocation()
+  const params = new URLSearchParams(search)
+  const kept = new URLSearchParams()
+  for (const key of ['linked', 'error']) {
+    const value = params.get(key)
+    if (value) kept.set(key, value)
+  }
+  const rest = kept.toString()
+  return <Navigate to={`/settings${rest ? `?${rest}` : ''}`} replace />
 }

@@ -8,6 +8,9 @@
  * is not finished, or older than the running version, still shows every text. See `custom.ts`.
  *
  * A new built-in language: put `xx.json` next to the others and add an entry to `LANGUAGES` here.
+ *
+ * The texts of sign-in through a provider come from the shared sign-in module (`vendor/nexoidc/oidc.<lang>.json`,
+ * the same words in every nex app, namespace `oidc`) and are merged in here; `{{app}}` in them is "nexsift".
  */
 
 import i18n from 'i18next'
@@ -24,10 +27,19 @@ interface LanguageEntry {
   load: () => Promise<{ default: Texts }>
 }
 
+/** The app's own texts plus the module's `oidc` part. */
+async function withOidc(own: Promise<{ default: Texts }>, oidc: Promise<{ default: Texts }>): Promise<{ default: Texts }> {
+  const [app, module] = await Promise.all([own, oidc])
+  return { default: { ...app.default, ...module.default } }
+}
+
 export const LANGUAGES = {
-  de: { label: 'DE', name: 'Deutsch', load: () => import('./de.json') },
-  en: { label: 'EN', name: 'English', load: () => import('./en.json') },
+  de: { label: 'DE', name: 'Deutsch', load: () => withOidc(import('./de.json'), import('../vendor/nexoidc/oidc.de.json')) },
+  en: { label: 'EN', name: 'English', load: () => withOidc(import('./en.json'), import('../vendor/nexoidc/oidc.en.json')) },
 } as const satisfies Record<string, LanguageEntry>
+
+/** The name the module's texts use for `{{app}}`. */
+export const APP_NAME = 'nexsift'
 
 export type BuiltInLanguage = keyof typeof LANGUAGES
 export const BUILT_IN_LANGUAGES = Object.keys(LANGUAGES) as BuiltInLanguage[]
@@ -92,7 +104,7 @@ export async function startI18n(): Promise<void> {
     resources: { [language]: { translation: await textsFor(language) } },
     lng: language,
     fallbackLng: false,
-    interpolation: { escapeValue: false },
+    interpolation: { escapeValue: false, defaultVariables: { app: APP_NAME } },
   })
   document.documentElement.lang = language
 }

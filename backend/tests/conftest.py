@@ -31,6 +31,8 @@ from app.models import (  # noqa: E402
     AuthSession,
     Delivery,
     Event,
+    OidcLink,
+    OidcProvider,
     Rule,
     Setting,
     Source,
@@ -48,7 +50,20 @@ PASSWORD = "correct-horse-battery"
 def clean_db() -> Iterator[None]:
     init_db()
     with SessionLocal() as db:
-        for model in (Delivery, Event, Thread, Rule, Target, Source, AuthSession, Account, Setting, ApiKey):
+        for model in (
+            Delivery,
+            Event,
+            Thread,
+            Rule,
+            Target,
+            Source,
+            AuthSession,
+            OidcLink,
+            OidcProvider,
+            Account,
+            Setting,
+            ApiKey,
+        ):
             db.execute(delete(model))
         db.commit()
     brake._fails.clear()
@@ -97,3 +112,7 @@ def inbox(client: TestClient, view: str = "inbox") -> list[dict]:
     response = client.get(f"/api/threads?view={view}")
     assert response.status_code == 200, response.text
     return response.json()["items"]
+
+
+# The fake provider of the sign-in tests (tests/oidc_helpers.py), as a fixture for every test file.
+from tests.oidc_helpers import provider  # noqa: E402, F401

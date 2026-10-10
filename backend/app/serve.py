@@ -16,8 +16,10 @@ import sys
 from collections.abc import Iterator
 
 import uvicorn
+from uvicorn.importer import import_from_string
 
 from .config import get_settings
+from .proxy import behind_proxy
 
 
 class _Server(uvicorn.Server):
@@ -30,14 +32,15 @@ class _Server(uvicorn.Server):
 
 
 def _server(app: str, port: int, log_level: str) -> _Server:
+    trusted = get_settings().trusted_proxies or "127.0.0.1"
+    # The proxy handling is ours (app/proxy.py), so uvicorn's own is off.
     return _Server(
         uvicorn.Config(
-            app,
+            behind_proxy(import_from_string(app), trusted),
             host=get_settings().host,
             port=port,
             log_level=log_level,
-            proxy_headers=True,
-            forwarded_allow_ips=get_settings().trusted_proxies or "127.0.0.1",
+            proxy_headers=False,
             access_log=False,
         )
     )

@@ -122,9 +122,10 @@ def _ask_before_new_public_url(db: Any, clean: dict[str, Any], request: Request,
     """A new public address changes the redirect address the sign-in sends. Where authentik still knows the old one
     (the button set it up), or a provider entered by hand does, the operator is asked first: 409 with the question
     and nothing saved (blueprint 03, "Rückleitadresse"); ``confirm_public_url`` says yes. Clearing the address asks
-    nothing (nothing is registered from it)."""
+    like any other change: the sign-in then falls back to the address of the request, which authentik may not
+    know. The module decides for "" whether there is anything to ask."""
     address = clean.get("public_url")
-    if not address or address == settings_service.get(db, "public_url"):
+    if address is None or address == settings_service.get(db, "public_url"):
         return
     try:
         question = authentik.public_url_guard(

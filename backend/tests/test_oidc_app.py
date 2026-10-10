@@ -691,12 +691,31 @@ def test_the_public_address_takes_nothing_the_sign_in_module_refuses(client: Tes
     ):
         with pytest.raises(ValueError):
             settings_service.normalize_public_url(wrong)
-    # Clearing it asks nothing and works.
+    # Clearing it with nothing registered anywhere asks nothing and works.
     assert (
         client.put("/api/settings", json={"values": {"public_url": "https://a.example.org"}}, headers=UI).status_code
         == 200
     )
     assert client.put("/api/settings", json={"values": {"public_url": ""}}, headers=UI).status_code == 200
+    assert _setting("public_url") == ""
+
+
+def test_clearing_the_public_address_asks_like_any_change(
+    client: TestClient, operator: dict, provider: FakeProvider
+) -> None:
+    """Without the address the sign-in falls back to the address of the request, which the provider entered by hand
+    does not know: the operator is asked first (409, nothing saved), and ``confirm_public_url`` says yes."""
+    address = "https://a.example.org"
+    assert client.put("/api/settings", json={"values": {"public_url": address}}, headers=UI).status_code == 200
+    add_provider(client, provider)
+    clear = {"values": {"public_url": ""}}
+    asked = client.put("/api/settings", json=clear, headers=UI)
+    assert asked.status_code == 409, asked.text
+    detail = asked.json()["detail"]
+    assert detail["code"] == "public_url_change" and detail["hand"] == 1
+    assert _setting("public_url") == address
+    confirmed = client.put("/api/settings", json={**clear, "confirm_public_url": True}, headers=UI)
+    assert confirmed.status_code == 200, confirmed.text
     assert _setting("public_url") == ""
 
 

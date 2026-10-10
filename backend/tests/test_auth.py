@@ -1,5 +1,7 @@
+import pytest
 from fastapi.testclient import TestClient
 
+from app.config import get_settings
 from tests.conftest import PASSWORD, UI
 
 
@@ -56,3 +58,22 @@ def test_a_fresh_account_has_seen_this_version(client: TestClient, operator: dic
     from app import __version__
 
     assert client.get("/api/auth/me").json()["prefs"]["seen_version"] == __version__
+
+
+def test_the_session_cookie_is_secure_by_the_rightmost_forwarded_scheme(
+    client: TestClient, operator: dict, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(get_settings(), "cookie_secure", "auto")
+
+    def cookie_with(proto: str) -> str:
+        sent = client.post(
+            "/api/auth/login",
+            json={"name": "admin", "password": PASSWORD},
+            headers={**UI, "X-Forwarded-Proto": proto},
+        )
+        assert sent.status_code == 200, sent.text
+        return sent.headers["set-cookie"].lower()
+
+    assert "secure" in cookie_with("HTTPS")
+    assert "secure" in cookie_with("http, https")
+    assert "secure" not in cookie_with("https, http")

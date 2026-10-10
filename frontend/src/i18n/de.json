@@ -532,7 +532,6 @@
       "senderHostHelp": "Über diese Adresse erreichen Router, NAS, Proxmox und Co. nexsift. Sie steht in allen Einrichtungshinweisen. Nötig, sobald nexsift hinter einem Reverse Proxy steht: Syslog, E-Mail und die Gotify- und ntfy-Schnittstelle gehen nicht über den Proxy. Leer: nexsift nimmt die öffentliche Adresse.",
       "senderHostHint": "Etwa 192.168.1.10 oder nas.fritz.box, ohne Port.",
       "title": "Adressen",
-      "wayBack": "Fällt der Anbieter aus, schaltet ein Befehl im Container die Anmeldung mit Passwort wieder ein:",
       "needsLink": "Ausschalten geht, sobald dein Konto mit einem aktiven Anbieter verknüpft ist (Einstellungen, Konto)."
     },
     "tab": {

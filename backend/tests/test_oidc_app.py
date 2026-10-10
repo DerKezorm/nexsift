@@ -10,16 +10,20 @@
 
 from __future__ import annotations
 
+import getpass
 from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 
-from app import crypto
+from app import crypto, reset_password
 from app.db import SessionLocal
+from app.main import app
 from app.models import Account, OidcLink, OidcProvider
-from app.services import oidc_store, settings_service
+from app.security import Brake
+from app.services import accounts, oidc_store, settings_service
+from app.vendor import nexoidc
 from app.vendor.nexoidc import ProviderValues, secret_context
 from tests.conftest import PASSWORD, UI
 from tests.oidc_helpers import (
@@ -407,3 +411,110 @@ def test_a_provider_never_makes_accounts_whatever_is_sent(
         )
         store.commit()
         assert made.auto_create is False
+
+
+# --- The start: what the whole start-up does, not only the function it calls ----------------------------------------
+
+
+def _restart() -> None:
+    """A start of the app: the lifespan runs, the sign-in settings are looked at after the backup."""
+    with TestClient(app, base_url="http://testserver"):
+        pass
+
+
+def _entries() -> list[tuple[str, str]]:
+    with SessionLocal() as db:
+        return [(row.slug, row.issuer) for row in db.scalars(select(OidcProvider))]
+
+
+def _links() -> list[str]:
+    with SessionLocal() as db:
+        return sorted(db.scalars(select(OidcLink.subject)))
+
+
+def test_the_start_moves_the_old_provider_and_takes_over_what_0_11_changed(
+    provider: FakeProvider, caplog: pytest.LogCaptureFixture
+) -> None:
+    with SessionLocal() as db:
+        accounts.create_operator(db, "admin", PASSWORD)
+    _legacy(provider)
+    _restart()
+    assert _entries() == [("oidc", provider.issuer)] and _links() == ["person-1"]
+    with SessionLocal() as db:
+        assert db.scalars(select(OidcProvider.trusts_second_factor)).one() is True
+    # A start without a change in 0.11 takes over nothing.
+    caplog.clear()
+    _restart()
+    assert _entries() == [("oidc", provider.issuer)] and _links() == ["person-1"]
+    assert "took over" not in caplog.text
+    # Back in 0.11 the operator gave the identity up; up again, it stays given up.
+    with SessionLocal() as db:
+        db.scalars(select(Account)).one().oidc_subject = ""
+        db.commit()
+    _restart()
+    assert _links() == [] and _subject() == ""
+    # Back in 0.11 the provider was removed: it stays removed.
+    with SessionLocal() as db:
+        settings_service.save(db, {key: settings_service.DEFAULTS[key] for key in oidc_store.LEGACY_KEYS})
+    _restart()
+    assert _entries() == []
+
+
+def test_the_start_warms_the_tls_context(provider: FakeProvider, monkeypatch: pytest.MonkeyPatch) -> None:
+    called: list[bool] = []
+
+    async def warm() -> None:
+        called.append(True)
+
+    monkeypatch.setattr(nexoidc, "warm", warm)
+    _restart()
+    assert called == [True]
+
+
+def test_the_fingerprint_follows_every_commit_so_a_start_finds_nothing_changed(
+    client: TestClient, operator: dict, provider: FakeProvider
+) -> None:
+    entry = _migrated(provider)
+    stored = _setting(oidc_store.FINGERPRINT)
+    assert stored
+    with SessionLocal() as db:
+        legacy, subjects = oidc_store.read_legacy(db)
+        assert oidc_store.migrate.fingerprint(legacy, subjects) == stored
+    # A change here (new name, new secret) is the new version's own: the fingerprint moves with it.
+    rows = client.get("/api/oidc/admin/providers").json()
+    body = {key: rows[0][key] for key in ("label", "issuer", "client_id", "scopes", "enabled", "trusts_second_factor")}
+    answer = client.put(
+        f"/api/oidc/admin/providers/{entry['id']}",
+        json={**body, "label": "Renamed", "client_secret": "another-secret"},
+        headers=UI,
+    )
+    assert answer.status_code == 200, answer.text
+    assert _setting(oidc_store.FINGERPRINT) != stored
+    with SessionLocal() as db:
+        assert oidc_store._changed_by_0_11(db) is False
+
+
+# --- The refusals and the way back in --------------------------------------------------------------------------------
+
+
+def test_a_refused_return_counts_against_the_sender(client: TestClient, operator: dict, provider: FakeProvider) -> None:
+    add_provider(client, provider)
+    # The person is not the operator: refused with oidc_no_account, as often as the brake lets pass for free ...
+    seen = [error_in(sign_in_via_oidc(browser(), provider)) for _ in range(Brake.FREE)]
+    assert seen == ["oidc_no_account"] * Brake.FREE
+    # ... then the sender waits: the next start is refused before it reaches the provider.
+    assert error_in(browser().get("/api/oidc/sso/start")) == "too_many_attempts"
+
+
+def test_the_command_in_the_container_turns_the_password_back_on(
+    client: TestClient, operator: dict, provider: FakeProvider, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    add_provider(client, provider)
+    assert error_in(link(client, provider, PASSWORD)) is None
+    _password_off(client)
+    assert _password_works() is False
+    new_password = "another-correct-horse-battery"
+    monkeypatch.setattr(getpass, "getpass", lambda prompt="": new_password)
+    assert reset_password.main() == 0
+    assert browser().post("/api/auth/login", json={"name": "admin", "password": new_password}).status_code == 200
+    assert browser().get("/api/oidc/state").json()["password_login"] is True

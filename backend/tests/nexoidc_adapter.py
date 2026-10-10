@@ -39,6 +39,8 @@ class Adapter(StandardAdapter):
     # One account: nothing to pair with nexsuite, the list stays uncoupled.
     supports_coupling = False
     has_second_factor = False
+    # 0.11 asked no code after the provider: the migrated entry trusts it (blueprint 06).
+    trusted_before = True
     legacy_model = "single"
     old_callback_paths: tuple[str, ...] = ()
     operator_name = OPERATOR_NAME
@@ -124,7 +126,6 @@ class Adapter(StandardAdapter):
                     "oidc_client_id": client_id,
                     "oidc_client_secret_enc": crypto.encrypt_secret(client_secret),
                     "oidc_provider_name": label,
-                    oidc_store.MIGRATED: False,
                 },
             )
             for name, subject in subjects.items():
@@ -134,4 +135,17 @@ class Adapter(StandardAdapter):
             db.commit()
 
     def run_migration(self) -> None:
+        # The whole start: the migration once, then what 0.11 changed since, then the mirror and the fingerprint.
         oidc_store.migrate_settings(backup=False)
+
+    def legacy_read(self) -> dict[str, Any]:
+        with SessionLocal() as db:
+            legacy, subjects = oidc_store.read_legacy(db)
+            names = {row.id: row.name for row in db.scalars(select(Account))}
+        return {
+            "issuer": legacy.issuer,
+            "client_id": legacy.client_id,
+            "client_secret": legacy.client_secret,
+            "label": legacy.label,
+            "subjects": {names[account_id]: subject for account_id, subject in subjects},
+        }

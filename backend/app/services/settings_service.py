@@ -25,6 +25,8 @@ DEFAULTS: dict[str, Any] = {
     "oidc_client_id": "",
     "oidc_client_secret_enc": "",
     "oidc_provider_name": "",
+    #: What those settings said after the last mirror (``migrate.fingerprint``); the start takes over what 0.11 changed.
+    "oidc_legacy_fingerprint": "",
     "public_url": "",
     #: Host or IP the devices at home reach nexsift by, for the setup hints of all doors. Empty: from the
     #: public address, else from the request. Behind a reverse proxy the two differ: the browser goes through

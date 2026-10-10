@@ -18,6 +18,7 @@ import { initReactI18next } from 'react-i18next'
 
 import { merge, type Texts } from './custom'
 import { customLanguage, customLanguages } from './customStore'
+import { oidcWording, type OidcWording } from '../vendor/nexoidc/oidc'
 
 interface LanguageEntry {
   /** Short, for the switcher. */
@@ -27,10 +28,13 @@ interface LanguageEntry {
   load: () => Promise<{ default: Texts }>
 }
 
-/** The app's own texts plus the module's `oidc` part. */
+/**
+ * The app's own texts plus the module's `oidc` part. nexsift has one account: through `oidcWording` the sentences
+ * for apps with one account (`oidc.single.…`) take the place of the keys of the same name; nothing overrides a key.
+ */
 async function withOidc(own: Promise<{ default: Texts }>, oidc: Promise<{ default: Texts }>): Promise<{ default: Texts }> {
   const [app, module] = await Promise.all([own, oidc])
-  return { default: { ...app.default, ...module.default } }
+  return { default: { ...app.default, ...(oidcWording(module.default as OidcWording, { singleAccount: true }) as Texts) } }
 }
 
 export const LANGUAGES = {

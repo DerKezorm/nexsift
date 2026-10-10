@@ -532,7 +532,6 @@
       "senderHostHelp": "The address routers, the NAS, Proxmox and the like reach nexsift by. It goes into every setup hint. Needed once nexsift sits behind a reverse proxy: syslog, email and the Gotify and ntfy doors do not go through the proxy. Empty: nexsift takes the public address.",
       "senderHostHint": "Like 192.168.1.10 or nas.home.arpa, without a port.",
       "title": "Addresses",
-      "wayBack": "If the provider fails, a command in the container switches the password sign-in back on:",
       "needsLink": "It can be switched off once your account is linked to an active provider (Settings, Account)."
     },
     "tab": {

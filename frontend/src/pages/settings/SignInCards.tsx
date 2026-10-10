@@ -82,7 +82,8 @@ function SignInCard({ settings, onSaved, providers }: { settings: Settings; onSa
           hint={
             linked || !settings.password_login ? (
               <>
-                {t('settings.signin.wayBack')} <code className="font-mono whitespace-nowrap text-mist-400">docker exec -it nexsift python -m app.reset_password</code>
+                {t('oidc.admin.passwordHint')}
+                <code className="mt-1 block font-mono break-all text-mist-400">docker exec -it nexsift python -m app.reset_password</code>
               </>
             ) : (
               t('settings.signin.needsLink')
@@ -194,7 +195,7 @@ function ProvidersCard({ providers, reload, publicUrl }: { providers: OidcProvid
                     <Symbol name="grip" className="h-4 w-4" />
                   </button>
                 )}
-                <span className="min-w-0 flex-1">
+                <span className="min-w-0 flex-1 basis-56">
                   <span className="block truncate font-medium text-mist-100">{entry.label}</span>
                   <span className="block truncate text-xs text-mist-500">{entry.issuer}</span>
                 </span>

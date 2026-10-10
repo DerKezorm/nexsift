@@ -75,6 +75,7 @@
     "password_too_short": "Mindestens {{minimum}} Zeichen.",
     "prefs_too_large": "Zu viele Einstellungen auf einmal.",
     "public_url_invalid": "Bitte nur Schema und Host, etwa https://nexsift.example.com.",
+    "public_url_needed": "Die öffentliche Adresse konnte nicht gespeichert werden. Trage sie unter Einstellungen, Anmeldung ein.",
     "rule_condition": "Unbekanntes Feld oder unbekannter Vergleich.",
     "rule_name": "Die Regel braucht einen Namen, höchstens 120 Zeichen.",
     "rule_no_action": "Die Regel braucht mindestens eine Wirkung unter „Dann“.",

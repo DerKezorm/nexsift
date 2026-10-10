@@ -26,8 +26,9 @@ Paths (all below ``/api/oidc``):
 | GET | ``/me`` | signed in: every active entry with ``linked`` |
 | POST, DELETE | ``/{slug}/link`` | signed in: link (``{"password"}`` → ``{"url"}``), unlink |
 | DELETE | ``/admin/accounts/{account}/links/{provider}`` | operator, with the own password |
-| POST | ``/authentik/setup`` | operator: ``{"url", "token", "confirm_issuer_change"}`` → always 200, the steps |
-| GET | ``/authentik/blueprint`` | operator: ``nexsift-authentik.yaml`` |
+| POST | ``/authentik/setup`` | operator: ``{"url", "token", "confirm_issuer_change", "public_url"}`` → always 200 |
+| GET, POST | ``/authentik/address`` | operator: what the card shows about the public address; save it ("Use it only") |
+| GET | ``/authentik/blueprint`` | operator: ``nexsift-authentik.yaml``; without a public address 409 |
 """
 
 from __future__ import annotations
@@ -71,6 +72,7 @@ class ProviderIn(BaseModel):
     enabled: bool = True
     # One account (blueprint 06): never on, whatever is sent; the store writes it off.
     auto_create: bool = False
+    # Taken and ignored: nexsift has no second factor, so a provider is always trusted (``_form``).
     trusts_second_factor: bool = True
 
 
@@ -83,6 +85,14 @@ class SetupIn(BaseModel):
     token: str = Field(min_length=1, max_length=2000)
     # The second run after the question "another issuer drops the links" (blueprint 03); off by default.
     confirm_issuer_change: bool = False
+    # The address the operator confirmed in the card (the browser's own) while nexsift has none yet (blueprint 03).
+    public_url: str = Field(default="", max_length=600)
+
+
+class AddressIn(BaseModel):
+    public_url: str = Field(max_length=600)
+    # The operator confirmed the question the address change asked (``oidc.admin.addressChangeConfirm``).
+    confirm: bool = False
 
 
 class OrderIn(BaseModel):
@@ -117,6 +127,13 @@ def _redirect(target: flow.Redirect, request: Request) -> RedirectResponse:
             secure=secure,
         )
     return response
+
+
+def _form(payload: ProviderIn) -> providers.Form:
+    """The form as the module takes it. One account, no second factor of its own: a provider never makes an account
+    and always counts as trusted, whatever the request says. "Not trusted" would empty the old settings, and with the
+    password off 0.11 would find no way in (blueprint 06)."""
+    return providers.Form(**{**payload.model_dump(), "auto_create": False, "trusts_second_factor": True})
 
 
 def _form_error(exc: ProviderInvalid) -> Exception:
@@ -174,7 +191,7 @@ def admin_providers(_account: CurrentAccount, request: Request) -> list[dict[str
 async def add_provider(payload: ProviderIn, account: CurrentAccount, request: Request) -> dict[str, Any]:
     with store() as s:
         try:
-            created = await providers.create(s, providers.Form(**{**payload.model_dump(), "auto_create": False}))
+            created = await providers.create(s, _form(payload))
         except ProviderInvalid as exc:
             raise _form_error(exc) from exc
         logger.info("OIDC provider %s added by=%s", created.slug, account.name)
@@ -197,7 +214,7 @@ async def save_provider(
 ) -> dict[str, Any]:
     with store() as s:
         try:
-            form = providers.Form(**{**payload.model_dump(), "auto_create": False})
+            form = _form(payload)
             saved, dropped = await providers.update(s, provider_id, form)
         except ProviderInvalid as exc:
             raise _form_error(exc) from exc
@@ -407,15 +424,48 @@ async def authentik_setup(payload: SetupIn, account: CurrentAccount, request: Re
     logger.info("authentik setup started by=%s", account.name)
     with store() as s:
         result = await authentik.setup(
-            s, payload.url, payload.token, _base(request), confirm_issuer_change=payload.confirm_issuer_change
+            s,
+            payload.url,
+            payload.token,
+            _base(request),
+            confirm_issuer_change=payload.confirm_issuer_change,
+            public_url=payload.public_url,
+            headers=request.headers,
         )
     return result.as_dict()
+
+
+@router.get("/authentik/address", summary="What the authentik card shows about the public address")
+def authentik_address(_account: CurrentAccount, request: Request) -> dict[str, Any]:
+    with store() as s:
+        return authentik.address_view(s, _base(request), request.headers)
+
+
+@router.post("/authentik/address", summary="Save the public address (the card's Use it only); asks when it changes")
+def authentik_save_address(payload: AddressIn, account: CurrentAccount, request: Request) -> dict[str, Any]:
+    with store() as s:
+        try:
+            view = authentik.save_public_url(s, payload.public_url, _base(request), confirm=payload.confirm)
+        except ValueError as error:
+            raise fehler("public_url_invalid", "Use an address like https://nexsift.example.com.", 422) from error
+        except authentik.PublicUrlChange as asked:
+            raise fehler(
+                "public_url_change", "The public address changes what authentik knows.", 409, **asked.question
+            ) from asked
+        except authentik.PublicUrlNotKept as error:
+            raise fehler("public_url_needed", "The public address could not be saved.", 409) from error
+    logger.info("Public address saved by=%s", account.name)
+    return view
 
 
 @router.get("/authentik/blueprint", summary="Download a blueprint that creates the same objects in authentik")
 def authentik_blueprint(_account: CurrentAccount, request: Request) -> Response:
     with store() as s:
-        text = authentik.blueprint(authentik.blueprint_redirect(s, _base(request)))
+        try:
+            redirect = authentik.blueprint_redirect(s, _base(request))
+        except authentik.PublicUrlNeeded as error:
+            raise fehler("public_url_needed", "Set the public address first.", 409) from error
+        text = authentik.blueprint(redirect)
     return Response(
         content=text,
         media_type="application/yaml",

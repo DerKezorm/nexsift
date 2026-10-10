@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from ..config import get_settings
 from ..models import Setting
+from ..vendor.nexoidc import flow
 
 PUSH_MODES = ("immediate", "window", "single", "never")
 #: Mirrors ``backups.SCHEDULES``; kept here so the settings do not import the backup service.
@@ -27,6 +28,8 @@ DEFAULTS: dict[str, Any] = {
     "oidc_provider_name": "",
     #: What those settings said after the last mirror (``migrate.fingerprint``); the start takes over what 0.11 changed.
     "oidc_legacy_fingerprint": "",
+    #: The issuer 0.11 knows, as it wrote it, or "-" when the way back is closed (``migrate.way_back``).
+    "oidc_legacy_anchor": "",
     "public_url": "",
     #: Host or IP the devices at home reach nexsift by, for the setup hints of all doors. Empty: from the
     #: public address, else from the request. Behind a reverse proxy the two differ: the browser goes through
@@ -132,10 +135,12 @@ def save(db: Session, values: dict[str, Any]) -> None:
 
 
 def normalize_public_url(value: str) -> str:
-    """``scheme://host[:port]`` and nothing else, or empty. Raises ``ValueError`` otherwise."""
+    """``scheme://host[:port]`` and nothing else, or empty. Raises ``ValueError`` otherwise. Stricter than the sign-in
+    module's ``flow.clean_public_url`` (no path), never looser: what that refuses is refused here, too."""
     text = value.strip()
     if not text:
         return ""
+    flow.clean_public_url(text)
     parts = urlsplit(text)
     if parts.scheme.lower() not in ("http", "https") or not parts.hostname:
         raise ValueError("scheme or host")

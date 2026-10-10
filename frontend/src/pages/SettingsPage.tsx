@@ -5,9 +5,11 @@ import { useSearchParams } from 'react-router-dom'
 import { api, errorMessage } from '../api/client'
 import type { Settings } from '../api/types'
 import { useAuth } from '../auth'
+import { AddressChangeQuestion } from '../components/AddressChange'
 import { useNotice } from '../components/Notice'
 import { TabRow } from '../components/TabRow'
 import { Banner, Button, Field, PageHeader, Section } from '../components/ui'
+import { addressQuestion, type AddressQuestion } from '../lib/addressQuestion'
 import { useLoad } from '../lib/useLoad'
 import { ApiKeysTab } from './settings/ApiKeysTab'
 import { BackupTab } from './settings/BackupTab'
@@ -110,18 +112,23 @@ function Addresses({ settings, onSaved }: { settings: Settings; onSaved: (settin
   const [publicUrl, setPublicUrl] = useState(settings.public_url)
   const [senderHost, setSenderHost] = useState(settings.sender_host)
   const [error, setError] = useState<string | null>(null)
+  // A changed public address may leave authentik knowing the old redirect address: the server asks first (409).
+  const [asked, setAsked] = useState<{ values: Partial<Settings>; question: AddressQuestion } | null>(null)
 
-  async function save(values: Partial<Settings>) {
+  async function save(values: Partial<Settings>, confirmed = false) {
     setError(null)
     try {
-      const saved = await api.put<Settings>('/api/settings', { values })
+      const saved = await api.put<Settings>('/api/settings', { values, ...(confirmed ? { confirm_public_url: true } : {}) })
+      setAsked(null)
       onSaved(saved)
       // The server tidies addresses up (a pasted http:// goes); the fields show what was stored.
       setPublicUrl(saved.public_url)
       setSenderHost(saved.sender_host)
       notify({ text: t('common.saved') })
     } catch (caught) {
-      setError(errorMessage(caught))
+      const question = addressQuestion(caught)
+      if (question) setAsked({ values, question })
+      else setError(errorMessage(caught))
     }
   }
 
@@ -143,6 +150,16 @@ function Addresses({ settings, onSaved }: { settings: Settings; onSaved: (settin
           {t('common.save')}
         </Button>
       </div>
+      {asked && (
+        <AddressChangeQuestion
+          question={asked.question}
+          onCancel={() => {
+            setAsked(null)
+            setPublicUrl(settings.public_url)
+          }}
+          onConfirm={() => void save(asked.values, true)}
+        />
+      )}
       {error && <Banner tone="bad">{error}</Banner>}
     </Section>
   )

@@ -75,6 +75,7 @@
     "password_too_short": "At least {{minimum}} characters.",
     "prefs_too_large": "Too many preferences at once.",
     "public_url_invalid": "Only scheme and host, like https://nexsift.example.com.",
+    "public_url_needed": "The public address could not be saved. Enter it under Settings, Sign-in.",
     "rule_condition": "Unknown field or comparison.",
     "rule_name": "The rule needs a name, at most 120 characters.",
     "rule_no_action": "The rule needs at least one effect under \"Then\".",

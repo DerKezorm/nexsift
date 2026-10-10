@@ -3,6 +3,7 @@
  * links, the authentik button. Texts and codes come from `vendor/nexoidc/oidc.ts`.
  */
 import { api } from './client'
+import type { AuthentikAddress } from '../vendor/nexoidc/oidc'
 
 /** One entry of the list as the operator sees it: never the secret, only whether one is stored. */
 export interface OidcProvider {
@@ -19,6 +20,9 @@ export interface OidcProvider {
   managed: string
   position: number
   redirect_uri: string
+  /** What the authentik button registered at authentik last, '' for nothing; with `redirect_stale` the card says so. */
+  registered_redirect_uri: string
+  redirect_stale: boolean
   links: number
   editable: boolean
 }
@@ -67,6 +71,10 @@ export interface AuthentikResult {
   links_dropped: number
   /** With `reason: issuer_change`: how many accounts would have to link again. */
   count?: number
+  /** The run kept this public address (it stays saved even when a later step failed). */
+  public_url?: string
+  /** With `reason: public_url_needed`: what the card shows about the address. */
+  address?: AuthentikAddress
 }
 
 export interface Impact {
@@ -87,8 +95,17 @@ export const oidcApi = {
   mine: () => api.get<MyProvider[]>('/api/oidc/me'),
   link: (slug: string, password: string) => api.post<{ url: string }>(`/api/oidc/${encodeURIComponent(slug)}/link`, { password }),
   unlink: (slug: string) => api.delete(`/api/oidc/${encodeURIComponent(slug)}/link`),
-  authentik: (url: string, token: string, confirmIssuerChange = false) =>
-    api.post<AuthentikResult>('/api/oidc/authentik/setup', { url, token, confirm_issuer_change: confirmIssuerChange }),
+  authentik: (url: string, token: string, confirmIssuerChange = false, publicUrl = '') =>
+    api.post<AuthentikResult>('/api/oidc/authentik/setup', {
+      url,
+      token,
+      confirm_issuer_change: confirmIssuerChange,
+      ...(publicUrl ? { public_url: publicUrl } : {}),
+    }),
+  address: () => api.get<AuthentikAddress>('/api/oidc/authentik/address'),
+  /** "Use it only": saves the address; a changed one may be answered with the question (409 `public_url_change`). */
+  saveAddress: (publicUrl: string, confirm = false) =>
+    api.post<AuthentikAddress>('/api/oidc/authentik/address', { public_url: publicUrl, ...(confirm ? { confirm: true } : {}) }),
 }
 
 /** The start of a sign-in at a provider: a full page load, the server answers with the way to the provider. */

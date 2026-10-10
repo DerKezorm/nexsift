@@ -11,6 +11,8 @@ import { expect, test, type Page } from '@playwright/test'
 
 const UI = { 'X-Requested-By': 'nexsift' }
 const AUTHENTIK = 'http://127.0.0.1:8797'
+// How the browser reaches nexsift in these tests (playwright.config.ts): the public address the card suggests.
+const APP = 'http://127.0.0.1:8790'
 
 type Entry = { id: number; slug: string; label: string; issuer: string; client_id: string; scopes: string; enabled: boolean; trusts_second_factor: boolean }
 
@@ -40,6 +42,8 @@ function collectProblems(page: Page): string[] {
 test('34: add, edit and remove a provider with a question; the authentik card lists its steps', async ({ page }) => {
   const problems = collectProblems(page)
   await removeEntries(page)
+  // A fresh app: no public address yet (clearing it asks nothing).
+  await page.request.put('/api/settings', { data: { values: { public_url: '' } }, headers: UI })
   await page.goto('/settings?tab=signin')
   await expect(page.getByRole('heading', { name: 'Sign-in', exact: true })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Sign-in providers' })).toBeVisible()
@@ -82,10 +86,15 @@ test('34: add, edit and remove a provider with a question; the authentik card li
   const card = page.locator('#sign-in-authentik')
   await card.getByLabel('Address of authentik', { exact: true }).fill('http://127.0.0.1:9')
   await card.getByLabel('API token', { exact: true }).fill(process.env.E2E_AUTHENTIK_TOKEN!)
-  await card.getByRole('button', { name: 'Set up', exact: true }).click()
+  // Without a public address the card suggests the browser's own; the button takes it first (module 1.0.10).
+  await expect(card.getByTestId('authentik-no-address')).toContainText(APP)
+  await card.getByRole('button', { name: 'Use it and set up', exact: true }).click()
   const steps = page.getByTestId('authentik-steps')
   await expect(steps).toContainText('Connection to authentik')
   await expect(steps).toContainText('authentik cannot be reached at this address')
+  // The address stayed saved although the run failed later: card 1 shows it, the suggestion is gone.
+  await expect(card.getByTestId('authentik-no-address')).toHaveCount(0)
+  await expect(page.getByRole('textbox', { name: 'Public address', exact: true })).toHaveValue(APP)
   // The stand-in: every step by its name, the seventh of an app with one account included, and the entry.
   await card.getByLabel('Address of authentik', { exact: true }).fill(AUTHENTIK)
   await card.getByLabel('API token', { exact: true }).fill(process.env.E2E_AUTHENTIK_TOKEN!)
@@ -102,10 +111,109 @@ test('34: add, edit and remove a provider with a question; the authentik card li
   expect(problems).toEqual([])
 })
 
+test('40: the authentik card suggests the address, warns behind a proxy, asks before a change and reports a stale redirect', async ({ page }) => {
+  const problems = collectProblems(page)
+  await removeEntries(page)
+  await page.request.put('/api/settings', { data: { values: { public_url: '' } }, headers: UI })
+  // A proxy that ends TLS tells the server https while the browser is on http: the address of the request differs.
+  await page.route('**/api/oidc/authentik/address', (route) => route.continue({ headers: { ...route.request().headers(), 'x-forwarded-proto': 'https' } }))
+  await page.goto('/settings?tab=signin')
+  const card = page.locator('#sign-in-authentik')
+  const none = card.getByTestId('authentik-no-address')
+  await expect(none).toContainText('No public address yet.')
+  await expect(none).toContainText(APP)
+  await expect(none).toContainText(`${APP}/api/oidc/authentik/callback`)
+  await expect(card.getByTestId('authentik-proxy-warning')).toContainText('The server receives this request as https://127.0.0.1:8790.')
+  // "Use it only" saves the suggestion and sets nothing up.
+  await card.getByRole('button', { name: 'Use it only', exact: true }).click()
+  await expect(none).toHaveCount(0)
+  await expect(page.getByRole('textbox', { name: 'Public address', exact: true })).toHaveValue(APP)
+  // Set up with the stand-in: the entry registers exactly that address.
+  await card.getByLabel('Address of authentik', { exact: true }).fill(AUTHENTIK)
+  await card.getByLabel('API token', { exact: true }).fill(process.env.E2E_AUTHENTIK_TOKEN!)
+  await card.getByRole('button', { name: 'Set up', exact: true }).click()
+  await expect(page.getByTestId('authentik-steps').locator('li')).toHaveCount(7)
+  await expect(card.getByTestId('authentik-stale')).toHaveCount(0)
+  // Another public address: authentik still knows the old redirect address, so the server asks first.
+  const field = page.getByRole('textbox', { name: 'Public address', exact: true })
+  await field.fill('http://localhost:8790')
+  await page.locator('#sign-in').getByRole('button', { name: 'Save' }).click()
+  const question = page.locator('#sign-in').getByTestId('address-change')
+  await expect(question).toContainText(`authentik still knows the redirect address ${APP}/api/oidc/authentik/callback.`)
+  await question.getByRole('button', { name: 'Cancel' }).click()
+  await expect(question).toHaveCount(0)
+  await expect(field).toHaveValue(APP)
+  expect((await (await page.request.get('/api/settings')).json()).public_url).toBe(APP)
+  await field.fill('http://localhost:8790')
+  await page.locator('#sign-in').getByRole('button', { name: 'Save' }).click()
+  await page.locator('#sign-in').getByTestId('address-change').getByRole('button', { name: 'Save' }).click()
+  await expect(field).toHaveValue('http://localhost:8790')
+  // Until the button ran again the card says what authentik still knows.
+  await expect(card.getByTestId('authentik-stale')).toContainText(`authentik still knows the old redirect address ${APP}/api/oidc/authentik/callback.`)
+  await card.getByLabel('Address of authentik', { exact: true }).fill(AUTHENTIK)
+  await card.getByLabel('API token', { exact: true }).fill(process.env.E2E_AUTHENTIK_TOKEN!)
+  await card.getByRole('button', { name: 'Set up', exact: true }).click()
+  await expect(page.getByTestId('authentik-steps').locator('li')).toHaveCount(7)
+  await expect(card.getByTestId('authentik-stale')).toHaveCount(0)
+  // And back to the address the other tests use, this time under Settings, Addresses (the same setting, the same
+  // question): asked again, stale until the button ran again.
+  await page.goto('/settings?tab=addresses')
+  const second = page.getByRole('textbox', { name: 'Public address', exact: true })
+  await second.fill(APP)
+  await page.getByRole('button', { name: 'Save' }).first().click()
+  const again = page.getByTestId('address-change')
+  await expect(again).toContainText('authentik still knows the redirect address http://localhost:8790/api/oidc/authentik/callback.')
+  await again.getByRole('button', { name: 'Save' }).click()
+  await expect(second).toHaveValue(APP)
+  await expect(again).toHaveCount(0)
+  await page.goto('/settings?tab=signin')
+  await expect(card.getByTestId('authentik-stale')).toContainText('http://localhost:8790/api/oidc/authentik/callback')
+  await card.getByLabel('Address of authentik', { exact: true }).fill(AUTHENTIK)
+  await card.getByLabel('API token', { exact: true }).fill(process.env.E2E_AUTHENTIK_TOKEN!)
+  await card.getByRole('button', { name: 'Set up', exact: true }).click()
+  await expect(page.getByTestId('authentik-steps').locator('li')).toHaveCount(7)
+  await expect(card.getByTestId('authentik-stale')).toHaveCount(0)
+  // (Clearing asks nothing.)
+  await page.request.put('/api/settings', { data: { values: { public_url: '' } }, headers: UI })
+  await removeEntries(page)
+  expect(problems).toEqual([])
+})
+
+test('41: "Use it only" asks while a provider entered by hand is on, and saves once confirmed', async ({ page }) => {
+  const problems = collectProblems(page)
+  await removeEntries(page)
+  await page.request.put('/api/settings', { data: { values: { public_url: '' } }, headers: UI })
+  const made = await page.request.post('/api/oidc/admin/providers', {
+    data: { label: 'By hand', slug: 'by-hand', issuer: AUTHENTIK, client_id: 'e2e-client', client_secret: `e2e-${Date.now()}`, scopes: 'openid profile email', enabled: true },
+    headers: UI,
+  })
+  expect(made.status(), await made.text()).toBe(201)
+  // Behind a proxy that ends TLS the redirect address the provider knows (https, as the proxy says) is not the browser's.
+  await page.route('**/api/oidc/authentik/address', (route) => route.continue({ headers: { ...route.request().headers(), 'x-forwarded-proto': 'https' } }))
+  await page.goto('/settings?tab=signin')
+  const card = page.locator('#sign-in-authentik')
+  await expect(card.getByTestId('authentik-no-address')).toContainText(APP)
+  await card.getByRole('button', { name: 'Use it only', exact: true }).click()
+  // The redirect address of the provider by hand changes with the public address: the server asks, nothing saved.
+  const question = card.getByTestId('address-change')
+  await expect(question).toContainText('For 1 provider entered by hand, change the redirect address there yourself.')
+  await expect(question).not.toContainText('authentik still knows')
+  expect((await (await page.request.get('/api/settings')).json()).public_url).toBe('')
+  await question.getByRole('button', { name: 'Cancel' }).click()
+  await expect(question).toHaveCount(0)
+  await card.getByRole('button', { name: 'Use it only', exact: true }).click()
+  await card.getByTestId('address-change').getByRole('button', { name: 'Save' }).click()
+  await expect(card.getByTestId('authentik-no-address')).toHaveCount(0)
+  expect((await (await page.request.get('/api/settings')).json()).public_url).toBe(APP)
+  await page.request.put('/api/settings', { data: { values: { public_url: '' } }, headers: UI })
+  await removeEntries(page)
+  expect(problems).toEqual([])
+})
+
 test('33: the operator links the account, then signs in through the provider button; a stranger does not', async ({ page, browser }) => {
   const problems = collectProblems(page)
   await removeEntries(page)
-  const setup = await page.request.post('/api/oidc/authentik/setup', { data: { url: AUTHENTIK, token: process.env.E2E_AUTHENTIK_TOKEN }, headers: UI })
+  const setup = await page.request.post('/api/oidc/authentik/setup', { data: { url: AUTHENTIK, token: process.env.E2E_AUTHENTIK_TOKEN, public_url: APP }, headers: UI })
   expect((await setup.json()).ok, await setup.text()).toBe(true)
   // A name on the button other than the short name: the pages must name the provider by it, never by the slug.
   const [entry] = await entries(page)
@@ -178,7 +286,7 @@ for (const width of [375, 390]) {
     const problems = collectProblems(page)
     await page.setViewportSize({ width, height: 800 })
     await removeEntries(page)
-    const setup = await page.request.post('/api/oidc/authentik/setup', { data: { url: AUTHENTIK, token: process.env.E2E_AUTHENTIK_TOKEN }, headers: UI })
+    const setup = await page.request.post('/api/oidc/authentik/setup', { data: { url: AUTHENTIK, token: process.env.E2E_AUTHENTIK_TOKEN, public_url: APP }, headers: UI })
     expect((await setup.json()).ok, await setup.text()).toBe(true)
     const [entry] = await entries(page)
     await page.request.put(`/api/oidc/admin/providers/${entry.id}`, { data: { ...entry, label: 'Company login', client_secret: '' }, headers: UI })

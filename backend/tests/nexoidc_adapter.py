@@ -114,6 +114,15 @@ class Adapter(StandardAdapter):
         with SessionLocal() as db:
             settings_service.save(db, {"public_url": url})
 
+    def read_public_url(self) -> str:
+        # As a restart would find it: the setting (the environment variable behind it is not set in the tests).
+        with SessionLocal() as db:
+            return settings_service.public_url(db)
+
+    def save_public_url_route(self, url: str, *, confirm: bool = False) -> httpx.Response:
+        # Card 1 and Settings, Addresses save the address through the settings, which ask first (Pflichttest 39).
+        return self.operator().put("/api/settings", json={"values": {"public_url": url}, "confirm_public_url": confirm})
+
     def legacy_setup(
         self, *, issuer: str, client_id: str, client_secret: str, label: str, subjects: dict[str, str]
     ) -> None:
@@ -147,5 +156,6 @@ class Adapter(StandardAdapter):
             "client_id": legacy.client_id,
             "client_secret": legacy.client_secret,
             "label": legacy.label,
+            "auto_create": legacy.auto_create,
             "subjects": {names[account_id]: subject for account_id, subject in subjects},
         }

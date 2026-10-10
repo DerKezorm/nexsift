@@ -47,5 +47,5 @@ services:
       # nexsift creates one on first start and keeps it as /data/secret.key. Back it up with the data.
       NEXSIFT_SECRET_KEY: ${NEXSIFT_SECRET_KEY:-}
 
-      # Behind a reverse proxy: its address or network, so X-Forwarded-For is believed from it.
+      # Behind a reverse proxy: its address or network, so X-Forwarded-For and X-Forwarded-Proto (https) are believed from it.
       # NEXSIFT_TRUSTED_PROXIES: 172.18.0.0/16

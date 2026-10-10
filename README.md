@@ -162,6 +162,13 @@ Set two addresses under Settings: the **public address** you type in the browser
 and the **address for senders at home** (`192.168.1.10`). Syslog, email and the Gotify and ntfy doors do not go
 through a proxy, so the setup hints have to send the devices to nexsift directly.
 
+If the proxy ends TLS, nexsift itself only sees `http`. It believes the proxy's `X-Forwarded-For` and
+`X-Forwarded-Proto` only from the addresses you list in `NEXSIFT_TRUSTED_PROXIES` (the scheme also from
+`127.0.0.1`), never from anybody else. Put the proxy's address or network there; otherwise the authentik card under
+Settings, Sign-in warns that the address nexsift sees differs from the one in your browser. The authentik button
+never registers a guessed address: without a public address it offers the one your browser uses and registers
+exactly that.
+
 ## Where things are stored
 
 Everything lives in `/data`. Mount it from a local disk, never from an SMB or NFS share; SQLite's locking does not
@@ -192,7 +199,7 @@ Forgot the password? In the container: `python -m app.reset_password`.
 | `NEXSIFT_SECRET_KEY` | created on first start | Protects the stored secrets; when set, it wins over `secret.key` |
 | `NEXSIFT_PUBLIC_URL` | from the request | The address people and senders use to reach nexsift; for the setup hints and the redirect address of the sign-in providers (`/api/oidc/<short name>/callback`; a provider set up in 0.11 or before keeps `/api/oidc/callback`). The setting under Settings wins when set |
 | `NEXSIFT_PUBLIC_PORTS` | the inner ports | The ports as seen from outside, for the setup hints: `web=8490,gotify=8491,ntfy=8492,smtp=25,syslog=514` |
-| `NEXSIFT_TRUSTED_PROXIES` | none | Addresses or networks of reverse proxies whose `X-Forwarded-For` is believed, comma separated |
+| `NEXSIFT_TRUSTED_PROXIES` | none | Addresses or networks of reverse proxies whose `X-Forwarded-For` and `X-Forwarded-Proto` are believed, comma separated. Only they can tell nexsift that a request came in over `https` (a proxy on the same host, `127.0.0.1`, is believed about that out of the box) |
 | `NEXSIFT_SESSION_DAYS` | `30` | A browser session ends after this many days |
 | `NEXSIFT_COOKIE_SECURE` | `auto` | `on`, `off` or `auto` (from the request or `X-Forwarded-Proto`) |
 | `NEXSIFT_LOG_LEVEL` | empty | Usually left out: the level is set under Settings, Log. When set (`quiet`, `normal`, `detailed`, `trace`, or `WARNING`, `INFO`, `DEBUG`) it wins and the interface cannot change it; the way out when nexsift does not even start |

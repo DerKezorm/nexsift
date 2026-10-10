@@ -16,6 +16,7 @@ from ..config import get_settings
 from ..deps import CurrentAccount, DbSession
 from ..meldungen import fehler
 from ..services import bus, oidc_store, settings_service, texts, updates
+from ..vendor.nexoidc import authentik
 
 logger = logging.getLogger("nexsift.settings")
 
@@ -51,6 +52,8 @@ def about(account: CurrentAccount) -> dict[str, Any]:
 
 class SettingsIn(BaseModel):
     values: dict[str, Any]
+    #: The operator confirmed the question a changed public address asked (``oidc.admin.addressChangeConfirm``).
+    confirm_public_url: bool = False
 
 
 @router.get("/settings", summary="The operator's settings")
@@ -59,7 +62,7 @@ def read_settings(account: CurrentAccount, db: DbSession) -> dict[str, Any]:
 
 
 @router.put("/settings", summary="Change settings; unknown keys and out-of-range numbers are refused")
-def write_settings(payload: SettingsIn, account: CurrentAccount, db: DbSession) -> dict[str, Any]:
+def write_settings(payload: SettingsIn, account: CurrentAccount, db: DbSession, request: Request) -> dict[str, Any]:
     clean: dict[str, Any] = {}
     for key, value in payload.values.items():
         if key not in settings_service.PUBLIC_KEYS:
@@ -105,6 +108,7 @@ def write_settings(payload: SettingsIn, account: CurrentAccount, db: DbSession) 
                 field=key,
             )
         clean[key] = value
+    _ask_before_new_public_url(db, clean, request, confirmed=payload.confirm_public_url)
     before = settings_service.public(db)
     settings_service.save(db, clean)
     changed = sorted(key for key, value in clean.items() if before.get(key) != value)
@@ -112,6 +116,26 @@ def write_settings(payload: SettingsIn, account: CurrentAccount, db: DbSession) 
         # Names only: values like the public address are harmless, but a setting added later may not be.
         logger.info("Settings changed keys=%s", ",".join(changed))
     return settings_service.public(db)
+
+
+def _ask_before_new_public_url(db: Any, clean: dict[str, Any], request: Request, *, confirmed: bool) -> None:
+    """A new public address changes the redirect address the sign-in sends. Where authentik still knows the old one
+    (the button set it up), or a provider entered by hand does, the operator is asked first: 409 with the question
+    and nothing saved (blueprint 03, "Rückleitadresse"); ``confirm_public_url`` says yes. Clearing the address asks
+    nothing (nothing is registered from it)."""
+    address = clean.get("public_url")
+    if not address or address == settings_service.get(db, "public_url"):
+        return
+    try:
+        question = authentik.public_url_guard(
+            oidc_store.SqlStore(db), str(address), str(request.base_url), confirm=confirmed
+        )
+    except ValueError as error:
+        raise fehler(
+            "public_url_invalid", "Use an address like https://nexsift.example.com.", 422, field="public_url"
+        ) from error
+    if question is not None:
+        raise fehler("public_url_change", "The public address changes what authentik knows.", 409, **question)
 
 
 @router.get("/stream", summary="Live changes as server-sent events")

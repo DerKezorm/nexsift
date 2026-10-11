@@ -314,6 +314,26 @@
         "The redirect address of a new provider is /api/oidc/<short name>/callback. A provider from 0.11 or before keeps /api/oidc/callback, so nothing has to be changed at the provider.",
         "The update makes a backup before it moves the old sign-in settings over. Going back to 0.11 works: the old settings are kept in step."
       ]
+    },
+    "0.12.1": {
+      "lead": "Messages sent as a form with curl -F, like the ones from Unraid's Gotify agent, arrive complete again.",
+      "sections": [
+        {
+          "title": "Gotify reads curl -F",
+          "body": "Senders that post title, message and priority as a multipart form, Unraid's built-in Gotify agent among them, arrived with an empty title and text and always as info. A critical alert sent no push. nexsift now reads these fields, and the priority counts again. Title, message and priority in the address work too, as with Gotify.",
+          "where": "Sources › a Gotify source"
+        },
+        {
+          "title": "Discord with attachments",
+          "body": "Apps that attach a picture to a Discord message put the message itself in the field payload_json. nexsift reads it from there now. The attachment is left out.",
+          "where": "Sources › a Discord source"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "nexsift's own webhook takes multipart forms as well.",
+        "The Gotify door answers with the priority as a number, as Gotify does."
+      ]
     }
   }
 }

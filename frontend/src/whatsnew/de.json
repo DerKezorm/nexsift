@@ -314,6 +314,26 @@
         "Die Rückleitadresse eines neuen Anbieters ist /api/oidc/<Kurzname>/callback. Ein Anbieter aus 0.11 oder früher behält /api/oidc/callback, beim Anbieter muss also nichts geändert werden.",
         "Das Update legt eine Sicherung an, bevor es die alten Anmeldeeinstellungen übernimmt. Zurück auf 0.11 geht: Die alten Einstellungen werden mitgeführt."
       ]
+    },
+    "0.12.1": {
+      "lead": "Meldungen, die als Formular mit curl -F kommen, etwa von Unraids Gotify-Agent, kommen wieder vollständig an.",
+      "sections": [
+        {
+          "title": "Gotify liest curl -F",
+          "body": "Absender, die Titel, Text und Priorität als Multipart-Formular schicken, darunter der eingebaute Gotify-Agent von Unraid, kamen mit leerem Titel und Text und immer als Info an. Ein kritischer Alarm löste keinen Push aus. nexsift liest diese Felder jetzt, und die Priorität zählt wieder. Titel, Text und Priorität in der Adresse gehen auch, wie bei Gotify.",
+          "where": "Quellen › eine Gotify-Quelle"
+        },
+        {
+          "title": "Discord mit Anhang",
+          "body": "Apps, die einer Discord-Meldung ein Bild anhängen, schreiben die Meldung selbst ins Feld payload_json. nexsift liest sie jetzt dort. Der Anhang bleibt draußen.",
+          "where": "Quellen › eine Discord-Quelle"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Der eigene Webhook von nexsift nimmt Multipart-Formulare ebenfalls an.",
+        "Die Gotify-Tür antwortet mit der Priorität als Zahl, wie Gotify."
+      ]
     }
   }
 }

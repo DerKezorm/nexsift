@@ -30,7 +30,7 @@ from . import __version__
 from .adapters import doors
 from .db import SessionLocal
 from .middleware import RequestContextMiddleware
-from .routers.ingress import read_body
+from .routers.ingress import form_fields, read_body
 from .services import ingest, strangers
 from .services import sources as sources_service
 
@@ -56,6 +56,14 @@ def _gotify_token(request: Request) -> str:
     return token.strip()
 
 
+def _gotify_number(value: object) -> int:
+    # A form sends the priority as text; Gotify answers with the number it stored.
+    try:
+        return int(str(value))
+    except ValueError:
+        return 0
+
+
 @gotify.post("/message")
 async def gotify_message(request: Request) -> Response:
     token = _gotify_token(request)
@@ -63,11 +71,11 @@ async def gotify_message(request: Request) -> Response:
     if body is None:
         return _gotify_error(413, "the message is too large")
     content_type = request.headers.get("content-type", "")
-    form: dict[str, str] = {}
-    if "form" in content_type:
-        from urllib.parse import parse_qsl
-
-        form = dict(parse_qsl(body.decode("utf-8", errors="replace")))
+    form = await form_fields(request, body)
+    # Gotify binds these from the query too when the body is not JSON; a field in the body wins.
+    for name in ("title", "message", "priority"):
+        if name not in form and request.query_params.get(name):
+            form[name] = request.query_params[name]
 
     def take() -> dict[str, Any] | None:
         with SessionLocal() as db:
@@ -81,7 +89,7 @@ async def gotify_message(request: Request) -> Response:
                 "appid": source.id,
                 "message": str(payload.get("message", "")),
                 "title": str(payload.get("title", "")),
-                "priority": payload.get("priority", 0),
+                "priority": _gotify_number(payload.get("priority", 0)),
                 "date": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
             }
 

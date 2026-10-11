@@ -68,6 +68,45 @@ def test_gotify_door_answers_like_gotify(client: TestClient, gotify_client: Test
     assert gotify_client.post("/message?token=wrong", json={"message": "x"}).status_code == 401
 
 
+def test_gotify_door_reads_multipart_like_curl_f(client: TestClient, gotify_client: TestClient, operator: dict) -> None:
+    # Unraid's Gotify agent sends `curl -F title=… -F message=… -F priority=…` (issue #6). A file part is ignored.
+    token = add_source(client, "gotify", "Unraid")["connection"]["token"]
+    response = gotify_client.post(
+        f"/message?token={token}",
+        files={
+            "title": (None, "Array health"),
+            "message": (None, "Disk 3 has read errors"),
+            "priority": (None, "5"),
+            "image": ("disk.png", b"\x89PNG\r\n\x1a\n", "image/png"),
+        },
+    )
+    assert response.status_code == 200
+    answer = response.json()
+    assert (answer["title"], answer["message"], answer["priority"]) == ("Array health", "Disk 3 has read errors", 5)
+    [thread] = inbox(client)
+    assert (thread["title"], thread["priority"]) == ("Array health", "warn")
+    assert "Disk 3 has read errors" in client.get(f"/api/threads/{thread['id']}").text
+
+
+def test_gotify_door_reads_the_query_like_gotify(client: TestClient, gotify_client: TestClient, operator: dict) -> None:
+    # Gotify binds title, message and priority from the query too, unless the body is JSON.
+    token = add_source(client, "gotify", "Script")["connection"]["token"]
+    assert gotify_client.post(f"/message?token={token}&title=Query&message=only&priority=8").status_code == 200
+    gotify_client.post(f"/message?token={token}&priority=8", data={"title": "Body wins", "priority": "2"})
+    titles = {thread["title"]: thread["priority"] for thread in inbox(client)}
+    assert titles == {"Query": "crit", "Body wins": "info"}
+
+
+def test_broken_multipart_is_no_server_error(client: TestClient, gotify_client: TestClient, operator: dict) -> None:
+    token = add_source(client, "gotify")["connection"]["token"]
+    response = gotify_client.post(
+        f"/message?token={token}",
+        content=b"--nope\r\nContent-Disposition: form-data\r\n\r\nx",
+        headers={"Content-Type": "multipart/form-data"},
+    )
+    assert response.status_code == 200
+
+
 def test_ntfy_door_answers_like_ntfy(client: TestClient, ntfy_client: TestClient, operator: dict) -> None:
     source = add_source(client, "ntfy", "Home Assistant")
     topic = source["connection"]["topic"]
@@ -108,6 +147,32 @@ def test_discord_door_takes_embeds(client: TestClient, operator: dict) -> None:
     assert threads["Download Failed"]["links"][0]["url"] == "https://radarr.example.com/movie/1"
     wrong_id = path.replace("/api/webhooks/", "/api/webhooks/1")
     assert client.post(wrong_id, json={"content": "x"}).status_code == 404
+
+
+def test_discord_door_reads_multipart(client: TestClient, operator: dict) -> None:
+    # Senders that attach a file send multipart: the JSON in the field payload_json, or the fields one by one.
+    source = add_source(client, "discord", "Camera")
+    path = source["connection"]["url"].split("testserver:8490", 1)[1]
+    payload = '{"embeds": [{"title": "Motion at the gate", "description": "Front camera", "color": 15548997}]}'
+    files = {"payload_json": (None, payload), "files[0]": ("snap.jpg", b"\xff\xd8\xff\xe0", "image/jpeg")}
+    assert client.post(path, files=files).status_code == 204
+    assert client.post(path, files={"content": (None, "Plain field")}).status_code == 204
+    threads = {thread["title"]: thread for thread in inbox(client)}
+    assert set(threads) == {"Motion at the gate", "Plain field"}
+    assert threads["Motion at the gate"]["priority"] == "crit"
+    detail = client.get(f"/api/threads/{threads['Motion at the gate']['id']}").text
+    assert "Front camera" in detail and "snap.jpg" not in detail
+
+
+def test_own_webhook_reads_multipart(client: TestClient, operator: dict) -> None:
+    source = add_source(client, "webhook")
+    path = "/api/v1/hook/" + source["connection"]["token"]
+    files = {"title": (None, "Scrub finished"), "message": (None, "0 errors"), "priority": (None, "warning")}
+    assert client.post(path, files=files).status_code == 202
+    [thread] = inbox(client)
+    assert (thread["title"], thread["priority"]) == ("Scrub finished", "warn")
+    # The raw data shows the fields, not the multipart text around them.
+    assert "Content-Disposition" not in client.get(f"/api/threads/{thread['id']}").text
 
 
 def test_new_token_locks_out_the_old_one(client: TestClient, operator: dict) -> None:

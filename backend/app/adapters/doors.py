@@ -116,11 +116,17 @@ def _visible(headers: dict[str, str]) -> dict[str, str]:
 DISCORD_COLORS = {15548997: CRIT, 16711680: CRIT, 15158332: CRIT, 16776960: WARN, 15105570: WARN, 16753920: WARN}
 
 
-def discord(body: bytes) -> tuple[Incoming, Payload]:
+def discord(body: bytes, form: dict[str, str] | None = None) -> tuple[Incoming, Payload]:
     """A Discord webhook call: ``content`` and/or ``embeds``. The embed color is the only hint of urgency
-    Discord has; red and orange shades count."""
-    data = _as_json(body)
-    payload: Payload = data if isinstance(data, dict) else {"content": _text(body)}
+    Discord has; red and orange shades count. Sent as multipart (when a file goes along), the same JSON sits in
+    the field ``payload_json``, or the fields come one by one; the files are left out."""
+    if form:
+        text = form.get("payload_json", "")
+        data = _as_json(text.encode("utf-8")) if text else dict(form)
+        raw = text or json.dumps(form, ensure_ascii=False)
+    else:
+        data, raw = _as_json(body), _text(body)
+    payload: Payload = data if isinstance(data, dict) else {"content": raw}
     content = str(payload.get("content", "") or "")
     embeds = payload.get("embeds") if isinstance(payload.get("embeds"), list) else []
     title, parts, links, priority = "", [], [], INFO
@@ -148,12 +154,12 @@ def discord(body: bytes) -> tuple[Incoming, Payload]:
         body="\n".join(part for part in (content, body_text) if part),
         priority=priority,
         links=links + links_from_text(content, body_text),
-        raw=_text(body),
+        raw=raw,
     )
     return incoming, payload
 
 
-def webhook(body: bytes, content_type: str) -> tuple[Incoming, Payload]:
+def webhook(body: bytes, content_type: str, form: dict[str, str] | None = None) -> tuple[Incoming, Payload]:
     """nexsift's own webhook: JSON with title, message and priority, all optional. Anything else is taken as
     text. The field names of the usual suspects (text, body, content, severity, level, status) work too, so a
     sender with fixed JSON can often be pointed here unchanged."""
@@ -162,12 +168,10 @@ def webhook(body: bytes, content_type: str) -> tuple[Incoming, Payload]:
         # JSON written into a JSON string: what Paperless sends when its body is a template and "send as JSON"
         # is on anyway. Read the inner object instead of showing the quoted text.
         data = _as_json(data.encode("utf-8"))
-    if not isinstance(data, dict) and "x-www-form-urlencoded" in content_type.lower():
-        # DSM's custom webhook sends a form unless JSON is chosen: text=<message>. Read as the same fields.
-        from urllib.parse import parse_qsl
-
-        form = dict(parse_qsl(_text(body), keep_blank_values=True))
-        data = form or None
+    if not isinstance(data, dict) and form:
+        # DSM's custom webhook sends a form unless JSON is chosen: text=<message>; curl -F sends multipart.
+        # Read as the same fields.
+        data = form
     if not isinstance(data, dict):
         text = _text(body).strip()
         first = text.split("\n", 1)[0]
@@ -204,7 +208,7 @@ def webhook(body: bytes, content_type: str) -> tuple[Incoming, Payload]:
         body=message if message != title else "",
         priority=priority,
         links=links,
-        raw=_text(body),
+        raw=json.dumps(form, ensure_ascii=False) if data is form else _text(body),
         icon=first("icon"),
     )
     return incoming, payload

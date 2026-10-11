@@ -4,11 +4,11 @@
  * app's file (nexsift's: its set-up through `startI18n` and `changeLanguage`).
  *
  * The module's own tests already check the wording files against Bauplan 04 word for word; this test checks that the
- * app really loads them (merged into its resources, `{{app}}` filled in) and that nothing in the app overrides them.
+ * app really loads them (merged into its resources, `{{app}}` and `{{slug}}` filled in) and that nothing in the app overrides them.
  */
 import { beforeAll, describe, expect, it } from 'vitest'
 
-import { oidcWording, type OidcWording } from './vendor/nexoidc/oidc'
+import { oidcVariables, oidcWording, type OidcWording } from './vendor/nexoidc/oidc'
 import de from './vendor/nexoidc/oidc.de.json'
 import en from './vendor/nexoidc/oidc.en.json'
 // The app's i18n instance after its set-up (startI18n, changeLanguage: the module's files merged into the resources).
@@ -18,6 +18,11 @@ import i18n, { changeLanguage, startI18n } from './i18n'
 const APP_NAME = 'nexsift'
 // nexsift has one account: the app merges the files through oidcWording with the sentences for such apps.
 const SINGLE_ACCOUNT = true
+// nexsift has no invitations: the sentences without them (since 1.0.12).
+const INVITATIONS = false
+const WORDING = { singleAccount: SINGLE_ACCOUNT, invitations: INVITATIONS }
+// The slug the authentik button gives the app; the app sets the same through oidcVariables in its i18n.
+const APP_SLUG = oidcVariables(APP_NAME).slug
 
 beforeAll(async () => {
   await startI18n()
@@ -32,20 +37,20 @@ function leaves(tree: Tree, prefix = ''): [string, string][] {
   })
 }
 
-// Every placeholder of the texts but `{{app}}` (`address` since 1.0.10, in the template since 1.0.11).
+// Every placeholder of the texts but `{{app}}` and `{{slug}}` (`address` since 1.0.10, in the template since 1.0.11).
 const values = { name: 'N', count: 2, only: 1, status: 403, address: 'https://app.example.com' }
 
 describe('the oidc texts', () => {
   for (const [language, tree] of [['de', de], ['en', en]] as const) {
     it(`are all in the app in ${language}, word for word, with the app's name`, async () => {
       await changeLanguage(language)
-      for (const [key, text] of leaves(oidcWording(tree as Tree, { singleAccount: SINGLE_ACCOUNT }))) {
+      for (const [key, text] of leaves(oidcWording(tree as Tree, WORDING))) {
         // Plural forms are asked for without their suffix, with a count that picks them (since 1.0.9).
         const plural = /_(one|other)$/.exec(key)
         const given = plural ? { ...values, count: plural[1] === 'one' ? 1 : 2 } : values
         const asked = plural ? key.slice(0, plural.index) : key
         const expected = text.replace(/\{\{(\w+)\}\}/g, (_, name: string) =>
-          name === 'app' ? APP_NAME : String(given[name as keyof typeof given]),
+          name === 'app' ? APP_NAME : name === 'slug' ? APP_SLUG : String(given[name as keyof typeof given]),
         )
         expect(i18n.t(asked, given), key).toBe(expected)
       }

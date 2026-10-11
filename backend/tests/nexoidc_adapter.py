@@ -35,6 +35,8 @@ class Adapter(StandardAdapter):
     package = "app.vendor.nexoidc"
     api = "/api"
     single_account = True
+    # No invitations at all: the contract skips their tests and runs 18 and 12 through auto_create (since 1.0.12).
+    has_invitations = False
     only_authentik = False
     # One account: nothing to pair with nexsuite, the list stays uncoupled.
     supports_coupling = False

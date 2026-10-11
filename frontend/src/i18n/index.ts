@@ -18,7 +18,7 @@ import { initReactI18next } from 'react-i18next'
 
 import { merge, type Texts } from './custom'
 import { customLanguage, customLanguages } from './customStore'
-import { oidcWording, type OidcWording } from '../vendor/nexoidc/oidc'
+import { oidcVariables, oidcWording, type OidcWording } from '../vendor/nexoidc/oidc'
 
 interface LanguageEntry {
   /** Short, for the switcher. */
@@ -34,7 +34,7 @@ interface LanguageEntry {
  */
 async function withOidc(own: Promise<{ default: Texts }>, oidc: Promise<{ default: Texts }>): Promise<{ default: Texts }> {
   const [app, module] = await Promise.all([own, oidc])
-  return { default: { ...app.default, ...(oidcWording(module.default as OidcWording, { singleAccount: true }) as Texts) } }
+  return { default: { ...app.default, ...(oidcWording(module.default as OidcWording, { singleAccount: true, invitations: false }) as Texts) } }
 }
 
 export const LANGUAGES = {
@@ -108,7 +108,7 @@ export async function startI18n(): Promise<void> {
     resources: { [language]: { translation: await textsFor(language) } },
     lng: language,
     fallbackLng: false,
-    interpolation: { escapeValue: false, defaultVariables: { app: APP_NAME } },
+    interpolation: { escapeValue: false, defaultVariables: oidcVariables(APP_NAME) },
   })
   document.documentElement.lang = language
 }

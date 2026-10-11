@@ -201,7 +201,7 @@ Forgot the password? In the container: `python -m app.reset_password`.
 | `NEXSIFT_PUBLIC_PORTS` | the inner ports | The ports as seen from outside, for the setup hints: `web=8490,gotify=8491,ntfy=8492,smtp=25,syslog=514` |
 | `NEXSIFT_TRUSTED_PROXIES` | none | Addresses or networks of reverse proxies whose `X-Forwarded-For` and `X-Forwarded-Proto` are believed, comma separated. Only they can tell nexsift that a request came in over `https` (a proxy on the same host, `127.0.0.1`, is believed about that out of the box) |
 | `NEXSIFT_SESSION_DAYS` | `30` | A browser session ends after this many days |
-| `NEXSIFT_COOKIE_SECURE` | `auto` | `on`, `off` or `auto` (from the request or `X-Forwarded-Proto`) |
+| `NEXSIFT_COOKIE_SECURE` | `auto` | `on`, `off` or `auto` (from the request; `X-Forwarded-Proto` only from a trusted proxy) |
 | `NEXSIFT_LOG_LEVEL` | empty | Usually left out: the level is set under Settings, Log. When set (`quiet`, `normal`, `detailed`, `trace`, or `WARNING`, `INFO`, `DEBUG`) it wins and the interface cannot change it; the way out when nexsift does not even start |
 | `NEXSIFT_API_DOCS` | `false` | Serves `/api/docs` and `/api/openapi.json` |
 | `NEXSIFT_GOTIFY_PORT`, `NEXSIFT_NTFY_PORT`, `NEXSIFT_SMTP_PORT`, `NEXSIFT_SYSLOG_PORT` | `8001`, `8002`, `2525`, `5514` | Ports inside the container; `0` turns that door off |

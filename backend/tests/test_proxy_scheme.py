@@ -110,6 +110,29 @@ def test_the_scheme_is_read_without_regard_to_case(admin: None, monkeypatch: pyt
         assert str(_seen(base, {"X-Forwarded-Proto": "ftp"})["seen"]).startswith("http://")
 
 
+def _cookie(base: str, proto: str) -> str:
+    """The session cookie the real server sets for a sign-in that carries this ``X-Forwarded-Proto``."""
+    with httpx.Client(base_url=base, headers=UI) as client:
+        signed = client.post(
+            "/api/auth/login", json={"name": "admin", "password": PASSWORD}, headers={"X-Forwarded-Proto": proto}
+        )
+        assert signed.status_code == 200, signed.text
+        return signed.headers["set-cookie"].lower()
+
+
+def test_the_session_cookie_is_secure_only_by_a_trusted_proxys_rightmost_scheme(
+    admin: None, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(get_settings(), "cookie_secure", "auto")
+    with _running("", monkeypatch) as base:
+        assert "secure" in _cookie(base, "HTTPS")
+        assert "secure" in _cookie(base, "http, https")
+        assert "secure" not in _cookie(base, "https, http")
+    # The same header from a sender nobody trusts: the connection is http, so is the cookie.
+    with _running("10.99.99.99", monkeypatch) as base:
+        assert "secure" not in _cookie(base, "https")
+
+
 def _scope(kind: str, peer: str, *values: bytes) -> dict:
     return {
         "type": kind,

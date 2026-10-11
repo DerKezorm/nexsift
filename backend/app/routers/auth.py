@@ -14,7 +14,6 @@ from ..config import get_settings
 from ..deps import CurrentAccount, DbSession, check_csrf, client_ip
 from ..meldungen import fehler, meldung
 from ..models import Account
-from ..proxy import forwarded_scheme
 from ..security import MIN_PASSWORD, SESSION_COOKIE, brake, end_all_sessions, end_session, start_session
 from ..services import accounts, settings_service
 from ..services.accounts import AccountError
@@ -54,8 +53,8 @@ def secure_cookie(request: Request) -> bool:
         return True
     if mode == "off":
         return False
-    # The rightmost value is the proxy's; the ones before it may be the visitor's.
-    return request.url.scheme == "https" or forwarded_scheme(request.scope["headers"]) == "https"
+    # The scheme of a trusted proxy is already in the request (app/proxy.py); anybody else's header counts for nothing.
+    return request.url.scheme == "https"
 
 
 def set_session_cookie(response: Response, request: Request, token: str) -> None:

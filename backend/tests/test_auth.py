@@ -60,20 +60,17 @@ def test_a_fresh_account_has_seen_this_version(client: TestClient, operator: dic
     assert client.get("/api/auth/me").json()["prefs"]["seen_version"] == __version__
 
 
-def test_the_session_cookie_is_secure_by_the_rightmost_forwarded_scheme(
+def test_a_forwarded_scheme_from_a_sender_nobody_trusts_does_not_make_the_cookie_secure(
     client: TestClient, operator: dict, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    """The test client is no trusted proxy: its ``X-Forwarded-Proto`` counts for nothing (module, "Hinter einem Proxy").
+    The trusted side runs through the real server in ``test_proxy_scheme.py``."""
     monkeypatch.setattr(get_settings(), "cookie_secure", "auto")
-
-    def cookie_with(proto: str) -> str:
+    for proto in ("https", "HTTPS", "http, https"):
         sent = client.post(
             "/api/auth/login",
             json={"name": "admin", "password": PASSWORD},
             headers={**UI, "X-Forwarded-Proto": proto},
         )
         assert sent.status_code == 200, sent.text
-        return sent.headers["set-cookie"].lower()
-
-    assert "secure" in cookie_with("HTTPS")
-    assert "secure" in cookie_with("http, https")
-    assert "secure" not in cookie_with("https, http")
+        assert "secure" not in sent.headers["set-cookie"].lower(), proto

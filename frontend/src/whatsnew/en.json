@@ -348,6 +348,21 @@
       "small": [
         "No new variables, ports or paths."
       ]
+    },
+    "0.12.3": {
+      "lead": "Out of the box nexsift now believes no proxy at all, not even one on the same host.",
+      "sections": [
+        {
+          "title": "127.0.0.1 is no longer trusted by itself",
+          "body": "With NEXSIFT_TRUSTED_PROXIES empty, nexsift still believed X-Forwarded-Proto and X-Forwarded-For from 127.0.0.1, on all three doors: the interface, Gotify and ntfy. Anything on the same host could claim https or another sender address. Empty now means nobody. If your proxy runs on the same host with host networking, put 127.0.0.1 in NEXSIFT_TRUSTED_PROXIES.",
+          "where": "The container's variables"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "The list is read the same way everywhere: entries that are neither an address nor a network, such as * or a host name, are left out.",
+        "No new variables, ports or paths."
+      ]
     }
   }
 }

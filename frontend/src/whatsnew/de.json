@@ -348,6 +348,21 @@
       "small": [
         "Keine neuen Variablen, Ports oder Pfade."
       ]
+    },
+    "0.12.3": {
+      "lead": "Ab Werk glaubt nexsift jetzt keinem Proxy mehr, auch keinem auf demselben Rechner.",
+      "sections": [
+        {
+          "title": "127.0.0.1 gilt nicht mehr von selbst als vertraut",
+          "body": "Mit leerem NEXSIFT_TRUSTED_PROXIES hat nexsift X-Forwarded-Proto und X-Forwarded-For von 127.0.0.1 trotzdem geglaubt, an allen drei Türen: Oberfläche, Gotify und ntfy. Alles auf demselben Rechner konnte so https oder eine andere Absenderadresse behaupten. Leer heißt jetzt: niemand. Läuft dein Proxy auf demselben Rechner im Host-Netz, trag 127.0.0.1 in NEXSIFT_TRUSTED_PROXIES ein.",
+          "where": "Die Variablen im Container"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Die Liste wird überall gleich gelesen: Einträge, die weder Adresse noch Netz sind, etwa * oder ein Rechnername, fallen weg.",
+        "Keine neuen Variablen, Ports oder Pfade."
+      ]
     }
   }
 }

@@ -283,6 +283,37 @@
         "Rules that keep messages in the inbox, like the ones for Watchtower and Paperless, still win. The dialog names them.",
         "The storm guard's summary now names per target only what that target would have taken by its level as well."
       ]
+    },
+    "0.12.0": {
+      "lead": "Sign-in has been rebuilt: several providers side by side, set up the same way as in the other nex apps.",
+      "sections": [
+        {
+          "title": "Several providers",
+          "body": "Besides authentik you can add Microsoft Entra ID (also with common or organizations), Keycloak, Authelia, Pocket ID or any other OpenID Connect provider. Each one gets its own button on the sign-in page. Your account is linked once to each provider you use. A provider you set up before keeps working, and is moved over by itself at the first start.",
+          "where": "Settings › Sign-in"
+        },
+        {
+          "title": "Linking moved",
+          "body": "Linking your account to a provider now sits with the account and asks for your password first. The sign-in page shows the buttons of all active providers.",
+          "where": "Settings › Account"
+        },
+        {
+          "title": "Off means off",
+          "body": "When the password is switched off, nobody can sign in with it, you as the operator included. This only works once your account is linked to an active provider, and removing or switching off the last way in switches the password back on. If the provider fails, the way back is `python -m app.reset_password` in the container.",
+          "where": "Settings › Sign-in › Password"
+        },
+        {
+          "title": "The public address asks first",
+          "body": "Changing or clearing the public address changes where providers send you back after signing in. nexsift now asks before it does that, and says what changes. The authentik button never registers an address it only guessed.",
+          "where": "Settings › Addresses"
+        }
+      ],
+      "smallTitle": "For operators",
+      "small": [
+        "NEXSIFT_TRUSTED_PROXIES now also decides who may tell nexsift that a request came in over https, and which sender address counts. With a chain of proxies the rightmost value is taken. Put your reverse proxy there; a proxy on the same host (127.0.0.1) is believed about the scheme anyway.",
+        "The redirect address of a new provider is /api/oidc/<short name>/callback. A provider from 0.11 or before keeps /api/oidc/callback, so nothing has to be changed at the provider.",
+        "The update makes a backup before it moves the old sign-in settings over. Going back to 0.11 works: the old settings are kept in step."
+      ]
     }
   }
 }

@@ -283,6 +283,37 @@
         "Regeln, die Meldungen im Posteingang halten, etwa die für Watchtower und Paperless, gehen weiter vor. Der Dialog nennt sie.",
         "Die Sammelmeldung des Sturmschutzes nennt je Ziel nur noch, was dieses Ziel auch nach seiner Stufe bekommen hätte."
       ]
+    },
+    "0.12.0": {
+      "lead": "Die Anmeldung ist neu gebaut: mehrere Anbieter nebeneinander, eingerichtet wie in den anderen nex-Apps.",
+      "sections": [
+        {
+          "title": "Mehrere Anbieter",
+          "body": "Neben authentik lassen sich Microsoft Entra ID (auch mit common oder organizations), Keycloak, Authelia, Pocket ID oder jeder andere OpenID-Connect-Anbieter einrichten. Jeder bekommt einen eigenen Knopf auf der Anmeldeseite. Dein Konto wird mit jedem Anbieter, den du nutzt, einmal verknüpft. Ein Anbieter, den du früher eingerichtet hast, läuft weiter und wird beim ersten Start von selbst übernommen.",
+          "where": "Einstellungen › Anmeldung"
+        },
+        {
+          "title": "Verknüpfen ist umgezogen",
+          "body": "Das Verknüpfen deines Kontos mit einem Anbieter sitzt jetzt beim Konto und fragt zuerst nach deinem Passwort. Die Anmeldeseite zeigt die Knöpfe aller aktiven Anbieter.",
+          "where": "Einstellungen › Konto"
+        },
+        {
+          "title": "Aus heißt aus",
+          "body": "Ist das Passwort ausgeschaltet, kann sich niemand mehr damit anmelden, auch du als Betreiber nicht. Ausschalten geht erst, wenn dein Konto mit einem aktiven Anbieter verknüpft ist, und wer den letzten Weg hinein entfernt oder ausschaltet, schaltet das Passwort wieder ein. Fällt der Anbieter aus, ist der Rückweg `python -m app.reset_password` im Container.",
+          "where": "Einstellungen › Anmeldung › Passwort"
+        },
+        {
+          "title": "Die öffentliche Adresse fragt nach",
+          "body": "Wer die öffentliche Adresse ändert oder leert, ändert, wohin die Anbieter nach der Anmeldung zurückleiten. nexsift fragt jetzt vorher nach und sagt, was sich ändert. Der authentik-Knopf trägt nie eine Adresse ein, die er nur geraten hat.",
+          "where": "Einstellungen › Adressen"
+        }
+      ],
+      "smallTitle": "Für Betreiber",
+      "small": [
+        "NEXSIFT_TRUSTED_PROXIES entscheidet jetzt auch, wer nexsift sagen darf, dass eine Anfrage über https kam, und welche Absenderadresse zählt. Bei einer Kette von Proxys gilt der Wert ganz rechts. Trag dort deinen Reverse-Proxy ein; ein Proxy auf demselben Rechner (127.0.0.1) wird beim Schema ohnehin geglaubt.",
+        "Die Rückleitadresse eines neuen Anbieters ist /api/oidc/<Kurzname>/callback. Ein Anbieter aus 0.11 oder früher behält /api/oidc/callback, beim Anbieter muss also nichts geändert werden.",
+        "Das Update legt eine Sicherung an, bevor es die alten Anmeldeeinstellungen übernimmt. Zurück auf 0.11 geht: Die alten Einstellungen werden mitgeführt."
+      ]
     }
   }
 }

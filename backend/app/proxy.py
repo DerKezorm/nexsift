@@ -6,11 +6,17 @@ builds its return address with ``http``. This middleware sits in front of uvicor
 trusted peer only, takes the RIGHTMOST value (the one the proxy wrote; everything left of it may come from the
 visitor), without regard to case, and only ``http`` or ``https``. For a WebSocket request the same value gives
 ``ws`` or ``wss``. Everything else (the client address) stays with uvicorn's own middleware.
+
+Out of the box nobody is trusted: with ``NEXSIFT_TRUSTED_PROXIES`` empty there is no proxy handling at all, and every
+request keeps the scheme and the address of its own connection, ``127.0.0.1`` included. The list is read once, here,
+for uvicorn and for ``deps.client_ip`` alike, so both trust the same senders.
 """
 
 from __future__ import annotations
 
+import ipaddress
 from collections.abc import Awaitable, Callable
+from functools import lru_cache
 from typing import Any
 
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware, _TrustedHosts
@@ -18,6 +24,23 @@ from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware, _TrustedHos
 Scope = dict[str, Any]
 Receive = Callable[[], Awaitable[dict[str, Any]]]
 Send = Callable[[dict[str, Any]], Awaitable[None]]
+Network = ipaddress.IPv4Network | ipaddress.IPv6Network
+
+
+@lru_cache(maxsize=4)
+def trusted_networks(spec: str) -> tuple[Network, ...]:
+    """The networks of ``NEXSIFT_TRUSTED_PROXIES`` (addresses or networks, comma separated). Anything that is
+    neither is left out; an empty list trusts nobody."""
+    networks = []
+    for entry in spec.split(","):
+        entry = entry.strip()
+        if not entry:
+            continue
+        try:
+            networks.append(ipaddress.ip_network(entry, strict=False))
+        except ValueError:
+            continue
+    return tuple(networks)
 
 
 def forwarded_scheme(headers: list[tuple[bytes, bytes]]) -> str | None:
@@ -47,6 +70,11 @@ class ForwardedScheme:
         await self.app(scope, receive, send)
 
 
-def behind_proxy(app: Any, trusted: str) -> Any:
-    """``app`` with the proxy handling of ``trusted`` proxies: this scheme first, then uvicorn's client address."""
+def behind_proxy(app: Any, spec: str) -> Any:
+    """``app`` with the proxy handling for the proxies in ``spec``: this scheme first, then uvicorn's client address.
+    No proxy in ``spec``: ``app`` itself, so no sender is believed about either."""
+    networks = trusted_networks(spec)
+    if not networks:
+        return app
+    trusted = ",".join(str(network) for network in networks)
     return ForwardedScheme(ProxyHeadersMiddleware(app, trusted_hosts=trusted), trusted)

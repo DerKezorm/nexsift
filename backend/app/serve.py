@@ -32,11 +32,11 @@ class _Server(uvicorn.Server):
 
 
 def _server(app: str, port: int, log_level: str) -> _Server:
-    trusted = get_settings().trusted_proxies or "127.0.0.1"
-    # The proxy handling is ours (app/proxy.py), so uvicorn's own is off.
+    # The proxy handling is ours (app/proxy.py), so uvicorn's own is off. Only the proxies in NEXSIFT_TRUSTED_PROXIES
+    # are believed; empty means nobody, not even 127.0.0.1 (a proxy on the same host in host networking goes there).
     return _Server(
         uvicorn.Config(
-            behind_proxy(import_from_string(app), trusted),
+            behind_proxy(import_from_string(app), get_settings().trusted_proxies),
             host=get_settings().host,
             port=port,
             log_level=log_level,

@@ -8,7 +8,6 @@ without a preflight the browser refuses.
 from __future__ import annotations
 
 import ipaddress
-from functools import lru_cache
 from typing import Annotated
 
 from fastapi import Depends, Request
@@ -18,6 +17,7 @@ from .config import get_settings
 from .db import get_db
 from .meldungen import fehler
 from .models import Account
+from .proxy import trusted_networks
 from .security import CSRF_HEADER, CSRF_VALUE, SESSION_COOKIE, session_account
 from .services import logs
 
@@ -25,22 +25,8 @@ DbSession = Annotated[Session, Depends(get_db)]
 UNSAFE = {"POST", "PUT", "PATCH", "DELETE"}
 
 
-@lru_cache(maxsize=4)
-def _trusted_networks(spec: str) -> tuple[ipaddress.IPv4Network | ipaddress.IPv6Network, ...]:
-    networks = []
-    for entry in spec.split(","):
-        entry = entry.strip()
-        if not entry:
-            continue
-        try:
-            networks.append(ipaddress.ip_network(entry, strict=False))
-        except ValueError:
-            continue
-    return tuple(networks)
-
-
 def _is_trusted_proxy(address: str) -> bool:
-    networks = _trusted_networks(get_settings().trusted_proxies)
+    networks = trusted_networks(get_settings().trusted_proxies)
     if not networks:
         return False
     try:

@@ -334,6 +334,20 @@
         "Der eigene Webhook von nexsift nimmt Multipart-Formulare ebenfalls an.",
         "Die Gotify-Tür antwortet mit der Priorität als Zahl, wie Gotify."
       ]
+    },
+    "0.12.2": {
+      "lead": "Ob das Anmelde-Cookie nur über https geht, entscheidet nexsift jetzt allein nach dem, was ein vertrauter Proxy meldet.",
+      "sections": [
+        {
+          "title": "Secure-Cookie nur über vertraute Proxys",
+          "body": "Steht NEXSIFT_COOKIE_SECURE auf auto, hat nexsift X-Forwarded-Proto für das Anmelde-Cookie bisher von jedem Absender geglaubt. Jetzt zählt der Kopf nur von den Adressen in NEXSIFT_TRUSTED_PROXIES, wie schon für die Anmeldung über einen Anbieter. Wer hinter einem Proxy mit https arbeitet und die Variable nicht gesetzt hat, bekommt das Cookie ohne Secure-Flag: Dann die Adresse des Proxys eintragen oder NEXSIFT_COOKIE_SECURE auf on stellen.",
+          "where": "Einstellungen › Anmeldung, und die Variablen im Container"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Keine neuen Variablen, Ports oder Pfade."
+      ]
     }
   }
 }

@@ -334,6 +334,20 @@
         "nexsift's own webhook takes multipart forms as well.",
         "The Gotify door answers with the priority as a number, as Gotify does."
       ]
+    },
+    "0.12.2": {
+      "lead": "Whether the sign-in cookie only travels over https now depends solely on what a trusted proxy reports.",
+      "sections": [
+        {
+          "title": "Secure cookie only through trusted proxies",
+          "body": "With NEXSIFT_COOKIE_SECURE set to auto, nexsift used to believe X-Forwarded-Proto from any sender for the sign-in cookie. Now the header counts only from the addresses in NEXSIFT_TRUSTED_PROXIES, as it already did for signing in through a provider. If you run behind a proxy with https and have not set the variable, the cookie comes without the Secure flag: add the proxy's address there or set NEXSIFT_COOKIE_SECURE to on.",
+          "where": "Settings › Sign-in, and the container's variables"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "No new variables, ports or paths."
+      ]
     }
   }
 }

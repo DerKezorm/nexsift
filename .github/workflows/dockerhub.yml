@@ -88,8 +88,8 @@ jobs:
           import os, pathlib, re
           text = pathlib.Path("README.md").read_text(encoding="utf-8")
           if len(text.encode()) > 24000:
-              cuts = [m.start() for m in re.finditer(r"^## ", text, re.M) if len(text[:m.start()].encode()) <= 23000]
-              text = text[:cuts[-1] if cuts else text.rfind("\n\n", 0, 23000)].rstrip()
+              cuts = [m.start() for m in re.finditer(r"^## ", text, re.M) if len(text[:m.start()].encode()) <= 23500]
+              text = text[:cuts[-1] if cuts else text.rfind("\n\n", 0, 23500)].rstrip()
               text += f"\n\n---\n\nThe full README is on GitHub: https://github.com/{os.environ['GITHUB_REPOSITORY']}#readme\n"
           pathlib.Path("dockerhub-readme.md").write_text(text, encoding="utf-8")
 

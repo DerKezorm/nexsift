@@ -1,10 +1,10 @@
 """Sign-in through OpenID Connect providers, their list, linking, and the authentik button.
 
 The protocol, who an identity is, the provider list and the button live in the shared module ``vendor/nexoidc``
-(the blueprint "Anmeldung mit OIDC und authentik", the same in every nex app); this router puts nexsift around it:
+(the same in every nex app); this router puts nexsift around it:
 the session, the sign-in brake, the password asked again before linking, and the error answers.
 
-nexsift has one account, the operator (blueprint 06). A provider brings in only the identity the operator linked
+nexsift has one account, the operator. A provider brings in only the identity the operator linked
 while signed in; anybody else the provider knows is refused with ``oidc_no_account``. No invitations, no accounts
 made through a provider.
 
@@ -70,7 +70,7 @@ class ProviderIn(BaseModel):
     client_secret: str = Field(default="", max_length=2000)
     scopes: str = Field(default="openid profile email", max_length=500)
     enabled: bool = True
-    # One account (blueprint 06): never on, whatever is sent; the store writes it off.
+    # One account: never on, whatever is sent; the store writes it off.
     auto_create: bool = False
     # Taken and ignored: nexsift has no second factor, so a provider is always trusted (``_form``).
     trusts_second_factor: bool = True
@@ -83,9 +83,9 @@ class PasswordIn(BaseModel):
 class SetupIn(BaseModel):
     url: str = Field(min_length=1, max_length=500)
     token: str = Field(min_length=1, max_length=2000)
-    # The second run after the question "another issuer drops the links" (blueprint 03); off by default.
+    # The second run after the question "another issuer drops the links"; off by default.
     confirm_issuer_change: bool = False
-    # The address the operator confirmed in the card (the browser's own) while nexsift has none yet (blueprint 03).
+    # The address the operator confirmed in the card (the browser's own) while nexsift has none yet.
     public_url: str = Field(default="", max_length=600)
 
 
@@ -132,7 +132,7 @@ def _redirect(target: flow.Redirect, request: Request) -> RedirectResponse:
 def _form(payload: ProviderIn) -> providers.Form:
     """The form as the module takes it. One account, no second factor of its own: a provider never makes an account
     and always counts as trusted, whatever the request says. "Not trusted" would empty the old settings, and with the
-    password off 0.11 would find no way in (blueprint 06)."""
+    password off 0.11 would find no way in."""
     return providers.Form(**{**payload.model_dump(), "auto_create": False, "trusts_second_factor": True})
 
 
@@ -258,7 +258,7 @@ def _brake_key(request: Request) -> str:
 @router.get("/{slug}/start", summary="Send the browser to the provider (no sign-in needed)")
 async def start(slug: Annotated[str, Path(max_length=40)], request: Request) -> RedirectResponse:
     # This is the sign-in button. Failures land on the sign-in page with a code; an invitation is refused by the
-    # module (one account, blueprint 06).
+    # module.
     invite = request.query_params.get("invite")
     with store() as s:
         try:
@@ -342,7 +342,7 @@ async def link_start(
     with store() as s:
         row = s.db.get(Account, account.id)
         assert row is not None
-        # The same brake as before start and return (blueprint 02, "Ablauf" 4): a braked sender links nothing.
+        # The same brake as before start and return: a braked sender links nothing.
         wait = brake.wait_seconds(_brake_key(request))
         if wait:
             raise fehler("too_many_attempts", "Too many attempts. Try again later.", 429, retry_after=wait)
@@ -397,7 +397,7 @@ def operator_unlink(
     request: Request,
     account: CurrentAccount,
 ) -> None:
-    # nexsift has one account, so the operator unlinks itself here; the route is the blueprint's, for every app.
+    # nexsift has one account, so the operator unlinks itself here; the route is the same in every app.
     with store() as s:
         operator = s.db.get(Account, account.id)
         assert operator is not None

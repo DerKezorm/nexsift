@@ -1,7 +1,6 @@
 """Behind a proxy that ends TLS, nexsift sees ``http`` while people use ``https``. It believes the proxy's
 ``X-Forwarded-Proto`` only from the proxies it trusts (``NEXSIFT_TRUSTED_PROXIES``), never from anybody else; out of the
-box that list is empty and nobody is trusted, ``127.0.0.1`` included (blueprint 03, "Rückleitadresse"; module 1.0.10,
-"Hinter einem Proxy").
+box that list is empty and nobody is trusted, ``127.0.0.1`` included.
 
 The test starts the real server of ``app.serve`` on a port of its own, because the scheme is set by uvicorn's proxy
 middleware, which a ``TestClient`` does not go through.

@@ -1,8 +1,8 @@
-"""nexoidc contract tests: nexsift's adapter (copied once from ``bauplaene/oidc/tests-fuer-apps/adapter_template.py``,
+"""nexoidc contract tests: nexsift's adapter (started from the shared adapter template,
 from then on nexsift's own file).
 
 The contract tests in ``tests/nexoidc/`` are the same in every nex app and never edited here. They reach nexsift
-only through this class: its real routes, its database and its account. nexsift has one account (blueprint 06): the
+only through this class: its real routes, its database and its account. nexsift has one account (one-account variant): the
 tests branch on ``single_account`` and refuse invitations and new accounts instead, and ``make_account`` renames the
 one account rather than making a second. The test run's data directory and the cleaning between tests come from
 ``tests/conftest.py``. Passwords are made at run time; none is written into this file.
@@ -38,10 +38,10 @@ class Adapter(StandardAdapter):
     # No invitations at all: the contract skips their tests and runs 18 and 12 through auto_create (since 1.0.12).
     has_invitations = False
     only_authentik = False
-    # One account: nothing to pair with nexsuite, the list stays uncoupled.
+    # One account: nothing to couple, the list stays uncoupled.
     supports_coupling = False
     has_second_factor = False
-    # 0.11 asked no code after the provider: the migrated entry trusts it (blueprint 06).
+    # 0.11 asked no code after the provider: the migrated entry trusts it (one-account variant).
     trusted_before = True
     legacy_model = "single"
     old_callback_paths: tuple[str, ...] = ()
@@ -122,7 +122,7 @@ class Adapter(StandardAdapter):
             return settings_service.public_url(db)
 
     def save_public_url_route(self, url: str, *, confirm: bool = False) -> httpx.Response:
-        # Card 1 and Settings, Addresses save the address through the settings, which ask first (Pflichttest 39).
+        # Card 1 and Settings, Addresses save the address through the settings, which ask first (contract test 39).
         return self.operator().put("/api/settings", json={"values": {"public_url": url}, "confirm_public_url": confirm})
 
     def legacy_setup(

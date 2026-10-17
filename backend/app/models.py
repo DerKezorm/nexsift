@@ -260,7 +260,7 @@ class ApiKey(Base):
 
 class OidcProvider(Base):
     """A sign-in provider (OpenID Connect), one row per entry of the list under Settings, Sign-in. The columns are
-    those of the shared sign-in blueprint (part 01); the module ``vendor/nexoidc`` reads and writes them through
+    those of the shared sign-in module; the module ``vendor/nexoidc`` reads and writes them through
     ``services/oidc_store.SqlStore``."""
 
     __tablename__ = "oidc_providers"
@@ -279,7 +279,7 @@ class OidcProvider(Base):
     enabled: Mapped[bool] = mapped_column(Boolean, default=True)
     #: Always off in nexsift (one account): a provider never makes an account here.
     auto_create: Mapped[bool] = mapped_column(Boolean, default=False)
-    #: nexsift has no second factor of its own; kept as the blueprint has it.
+    #: nexsift has no second factor of its own; kept as the shared module has it.
     trusts_second_factor: Mapped[bool] = mapped_column(Boolean, default=True)
     #: "" by hand, "authentik" when the authentik button made it (only that entry is the button's).
     managed: Mapped[str] = mapped_column(String(20), default="")

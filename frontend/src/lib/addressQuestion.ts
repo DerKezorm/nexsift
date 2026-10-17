@@ -1,7 +1,7 @@
 import { ApiError } from '../api/client'
 
 /**
- * The question a changed public address asks (blueprint 03 "Rückleitadresse", 04 card 1): the server answers 409
+ * The question a changed public address asks: the server answers 409
  * `public_url_change` with these fields and saves nothing; only the same request with the confirmation saves.
  */
 export interface AddressQuestion {

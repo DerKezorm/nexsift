@@ -1,5 +1,5 @@
 /**
- * "Sign-in providers" of the own account (shared sign-in blueprint, part 04, "Mein Konto, Sicherheit"): one line per
+ * "Sign-in providers" of the own account: one line per
  * active provider with its state and "Link" or "Unlink". nexsift has one account, so this card sits under
  * Settings, Account. Linking asks the password once more, then the browser goes to the provider and comes back to
  * `/account?linked=<slug>` or `?error=<code>` (forwarded here, see `App.tsx`).

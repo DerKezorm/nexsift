@@ -100,9 +100,9 @@ export function SetupScreen() {
 }
 
 /**
- * Sign-in, as the shared sign-in blueprint lays it out (part 04): the password form, below it "or" and a button per
- * active provider in the order of the list. With the password sign-in off only the buttons: off means off in nexsift
- * (one account, blueprint 06), so there is no "Sign in as the operator"; the way back is the command below. An error from the
+ * Sign-in, as the shared sign-in module lays it out: the password form, below it "or" and a button per
+ * active provider in the order of the list. With the password sign-in off only the buttons: off means off in nexsift,
+ * so there is no "Sign in as the operator"; the way back is the command below. An error from the
  * provider (`?error=<code>`) shows above, in the module's words; an unknown code shows nothing.
  */
 export function LoginScreen() {

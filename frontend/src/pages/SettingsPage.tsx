@@ -105,7 +105,7 @@ function AccountSection() {
 }
 
 /** The addresses: how the browser reaches nexsift, and how the devices at home do. The public address is also on the
- * sign-in tab (shared sign-in blueprint, card 1); both edit the same setting. */
+ * sign-in tab (card 1); both edit the same setting. */
 function Addresses({ settings, onSaved }: { settings: Settings; onSaved: (settings: Settings) => void }) {
   const { t } = useTranslation()
   const notify = useNotice()

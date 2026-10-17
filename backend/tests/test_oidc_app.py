@@ -667,7 +667,7 @@ def test_the_migration_and_a_provider_set_up_in_0_11_trust_it(provider: FakeProv
         assert [(row.enabled, row.trusts_second_factor) for row in db.scalars(select(OidcProvider))] == [(True, True)]
 
 
-# --- The public address asks first (blueprint 03, "Rückleitadresse") ----------------------------------------------------
+# --- The public address asks first ----------------------------------------------------
 
 
 def test_the_public_address_takes_nothing_the_sign_in_module_refuses(client: TestClient, operator: dict) -> None:

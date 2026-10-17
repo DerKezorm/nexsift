@@ -1,13 +1,13 @@
 /**
- * Settings, Sign-in: three cards one below the other, as the shared sign-in blueprint lays them out for every nex
- * app (part 04). Order, wording and behaviour come from there; the parts (section, switch, field, button, dialog)
+ * Settings, Sign-in: three cards one below the other, as the shared sign-in module lays them out for every nex
+ * app. Order, wording and behaviour come from there; the parts (section, switch, field, button, dialog)
  * are nexsift's own.
  *
  * 1. Sign-in: password sign-in (locked on while the account has no linked, active provider), the public address.
  * 2. Sign-in providers: the list with its marks, the drag handle, and the form as a dialog.
  * 3. authentik in one step: address, token, "Set up", the blueprint, and the steps with the reason of a failure.
  *
- * nexsift has one account (blueprint 06): the form has no "New people get an account", and no second factor of its
+ * nexsift has one account: the form has no "New people get an account", and no second factor of its
  * own, so no "The provider checks the second factor itself" either. The way back with the password off is
  * nexsift's command in the container, named at the switch.
  */
@@ -324,7 +324,7 @@ const EMPTY: OidcProviderForm = {
 
 type FieldName = 'label' | 'slug' | 'issuer' | 'client_id' | 'client_secret' | 'scopes' | 'id'
 
-/** The provider form as a dialog, fields in the blueprint's order (without the two switches nexsift has no use for). */
+/** The provider form as a dialog, fields in the shared order (without the two switches nexsift has no use for). */
 function ProviderDialog({ entry, publicUrl, onClose, onSaved }: { entry: OidcProvider | null; publicUrl: string; onClose: () => void; onSaved: () => Promise<void> }) {
   const { t } = useTranslation()
   const [form, setForm] = useState<OidcProviderForm>(
@@ -502,7 +502,7 @@ function AuthentikCard({ publicUrl, reload, reloadSettings }: { publicUrl: strin
     void loadAddress()
   }, [loadAddress, publicUrl])
 
-  // The button stops before it would change the issuer of an entry with links (blueprint 03): the same question as
+  // The button stops before it would change the issuer of an entry with links: the same question as
   // the form, and only "Save" runs it again with the confirmation; "Cancel" leaves everything as it is.
   const issuerChange = result ? authentikIssuerChange(result) : null
 

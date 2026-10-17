@@ -1,10 +1,10 @@
 """nexsift's side of the shared sign-in module ``vendor/nexoidc``: the ``Store`` over its two tables, the start-up
 configuration, the migration from the single provider of the settings, and the two guards around it.
 
-The module (the blueprint "Anmeldung mit OIDC und authentik", the same in every nex app) runs the protocol, decides
+The shared module runs the protocol, decides
 who an identity is and keeps the provider list; it never sees a database. What is nexsift's own lives here:
 
-- nexsift has one account, the operator (blueprint 06, "Apps mit nur einem Konto"): no invitations, no accounts made
+- nexsift has one account, the operator: no invitations, no accounts made
   through a provider, one identity per provider at most;
 - the client secrets are sealed with the server secret under ``oidc-provider:<id>``;
 - the address a provider sends stays at the link for display. nexsift's account always has a password and nexsift
@@ -127,7 +127,7 @@ class SqlStore:
     @staticmethod
     def _apply(row: OidcProvider, values: ProviderValues) -> None:
         row.slug, row.label, row.issuer, row.client_id = values.slug, values.label, values.issuer, values.client_id
-        # One account: a provider never makes one, whatever the form says (blueprint 06).
+        # One account: a provider never makes one, whatever the form says.
         row.scopes, row.enabled, row.auto_create = values.scopes, values.enabled, False
         row.trusts_second_factor, row.managed, row.position = (
             values.trusts_second_factor,
@@ -235,7 +235,7 @@ class SqlStore:
         return accounts.by_name(self.db, name) is not None
 
     def create_account(self, name: str, *, invite: Invite | None, email: str | None) -> int:
-        # One account (blueprint 06): the module never asks, ``single_account`` refuses before.
+        # One account: the module never asks, ``single_account`` refuses before.
         raise NotImplementedError("nexsift has one account; a provider makes none")
 
     # --- Invitations (nexsift has none) ------------------------------------------------------------------------------
@@ -292,7 +292,7 @@ def keep_a_way_in(db: Session) -> None:
     logger.warning("No provider brings the operator in any more: sign-in with a password is on again")
 
 
-# --- The migration from the single provider of the settings (blueprint 01 "Umstieg", 06 "Wanderung") ------------
+# --- The migration from the single provider of the settings ------------
 
 #: The settings of the single provider before the list. They stay readable for one version (the way back), then go.
 LEGACY_KEYS = ("oidc_issuer", "oidc_client_id", "oidc_client_secret_enc", "oidc_provider_name")
@@ -413,7 +413,7 @@ def migrate_settings(*, backup: bool = True) -> Provider | None:
 
 
 def mirror_legacy(db: Session) -> None:
-    """The way back to nexsift 0.11 (blueprint 01 "Umstieg" 4): that version reads the old settings ``oidc_*`` and
+    """The way back to nexsift 0.11: that version reads the old settings ``oidc_*`` and
     ``accounts.oidc_subject``, so they must always show what ``migrate.way_back`` says for the entry ``oidc`` and the
     stored anchor. Otherwise going back would bring a removed provider back, or let a subject in that was given up.
     The rule (the module's README, "Rückweg und wieder hoch"):

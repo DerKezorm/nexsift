@@ -1,6 +1,6 @@
 /**
- * Pflichttests 33 and 34 of the shared sign-in blueprint (copied once from bauplaene/oidc, then nexsift's file), in
- * the variant of an app with one account (blueprint 06): the operator links the own account; nobody else comes in.
+ * Contract tests 33 and 34 of the shared sign-in module (started from the shared copy, then nexsift's file), in
+ * the variant of an app with one account: the operator links the own account; nobody else comes in.
  *
  * authentik is the stand-in of e2e/fake-authentik.mjs: the part of its API the button uses, and the OpenID Connect
  * provider of the application the button makes, over http on 8797 with a key made at its start, sending the browser
@@ -52,7 +52,7 @@ test('34: add, edit and remove a provider with a question; the authentik card li
   // Without a linked provider the password cannot go.
   await expect(page.getByRole('switch', { name: 'Sign-in with a password' })).toBeDisabled()
 
-  // By hand: the form as a dialog, fields in the blueprint's order.
+  // By hand: the form as a dialog, fields in the shared order.
   await page.getByRole('button', { name: 'Add a provider' }).click()
   const form = page.getByTestId('provider-form')
   const order = ['Name on the button', 'Short name', 'Issuer', 'Client ID', 'Client secret', 'Redirect address for the provider', 'On', 'More']

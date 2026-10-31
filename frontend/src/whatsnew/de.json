@@ -363,6 +363,21 @@
         "Die Liste wird überall gleich gelesen: Einträge, die weder Adresse noch Netz sind, etwa * oder ein Rechnername, fallen weg.",
         "Keine neuen Variablen, Ports oder Pfade."
       ]
+    },
+    "0.12.4": {
+      "lead": "Eine kleine Reparatur: nexsift läuft jetzt weiter, wenn der Browser die Seite übersetzt.",
+      "sections": [
+        {
+          "title": "Übersetzte Seiten bleiben stehen",
+          "body": "Hat Chrome, Edge oder eine Erweiterung nexsift übersetzt, konnte ein Knopf mit seinem Ladekreis oder ein Text, der kam oder ging, die ganze Seite verschwinden lassen. nexsift läuft auf so einer Seite jetzt weiter, und der Ladekreis bleibt vor der Beschriftung.",
+          "where": "Überall"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Das gemeinsame Anmeldemodul ist aktualisiert. Geändert haben sich nur Kommentare und Testnamen, die Anmeldung läuft wie bisher.",
+        "Keine neuen Variablen, Ports oder Pfade."
+      ]
     }
   }
 }

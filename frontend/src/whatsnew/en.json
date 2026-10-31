@@ -363,6 +363,21 @@
         "The list is read the same way everywhere: entries that are neither an address nor a network, such as * or a host name, are left out.",
         "No new variables, ports or paths."
       ]
+    },
+    "0.12.4": {
+      "lead": "A small repair: nexsift now keeps working when the browser translates the page.",
+      "sections": [
+        {
+          "title": "Translated pages no longer go blank",
+          "body": "When Chrome, Edge or an extension translated nexsift, a button turning on its spinner or a text that came or went could make the whole page disappear. nexsift now keeps working on such a page, and the spinner stays in front of the label.",
+          "where": "Everywhere"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "The shared sign-in module is updated. Only comments and test names changed; signing in works as before.",
+        "No new variables, ports or paths."
+      ]
     }
   }
 }

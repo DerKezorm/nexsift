@@ -5,10 +5,12 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 import { NoticeProvider } from './components/Notice'
 import { startI18n } from './i18n'
+import { bearTranslatedPages } from './lib/translatedPage'
 import { AuthProvider } from './auth'
 import './styles/index.css'
 
 function startApp(): void {
+  bearTranslatedPages()
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <BrowserRouter>

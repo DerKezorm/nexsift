@@ -25,7 +25,7 @@ export function Button({ variant = 'primary', size = 'md', loading = false, clas
   return (
     <button type="button" className={`${buttonClasses(variant, size)} ${className}`} disabled={disabled || loading} {...rest}>
       {loading && <Spinner />}
-      {children}
+      <span className="contents">{children}</span>
     </button>
   )
 }

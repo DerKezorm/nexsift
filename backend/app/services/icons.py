@@ -8,8 +8,9 @@ only, which is why the picker lists the PNG folders and nothing else. The interf
 Not jsdelivr, though it is meant for this: measured on 05.10.2026 with 30 logos nobody had asked for, side by side,
 jsdelivr took 20 s with timeouts and wrong "not found" answers, GitHub 1.1 s without a single failure.
 
-The nexapps family is in no collection; its logos ship with nexsift (``bundled_icons``, PNG made from the SVGs
-nexdeck ships). The interface reads them from disk, the phone from nexsift's public repository on GitHub.
+The nexapps family is in no collection; its logos ship with nexsift (``bundled_icons``, 256 px PNG of the light marks
+from nexapps/icons-vergleich/neu.py). The interface reads them from disk, the phone from nexsift's public repository on
+GitHub.
 
 What a source stores: ``""`` (none), ``nexapps/<name>``, ``dashboard-icons/<name>``, ``selfhst/<name>`` or an
 http(s) address.
@@ -34,9 +35,11 @@ logger = logging.getLogger("nexsift.icons")
 
 #: Logos that ship with nexsift: the nexapps family.
 BUNDLED = Path(__file__).resolve().parent.parent / "bundled_icons"
-BUNDLED_URL = "https://raw.githubusercontent.com/DerKezorm/nexsift/main/backend/app/bundled_icons/{name}.png"
+#: ``?v=2`` here and below since the new marks (0.13.0): the ntfy apps keep a picture by its address, so a new mark
+#: needs a new one; raise it with the one in index.html.
+BUNDLED_URL = "https://raw.githubusercontent.com/DerKezorm/nexsift/main/backend/app/bundled_icons/{name}.png?v=2"
 #: nexsift's own logo, for pushes to ntfy when they do not carry the source's.
-NEXSIFT_LOGO = "https://raw.githubusercontent.com/DerKezorm/nexsift/main/frontend/public/icon-192.png"
+NEXSIFT_LOGO = "https://raw.githubusercontent.com/DerKezorm/nexsift/main/frontend/public/icon-192.png?v=2"
 COLLECTIONS: dict[str, tuple[str, str]] = {
     "nexapps": (BUNDLED_URL, ""),
     "dashboard-icons": (

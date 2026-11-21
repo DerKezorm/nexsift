@@ -16,8 +16,8 @@ self.addEventListener('push', (event) => {
     body: data.body || '',
     // Always nexsift's own logo. In 0.8.0 the source's came along, from GitHub; the service worker may load
     // pictures from nexsift only, and Chrome showed none at all.
-    icon: '/icon-192.png',
-    badge: '/badge-96.png',
+    icon: '/icon-192.png?v=2',
+    badge: '/badge-96.png?v=2',
     data: { url: data.url || '/' },
     // One notification per line in the inbox: a follow-up replaces the first instead of stacking up.
     tag: data.tag || undefined,

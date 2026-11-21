@@ -1,13 +1,21 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="nexsift">
+  <!-- A funnel with a dot coming out, on a white tile; dark when the system is dark.
+       Same shape as components/Logo.tsx and scripts/app-icons.mjs; the source is nexapps/icons-vergleich/neu.py. -->
+  <style>
+    .ground { fill: #fff } .rim { stroke: #71717a; stroke-opacity: .35 } .dot { fill: #27272a; stroke: #fff }
+    .v1 { stop-color: #a1a1aa } .v2 { stop-color: #52525b } .v3 { stop-color: #18181b }
+    @media (prefers-color-scheme: dark) {
+      .ground { fill: #111114 } .rim { stroke: #d4d4d8; stroke-opacity: .45 } .dot { fill: #fff; stroke: #111114 }
+      .v1 { stop-color: #fafafa } .v2 { stop-color: #d4d4d8 } .v3 { stop-color: #71717a }
+    }
+  </style>
   <defs>
-    <linearGradient id="g" gradientUnits="userSpaceOnUse" x1="8" y1="8" x2="56" y2="56">
-      <stop offset="0" stop-color="#fafafa"/>
-      <stop offset=".5" stop-color="#d4d4d8"/>
-      <stop offset="1" stop-color="#71717a"/>
+    <linearGradient id="g" gradientUnits="userSpaceOnUse" x1="10" y1="10" x2="54" y2="54">
+      <stop offset="0" class="v1"/><stop offset=".5" class="v2"/><stop offset="1" class="v3"/>
     </linearGradient>
   </defs>
-  <rect x="2" y="2" width="60" height="60" rx="16" fill="#111114"/>
-  <rect x="2" y="2" width="60" height="60" rx="16" fill="none" stroke="url(#g)" stroke-width="2.5" stroke-opacity=".55"/>
-  <path d="M15 17h34L36.5 32v10L27.5 47V32Z" fill="none" stroke="url(#g)" stroke-width="4.5" stroke-linejoin="round"/>
-  <circle cx="44" cy="46" r="3" fill="#d4d4d8"/>
+  <rect class="ground" x="2" y="2" width="60" height="60" rx="16"/>
+  <rect class="rim" x="2.75" y="2.75" width="58.5" height="58.5" rx="15.3" fill="none" stroke-width="1.5"/>
+  <path d="M13.5 15.5h37L37 32.5v11L27 49.5V32.5Z" fill="none" stroke="url(#g)" stroke-width="4.4" stroke-linejoin="round"/>
+  <circle class="dot" cx="45" cy="47" r="3.8" stroke-width="1.8"/>
 </svg>

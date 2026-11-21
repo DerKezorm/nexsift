@@ -25,11 +25,14 @@
   /* Text on platinum. */
   --color-on-accent: #111114;
 
-  /* The logo: dark tile with a silver funnel here, white tile with a dark funnel in light mode. */
+  /* The logo (components/Logo.tsx): dark tile with a silver funnel here, white tile with a gray funnel in light mode.
+     The same values are in public/logo.svg and scripts/app-icons.mjs; the source is nexapps/icons-vergleich/neu.py. */
   --color-mark-bg: #111114;
+  --color-mark-rim: rgb(212 212 216 / 0.45);
   --color-mark-light: #fafafa;
   --color-mark-mid: #d4d4d8;
   --color-mark-dark: #71717a;
+  --color-mark-dot: #ffffff;
 
   /* The three priorities. Deliberately not the accent: green means "the app", not "all good". */
   --color-crit-500: #fb7185;
@@ -76,9 +79,11 @@
   --color-accent-700: #18181b;
 
   --color-mark-bg: #ffffff;
-  --color-mark-light: #71717a;
-  --color-mark-mid: #3f3f46;
-  --color-mark-dark: #09090b;
+  --color-mark-rim: rgb(113 113 122 / 0.35);
+  --color-mark-light: #a1a1aa;
+  --color-mark-mid: #52525b;
+  --color-mark-dark: #18181b;
+  --color-mark-dot: #27272a;
 }
 
 

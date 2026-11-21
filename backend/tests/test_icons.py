@@ -262,7 +262,7 @@ def test_a_nexapps_logo_comes_from_disk_and_goes_out_through_the_public_reposito
     client.post("/api/v1/hook/" + source["connection"]["token"], json={"title": "Grab failed", "priority": "critical"})
     _run()
     assert SENT[0]["headers"]["icon"] == (
-        "https://raw.githubusercontent.com/DerKezorm/nexsift/main/backend/app/bundled_icons/nexcrate.png"
+        "https://raw.githubusercontent.com/DerKezorm/nexsift/main/backend/app/bundled_icons/nexcrate.png?v=2"
     )
 
 

@@ -203,6 +203,29 @@ for module in (
     app.include_router(module.router)
 
 
+#: Files without a hash in their name that a browser asks the server about again before each use: everything at the
+#: top of ``frontend/public`` (the mark, the icons, the manifest, the service worker, the theme script). ``no-cache``
+#: does not mean "do not keep", it means "ask first"; an unchanged file comes back as 304.
+#:
+#: ⚠️ The icons belong here: without a header the browser guesses how long it may keep them, and after a sister app's
+#: new mark Chrome installed the web app with the old icon from its own storage. test_static_fresh.py checks that every
+#: file at the top of public/ is listed.
+FRESH = frozenset(
+    {
+        "logo.svg",
+        "icon-192.png",
+        "icon-512.png",
+        "icon-maskable-512.png",
+        "apple-touch-icon.png",
+        "badge-96.png",
+        "manifest.webmanifest",
+        "sw.js",
+        "theme.js",
+    }
+)
+_ASK_FIRST = {"Cache-Control": "no-cache"}
+
+
 def _mount_frontend(target: FastAPI, dist: Path) -> None:
     index = dist / "index.html"
     if not index.exists():
@@ -218,8 +241,8 @@ def _mount_frontend(target: FastAPI, dist: Path) -> None:
             return JSONResponse(status_code=404, content={"detail": meldung("not_found", "Not found.")})
         candidate = (dist / path).resolve()
         if path and candidate.is_file() and root in candidate.parents and candidate != start_page:
-            return FileResponse(candidate)
-        return FileResponse(index, headers={"Cache-Control": "no-cache"})
+            return FileResponse(candidate, headers=_ASK_FIRST if path in FRESH else None)
+        return FileResponse(index, headers=_ASK_FIRST)
 
 
 _mount_frontend(app, get_settings().frontend_dist)

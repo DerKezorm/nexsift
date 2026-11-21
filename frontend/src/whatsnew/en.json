@@ -378,6 +378,26 @@
         "The shared sign-in module is updated. Only comments and test names changed; signing in works as before.",
         "No new variables, ports or paths."
       ]
+    },
+    "0.13.0": {
+      "lead": "nexsift has a new mark: the funnel with a dot coming out, in gray, on a white tile in light mode and a dark one in dark mode.",
+      "sections": [
+        {
+          "title": "A new mark that follows light and dark",
+          "body": "The logo in the header, on the sign-in page and on the About page switches with nexsift's own mode. The browser tab shows the light or dark mark the way the system is set. The icons for the home screen are new too.",
+          "where": "Everywhere"
+        },
+        {
+          "title": "Pushes carry the new mark",
+          "body": "Notifications on this device and pushes to ntfy show the new logo; the badge in the status bar is the funnel as well. The logos of the other nex apps that nexsift ships for sources are the new marks too.",
+          "where": "Rules › Forwarding to the phone"
+        }
+      ],
+      "smallTitle": "Also",
+      "small": [
+        "Icons, favicon, manifest and the service worker are asked for again before use, and the icons have new addresses, so an installed web app shows the new mark. Windows may keep the old one in the taskbar for a while; pinning the app again helps.",
+        "No new variables, ports or paths."
+      ]
     }
   }
 }

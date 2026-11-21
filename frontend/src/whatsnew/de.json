@@ -378,6 +378,26 @@
         "Das gemeinsame Anmeldemodul ist aktualisiert. Geändert haben sich nur Kommentare und Testnamen, die Anmeldung läuft wie bisher.",
         "Keine neuen Variablen, Ports oder Pfade."
       ]
+    },
+    "0.13.0": {
+      "lead": "nexsift hat ein neues Zeichen: der Trichter mit einem Punkt, der herauskommt, in Grau, im hellen Modus auf weißer Kachel, im dunklen auf dunkler.",
+      "sections": [
+        {
+          "title": "Ein neues Zeichen, das hell und dunkel folgt",
+          "body": "Das Logo in der Kopfzeile, auf der Anmeldeseite und auf der Über-Seite wechselt mit nexsifts eigenem Modus. Der Browser-Tab zeigt das helle oder dunkle Zeichen, je nachdem, wie das System eingestellt ist. Auch die Symbole für den Startbildschirm sind neu.",
+          "where": "Überall"
+        },
+        {
+          "title": "Pushes tragen das neue Zeichen",
+          "body": "Mitteilungen auf diesem Gerät und Pushes an ntfy zeigen das neue Logo; auch das Abzeichen in der Statusleiste ist der Trichter. Die Logos der anderen nex-Apps, die nexsift für Quellen mitbringt, sind ebenfalls die neuen Zeichen.",
+          "where": "Regeln › Weiterleitung aufs Handy"
+        }
+      ],
+      "smallTitle": "Außerdem",
+      "small": [
+        "Symbole, Favicon, Manifest und der Service Worker werden vor jeder Nutzung neu nachgefragt, und die Symbole haben neue Adressen, damit auch eine installierte Web-App das neue Zeichen zeigt. Windows behält das alte in der Taskleiste womöglich noch eine Weile; die App neu anheften hilft.",
+        "Keine neuen Variablen, Ports oder Pfade."
+      ]
     }
   }
 }
